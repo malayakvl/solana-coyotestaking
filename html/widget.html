@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Solana Wallet Widget Test</title>
+  <link rel="stylesheet" href="globals.css">
+  
+  <!-- React and ReactDOM CDN (required for widget) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <h1>Solana Wallet Widget Test</h1>
+  <div class="wallet-widget-class"></div>
+  
+  <!-- Widget bundle (copy from widget/dist after build) -->
+  <script src="bundle.iife.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Window object:', window);
+      console.log('WidgetBundle:', window.WidgetBundle);
+      
+      if (window.WidgetBundle && typeof window.WidgetBundle.mountWidget === 'function') {
+        console.log('Mounting widget...');
+        window.WidgetBundle.mountWidget();
+      } else {
+        console.error('WidgetBundle not found or mountWidget is not a function');
+      }
+    });
+  </script>
+</body>
+</html>
