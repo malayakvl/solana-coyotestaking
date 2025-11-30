@@ -28,12 +28,19 @@ export const ConnectButton = () => {
       setGlobalState(newGlobalState);
       
       // Handle disconnect from other buttons - reset to initial state
-      if (!newGlobalState.connected && (connected || wallet)) {
+      if (!newGlobalState.connected) {
         console.log('ConnectButton: Global disconnect received, resetting to initial state');
         try {
           // Disconnect locally if connected
           if (connected) {
             disconnect();
+          }
+          // Even if not connected, but wallet is selected, we need to clear the selection
+          else if (wallet && newGlobalState.walletName === null) {
+            // This is a forced reset from another button, we need to clear our local state
+            console.log('ConnectButton: Clearing local wallet selection');
+            // We can't directly clear the wallet selection, but we can force a re-render
+            // by updating our local state to match the global state
           }
         } catch (error) {
           console.error('ConnectButton: Error during disconnect', error);
@@ -51,12 +58,6 @@ export const ConnectButton = () => {
             console.error('ConnectButton: Error auto-selecting wallet', error);
           }
         }
-      }
-      
-      // Handle global reset to initial state (no wallet selected)
-      if (!newGlobalState.walletName && !newGlobalState.connected && wallet) {
-        console.log('ConnectButton: Global reset to initial state');
-        // This will trigger a re-render with no wallet selected
       }
     });
 
@@ -133,6 +134,16 @@ export const ConnectButton = () => {
       });
       hasSentInitialState.current = false;
     }
+    // Handle wallet deselection (when user manually clears wallet selection)
+    else if (walletChanged && !currentWalletName && !currentConnected) {
+      console.log('ConnectButton: Wallet deselected, resetting to initial state');
+      window.updateGlobalWalletState({
+        connected: false,
+        publicKey: null,
+        walletName: null
+      });
+      hasSentInitialState.current = false;
+    }
     // Handle wallet selection without connection
     else if (!currentConnected && currentWalletName && !hasSentInitialState.current) {
       console.log('ConnectButton: Wallet selected but not connected', currentWalletName);
@@ -146,7 +157,10 @@ export const ConnectButton = () => {
   const effectiveConnected = globalState?.connected ?? false;
   const effectivePublicKey = globalState?.publicKey ?? null;
   const effectiveWalletName = globalState?.walletName ?? null;
-  const walletInstance = wallet;
+  
+  // For Solflare specifically, we need to ensure proper state reset
+  const shouldShowInitial = !effectiveConnected && !effectiveWalletName;
+  const walletInstance = shouldShowInitial ? null : wallet;
 
   console.log('ConnectButton: Render with state', {
     localConnected: connected,
@@ -157,7 +171,8 @@ export const ConnectButton = () => {
     effectivePublicKey,
     walletName: wallet?.adapter?.name,
     effectiveWalletName,
-    localWallet: wallet?.adapter?.name
+    localWallet: wallet?.adapter?.name,
+    shouldShowInitial
   });
 
   // State 3: Wallet connected - show wallet icon and public key
