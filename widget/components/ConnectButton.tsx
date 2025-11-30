@@ -24,33 +24,25 @@ export const ConnectButton = () => {
 
     const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
       console.log('ConnectButton: Received global state update', newGlobalState);
-      // When we receive a global state update, we should update our state
       setGlobalState(newGlobalState);
       
-      // Handle disconnect from other buttons - reset to initial state
+      // Handle disconnect - reset to initial state
       if (!newGlobalState.connected) {
-        console.log('ConnectButton: Global disconnect received, resetting to initial state');
-        try {
-          // Disconnect locally if connected
-          if (connected) {
+        console.log('ConnectButton: Global disconnect received');
+        // Always disconnect locally if we're connected
+        if (connected) {
+          try {
             disconnect();
+          } catch (error) {
+            console.error('ConnectButton: Error disconnecting', error);
           }
-          // Even if not connected, but wallet is selected, we need to clear the selection
-          else if (wallet && newGlobalState.walletName === null) {
-            // This is a forced reset from another button, we need to clear our local state
-            console.log('ConnectButton: Clearing local wallet selection');
-            // We can't directly clear the wallet selection, but we can force a re-render
-            // by updating our local state to match the global state
-          }
-        } catch (error) {
-          console.error('ConnectButton: Error during disconnect', error);
         }
       }
       
-      // If we receive a wallet selection from another button, try to select the same wallet
-      if (newGlobalState.walletName && wallets.length > 0 && !wallet) {
+      // Handle wallet selection from other buttons
+      if (newGlobalState.walletName && wallets.length > 0 && !connected) {
         const matchingWallet = wallets.find(w => w.adapter.name === newGlobalState.walletName);
-        if (matchingWallet) {
+        if (matchingWallet && (!wallet || wallet.adapter.name !== newGlobalState.walletName)) {
           console.log('ConnectButton: Auto-selecting wallet', newGlobalState.walletName);
           try {
             select(matchingWallet.adapter.name);
@@ -61,7 +53,7 @@ export const ConnectButton = () => {
       }
     });
 
-    // Also get the initial state
+    // Get initial state
     setTimeout(() => {
       if (window.globalWalletState) {
         setGlobalState(window.globalWalletState);
@@ -74,7 +66,7 @@ export const ConnectButton = () => {
       }
     };
   }, [wallet, wallets, select, disconnect, connected]);
-
+  
   // Emit events when this button's state changes (but only for genuine user actions)
   useEffect(() => {
     if (typeof window === 'undefined' || !window.updateGlobalWalletState) {
@@ -100,14 +92,6 @@ export const ConnectButton = () => {
       hasSentInitialState: hasSentInitialState.current
     });
 
-    // Handle wallet selection
-    if (walletChanged && currentWalletName) {
-      console.log('ConnectButton: Wallet selected', currentWalletName);
-      window.updateGlobalWalletState({
-        walletName: currentWalletName
-      });
-    }
-
     // Handle connection
     if (connectedChanged && currentConnected && publicKey) {
       console.log('ConnectButton: Wallet connected', {
@@ -124,31 +108,30 @@ export const ConnectButton = () => {
       
       hasSentInitialState.current = true;
     } 
-    // Handle disconnection - reset to initial state
+    // Handle disconnection - reset to initial state completely
     else if (connectedChanged && !currentConnected) {
       console.log('ConnectButton: Wallet disconnected, resetting to initial state');
       window.updateGlobalWalletState({
         connected: false,
         publicKey: null,
-        walletName: null  // Reset wallet name to null to return to initial state
+        walletName: null  // This is crucial - reset wallet name to null
       });
       hasSentInitialState.current = false;
     }
-    // Handle wallet deselection (when user manually clears wallet selection)
+    // Handle wallet selection
+    else if (walletChanged && currentWalletName) {
+      console.log('ConnectButton: Wallet selected', currentWalletName);
+      window.updateGlobalWalletState({
+        walletName: currentWalletName
+      });
+    }
+    // Handle wallet deselection (return to initial state)
     else if (walletChanged && !currentWalletName && !currentConnected) {
-      console.log('ConnectButton: Wallet deselected, resetting to initial state');
+      console.log('ConnectButton: Wallet deselected, returning to initial state');
       window.updateGlobalWalletState({
         connected: false,
         publicKey: null,
         walletName: null
-      });
-      hasSentInitialState.current = false;
-    }
-    // Handle wallet selection without connection
-    else if (!currentConnected && currentWalletName && !hasSentInitialState.current) {
-      console.log('ConnectButton: Wallet selected but not connected', currentWalletName);
-      window.updateGlobalWalletState({
-        walletName: currentWalletName
       });
     }
   }, [connected, publicKey, wallet]);
@@ -158,9 +141,10 @@ export const ConnectButton = () => {
   const effectivePublicKey = globalState?.publicKey ?? null;
   const effectiveWalletName = globalState?.walletName ?? null;
   
-  // For Solflare specifically, we need to ensure proper state reset
-  const shouldShowInitial = !effectiveConnected && !effectiveWalletName;
-  const walletInstance = shouldShowInitial ? null : wallet;
+  // If global state has a wallet selected but not connected, use that wallet
+  const walletInstance = effectiveWalletName && !effectiveConnected 
+    ? wallets.find(w => w.adapter.name === effectiveWalletName) || wallet
+    : wallet;
 
   console.log('ConnectButton: Render with state', {
     localConnected: connected,
@@ -171,8 +155,7 @@ export const ConnectButton = () => {
     effectivePublicKey,
     walletName: wallet?.adapter?.name,
     effectiveWalletName,
-    localWallet: wallet?.adapter?.name,
-    shouldShowInitial
+    localWallet: wallet?.adapter?.name
   });
 
   // State 3: Wallet connected - show wallet icon and public key
@@ -199,7 +182,7 @@ export const ConnectButton = () => {
   }
 
   // State 2: Wallet selected but not connected - show wallet icon and "Connect"
-  if (walletInstance && walletInstance.adapter) {
+  if (walletInstance && walletInstance.adapter && effectiveWalletName) {
     return (
       <WalletMultiButton 
         className="wallet-btn"
