@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Widget Test Page</title>
+  <title>Widget Test Page Synced</title>
   <link rel="stylesheet" href="./dist/bundle.iife.css">
   <style>
     header, main {
@@ -11,42 +11,53 @@
       padding: 10px;
       border: 1px solid #ccc;
     }
-    .wallet-wrapper, .stake-wrapper {
+    /* .wallet-adapter-button, .stake-button {
       display: inline-block;
       margin-right: 8px;
-    }
+      min-width: 120px;
+    } */
   </style>
 </head>
 <body>
-  <header id="header">
+  <header>
     <h2>Header</h2>
-    <div class="wallet-wrapper">
-      <button class="wallet-adapter-button">Wallet</button>
-    </div>
+    <button class="wallet-adapter-button">Wallet</button>
+    <button class="stake-button">Stake SOL</button>
   </header>
 
-  <main id="content">
+  <main>
     <h2>Content Area</h2>
-    <div class="wallet-wrapper">
-      <button class="wallet-adapter-button">Wallet</button>
-    </div>
-    <div class="stake-wrapper">
-      <button class="stake-button">Stake SOL</button>
-    </div>
+    <button class="wallet-adapter-button">Wallet</button>
+    <button class="stake-button">Stake SOL</button>
   </main>
 
-  <script src="./dist/bundle.iife.js" defer></script>
+  <script src="./dist/bundle.iife.js"></script>
 
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const bundle = window.WidgetBundle;
-      if (!bundle) return console.error('WidgetBundle not found');
+    // Wait for the bundle to load and initialize
+    function initializeWidget() {
+      // Give the bundle a moment to initialize
+      setTimeout(() => {
+        const bundle = window.WidgetBundle;
+        if (!bundle) {
+          console.error('WidgetBundle not found');
+          return;
+        }
 
-      // Викликаємо replaceButtons з bundle
-      if (bundle.replaceButtons) {
+        // Initialize the buttons
         bundle.replaceButtons();
-      }
-    });
+
+        // Log global state periodically for debugging
+        setInterval(() => {
+          if (window.globalWalletState) {
+            console.log('Global wallet state:', window.globalWalletState);
+          }
+        }, 3000);
+      }, 100);
+    }
+
+    // Initialize immediately since the script is not deferred
+    initializeWidget();
   </script>
 </body>
 </html>

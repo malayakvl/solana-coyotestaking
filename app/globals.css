@@ -25,6 +25,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
 .pi-wallet {
   background: url("https://vladika.love/wp-content/themes/yootheme/js/wallet-icon.png") !important;
   background-size: contain;
@@ -71,9 +72,11 @@ button.wallet-adapter-modal-button-close:not(.custom) {
 button.wallet-adapter-modal-button-close:not(.custom) svg {
   fill: #000 !important; 
 }
+
 .wallet-widget-class {
   text-align: center !important;
 }
+
 .wallet-adapter-modal-button-close {
   background-color:#ff554f !important;
 }
@@ -85,6 +88,7 @@ button.wallet-adapter-modal-button-close:not(.custom) svg {
 footer .wallet-widget-class {
   padding-top: 30px;
 }
+
 .stake-sol-btn {
   border: none;
   border-radius: 5em;
@@ -95,6 +99,8 @@ footer .wallet-widget-class {
   color: #ffffff !important;
   padding: 20px 55px;
 }
+
+/* Stake Popup Styles */
 .stake-popup-overlay {
   position: fixed;
   top: 0;
@@ -111,11 +117,83 @@ footer .wallet-widget-class {
 .stake-popup-content {
   background-color: #fff;
   width: 520px;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 .stake-popup-header-logo {
   background-image: url(../public/popup/popup-top.png);
   background-repeat: no-repeat;
   width: 517px;
   height: 314px;
   position: absolute;
+  top: -50px;
+  left: -20px;
+}
+
+.validator-metrics {
+  margin-bottom: 12px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.validator-metrics p {
+  margin: 5px 0;
+}
+
+.stake-amount-input {
+  width: 100%;
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.stake-popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirm-button {
+  padding: 12px 24px;
+  background: #ff554f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.confirm-button:hover {
+  background: #e04a46;
+}
+
+.cancel-button {
+  padding: 12px 24px;
+  background: white;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  background: #f5f5f5;
+}
+
+.stake-message {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.stake-message:empty {
+  display: none;
 }

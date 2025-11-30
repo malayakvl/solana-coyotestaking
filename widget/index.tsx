@@ -3,57 +3,116 @@ import ReactDOM from 'react-dom/client';
 import { WalletContextProvider } from './components/WalletContextProvider';
 import { ConnectButton } from './components/ConnectButton';
 import { StakeButton } from './components/StakeButton';
+import { StakePopup } from './components/StakePopup';
 import './globals.css';
 
-// Один глобальний root для всіх кнопок
-let globalRoot: ReactDOM.Root | null = null;
+// Extend the Window interface
+declare global {
+  interface Window {
+    globalWalletState: {
+      connected: boolean;
+      publicKey: string | null;
+      walletName: string | null;
+    };
+    globalWalletEventListeners: Array<(state: Window['globalWalletState']) => void>;
+    updateGlobalWalletState: (newState: Partial<Window['globalWalletState']>) => void;
+    subscribeToGlobalWalletState: (callback: (state: Window['globalWalletState']) => void) => () => void;
+    WidgetBundle?: {
+      replaceButtons: () => void;
+      ConnectButton: typeof ConnectButton;
+      StakeButton: typeof StakeButton;
+      StakePopup: typeof StakePopup;
+      WalletContextProvider: typeof WalletContextProvider;
+    };
+  }
+}
+
+// Initialize global state
+if (typeof window !== 'undefined') {
+  // Ensure global state object exists
+  if (!window.globalWalletState) {
+    window.globalWalletState = {
+      connected: false,
+      publicKey: null,
+      walletName: null
+    };
+  }
+
+  // Ensure event listeners array exists
+  if (!window.globalWalletEventListeners) {
+    window.globalWalletEventListeners = [];
+  }
+
+  // Global function to update wallet state
+  window.updateGlobalWalletState = (newState) => {
+    if (typeof window === 'undefined' || !window.globalWalletState) return;
+    
+    console.log('Global state updated:', newState);
+    window.globalWalletState = { ...window.globalWalletState, ...newState };
+    
+    // Notify all listeners
+    window.globalWalletEventListeners.forEach(listener => {
+      try {
+        listener(window.globalWalletState);
+      } catch (error) {
+        console.error('Error notifying listener:', error);
+      }
+    });
+  };
+
+  // Global function to subscribe to wallet state changes
+  window.subscribeToGlobalWalletState = (callback) => {
+    if (typeof window === 'undefined') return () => {};
+    
+    window.globalWalletEventListeners.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      const index = window.globalWalletEventListeners.indexOf(callback);
+      if (index > -1) {
+        window.globalWalletEventListeners.splice(index, 1);
+      }
+    };
+  };
+}
 
 export const replaceButtons = () => {
-  const containerId = 'wallet-global-root';
-  let container = document.getElementById(containerId);
+  // Wallet buttons
+  document.querySelectorAll('.wallet-adapter-button').forEach((btn: HTMLElement, i) => {
+    const container = document.createElement('div');
+    container.style.display = 'inline-block';
+    btn.replaceWith(container);
 
-  if (!container) {
-    container = document.createElement('div');
-    container.id = containerId;
-    document.body.appendChild(container);
-  }
-
-  if (!globalRoot) {
-    globalRoot = ReactDOM.createRoot(container);
-
-    // Збираємо кнопки на сторінці
-    const walletButtons = Array.from(document.querySelectorAll('.wallet-adapter-button')).map((btn, i) => {
-      const wrapper = document.createElement('div');
-      wrapper.style.display = 'inline-block'; // зберігаємо позицію
-      btn.replaceWith(wrapper);
-      return <ConnectButton key={`wallet-${i}`} />;
-    });
-
-    const stakeButtons = Array.from(document.querySelectorAll('.stake-button')).map((btn, i) => {
-      const wrapper = document.createElement('div');
-      wrapper.style.display = 'inline-block';
-      btn.replaceWith(wrapper);
-      return <StakeButton key={`stake-${i}`} onClick={() => console.log('Stake clicked')} />;
-    });
-
-    // Один React root з WalletContextProvider
-    globalRoot.render(
+    // Each button gets its own context provider, but they'll use global state
+    ReactDOM.createRoot(container).render(
       <WalletContextProvider>
-        <div id="widget-buttons-wrapper">
-          {walletButtons}
-          {stakeButtons}
-        </div>
+        <ConnectButton />
       </WalletContextProvider>
     );
-  }
+  });
+
+  // Stake buttons
+  document.querySelectorAll('.stake-button').forEach((btn: HTMLElement, i) => {
+    const container = document.createElement('div');
+    container.style.display = 'inline-block';
+    btn.replaceWith(container);
+
+    // Each button gets its own context provider, but they'll use global state
+    ReactDOM.createRoot(container).render(
+      <WalletContextProvider>
+        <StakeButton onClick={() => console.log('Stake clicked')} />
+      </WalletContextProvider>
+    );
+  });
 };
 
-// Глобально для WordPress
+// Make sure WidgetBundle is attached to window
 if (typeof window !== 'undefined') {
-  (window as any).WidgetBundle = {
+  window.WidgetBundle = {
     replaceButtons,
     ConnectButton,
     StakeButton,
+    StakePopup,
     WalletContextProvider
   };
 }
