@@ -23,6 +23,10 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const [jitoValue, setJitoValue] = useState<number | null>(null);
+  const [uptime, setUptime] = useState<number | null>(null); // Add uptime state
+  const [skipRate, setSkipRate] = useState<number | null>(null); // Add skip rate state
+  const [amountError, setAmountError] = useState<string | null>(null); // Add amount validation error state
   const [globalWalletState, setGlobalWalletState] = useState<{
     connected: boolean;
     publicKey: string | null;
@@ -95,8 +99,78 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen, effectiveConnected, effectivePublicKey, connection]);
 
+  // Fetch Jito data when popup opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    
+    const fetchJito = async () => {
+      try {
+        const response = await fetch("https://kobe.mainnet.jito.network/api/v1/steward_events?limit=1&event_type=ScoreComponentsV2&vote_account=53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
+        const data = await response.json();
+        const jitoScore = Math.round(data.events[0].data.score * 100 * 100) / 100;
+        
+        if (!cancelled) {
+          setJitoValue(jitoScore);
+        }
+      } catch (error) {
+        console.error("Failed to fetch Jito:", error);
+        if (!cancelled) {
+          setJitoValue(null);
+        }
+      }
+    };
+
+    fetchJito();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  // Fetch Stakewiz data when popup opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    
+    const fetchStakewizData = async () => {
+      try {
+        const validatorResponse = await fetch("https://api.stakewiz.com/validator/53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
+        const validatorData = await validatorResponse.json();
+        
+        if (!cancelled) {
+          const skipRateValue = Math.round(validatorData.skip_rate * 100) / 100;
+          const uptimeValue = validatorData.uptime;
+          
+          setSkipRate(skipRateValue);
+          setUptime(uptimeValue);
+        }
+      } catch (error) {
+        console.error("Failed to fetch Stakewiz data:", error);
+        if (!cancelled) {
+          setSkipRate(null);
+          setUptime(null);
+        }
+      }
+    };
+
+    fetchStakewizData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
   // Обработчик отправки стейка
   const handleConfirm = async () => {
+    // Check for validation errors before proceeding
+    if (amountError) {
+      setMessage(`❌ ${amountError}`);
+      return;
+    }
+    
     const num = parseFloat(amount);
 
     // Валидация
@@ -187,13 +261,17 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         </div>
         <div className="flex">
           <div className="col-param">
-            Uptime
+            {uptime !== null ? `${uptime}%` : '?'}
+            <br />
+            <span>Uptime:</span>
           </div>
           <div className="col-param">
-            Skip Rate
+            {skipRate !== null ? `${skipRate}%` : '?'}<br />
+            <span>Skip Rate</span>
           </div>
           <div className="col-param">
-            Jito MEV score
+            {jitoValue !== null ? jitoValue : '?'}<br />
+            <span>Jito MEV score</span>
           </div>
         </div>  
         <button 
@@ -210,52 +288,89 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         >
           ×
         </button>
+        <div className="red-content-popup">  
+          <div className="red-content">
+          {/* <p>Wallet: {effectiveConnected ? effectivePublicKey : 'Not connected'}</p> */}
+          <p className="text-amount">
+            Available amount:{' '}
+            <span className="amount-value">
+              {availableBalance !== null
+                ? `${availableBalance.toFixed(3)}`
+                : effectiveConnected
+                  ? 'Loading...'
+                  : 'Connect wallet'}
+            </span>
+          </p>
 
-        <h2>Stake SOL</h2>
-        <p>Wallet: {effectiveConnected ? effectivePublicKey : 'Not connected'}</p>
-        <p>
-          Available balance:{' '}
-          {availableBalance !== null
-            ? `${availableBalance.toFixed(3)} SOL`
-            : effectiveConnected
-              ? 'Loading...'
-              : 'Connect wallet'}
-        </p>
-
-        <input
-          type="number"
-          placeholder={`${MIN_STAKE} SOL`}
-          value={amount}
-          onChange={e => setAmount(e.target.value)}
-          style={{ width: '100%', padding: 8, marginBottom: 12, borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: '20px' }}>
-          <button 
-            onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              cursor: 'pointer'
+          <input
+            type="text"
+            placeholder={`${MIN_STAKE} SOL`}
+            value={amount}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAmount(value);
+              
+              // Validate the amount as user types
+              if (value === '') {
+                setAmountError(null);
+              } else {
+                const num = parseFloat(value);
+                if (isNaN(num)) {
+                  setAmountError('Please enter a valid number');
+                } else if (num < MIN_STAKE) {
+                  setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
+                } else if (availableBalance !== null && num > availableBalance) {
+                  setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
+                } else {
+                  setAmountError(null);
+                }
+              }
             }}
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleConfirm}
-            style={{
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: '#ff554f',
-              color: 'white',
-              cursor: 'pointer'
+            className="stake-input"
+            style={{ 
+              borderColor: amountError ? '#ff554f' : '#ccc',
+              borderWidth: amountError ? '2px' : '1px'
             }}
-          >
-            Confirm
-          </button>
+          />
+          {amountError && (
+            <div style={{ 
+              color: '#ff554f', 
+              fontSize: '14px', 
+              marginTop: '5px',
+              fontWeight: 'bold'
+            }}>
+              {amountError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: '20px' }}>
+            <button 
+              onClick={onClose}
+              style={{
+                padding: '8px 16px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleConfirm}
+              style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '4px',
+                backgroundColor: '#ff554f',
+                color: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Confirm
+            </button>
+          </div>
+          </div>
         </div>
 
         {message && <p style={{ marginTop: 12, color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}

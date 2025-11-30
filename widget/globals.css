@@ -93,6 +93,7 @@ footer .wallet-widget-class {
   padding: 15px;
   background: #fff;
   position: relative;
+  font-family: DM Sans,Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
 }
 
 .stake-popup-header {
@@ -105,11 +106,58 @@ footer .wallet-widget-class {
   left: 0;
 }
 .stake-popup-tips {
-  margin-top: 167px;
+  margin-top: 117px;
   font-family: DM Sans,Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
 }
 .col-param {
   width: 33%;
   float: left;
-  padding-top: 40px;
+  padding-top: 25px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 24px;
+  color: #6e181e;
+  font-family: DM Sans,Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+.col-param span {
+  display: block;
+  font-size: 16px;
+  font-family: DM Sans,Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
+  color: black;
+}
+
+.flex::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.red-content-popup {
+  margin-top: 30px;
+  background-color: #ff554e;
+  color: #fff;
+  margin: -15px;
+  width: calc(100% + 30px);
+  margin-top: 40px !important
+}
+.red-content {
+  padding: 15px;
+}
+.text-amount {
+  text-align: right;
+}
+.amount-value {
+  font-size: 20px;
+}
+.stake-input {
+  background-color: #fff;
+  height: 45px;
+  background-color: #fff;
+  height: 45px;
+  border: none;
+  width: 100%;
+  color: #590b10;
+  font-weight: bold;
+  font-size: 30px;
+  text-align: right;
+  opacity: 1;
 }
