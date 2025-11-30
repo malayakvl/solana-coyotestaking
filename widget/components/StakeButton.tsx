@@ -11,6 +11,7 @@ export const StakeButton = () => {
     walletName: string | null;
   } | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Subscribe to global wallet state changes
   useEffect(() => {
@@ -47,7 +48,12 @@ export const StakeButton = () => {
   });
 
   const handleStake = () => {
-    if (!effectiveConnected) return alert('Connect wallet first!');
+    if (!effectiveConnected) {
+      setErrorMessage('Please connect your wallet first!');
+      // Clear the error message after 3 seconds
+      setTimeout(() => setErrorMessage(null), 3000);
+      return;
+    }
     setIsPopupOpen(true);
   };
 
@@ -59,21 +65,15 @@ export const StakeButton = () => {
     <>
       <button 
         onClick={handleStake} 
-        style={{ 
-          padding: '8px 12px', 
-          marginLeft: 8,
-          border: 'none',
-          borderRadius: '5em',
-          backgroundColor: '#ff8480',
-          color: '#ffffff',
-          fontSize: '22px',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          cursor: 'pointer'
-        }}
+        className="stake-sol-btn"
       >
         Stake SOL
       </button>
+      {errorMessage && (
+        <div className="stake-btn-error">
+          {errorMessage}
+        </div>
+      )}
       <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} />
     </>
   );

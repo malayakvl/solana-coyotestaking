@@ -179,14 +179,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       justifyContent: 'center',
       zIndex: 1000
     }}>
-      <div className="stake-popup-content" style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '400px',
-        width: '90%',
-        position: 'relative'
-      }}>
+      <div className="stake-popup-content">
+        <div className="stake-popup-header"></div>
         <button 
           onClick={onClose}
           style={{

@@ -179,14 +179,23 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       justifyContent: 'center',
       zIndex: 1000
     }}>
-      <div className="stake-popup-content" style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '400px',
-        width: '90%',
-        position: 'relative'
-      }}>
+      <div className="stake-popup-content">
+        <div className="stake-popup-header"></div>
+        <div className="stake-popup-tips">
+          This is your staking jackpot 0% comission + MEV rewards. Stake smart, earn more.
+          Your SOL deserves this kind of luck!
+        </div>
+        <div className="flex">
+          <div className="col-param">
+            Uptime
+          </div>
+          <div className="col-param">
+            Skip Rate
+          </div>
+          <div className="col-param">
+            Jito MEV score
+          </div>
+        </div>  
         <button 
           onClick={onClose}
           style={{

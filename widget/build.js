@@ -16,7 +16,8 @@ esbuild.build({
   loader: {
     '.tsx': 'tsx',
     '.ts': 'ts',
-    '.css': 'css'
+    '.css': 'css',
+    '.png': 'file'
   }
 }).then(() => console.log('✅ WidgetBundle built'))
   .catch(err => console.error(err));
