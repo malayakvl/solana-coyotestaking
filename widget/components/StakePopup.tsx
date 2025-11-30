@@ -278,7 +278,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '10px',
+            top: '-70px',
             right: '10px',
             background: 'none',
             border: 'none',
@@ -302,74 +302,57 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
             </span>
           </p>
 
-          <input
-            type="text"
-            placeholder={`${MIN_STAKE} SOL`}
-            value={amount}
-            onChange={(e) => {
-              const value = e.target.value;
-              setAmount(value);
-              
-              // Validate the amount as user types
-              if (value === '') {
-                setAmountError(null);
-              } else {
-                const num = parseFloat(value);
-                if (isNaN(num)) {
-                  setAmountError('Please enter a valid number');
-                } else if (num < MIN_STAKE) {
-                  setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
-                } else if (availableBalance !== null && num > availableBalance) {
-                  setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
-                } else {
+            <input
+              type="text"
+              placeholder={`${MIN_STAKE} SOL`}
+              value={amount}
+              onChange={(e) => {
+                const value = e.target.value;
+                setAmount(value);
+                
+                // Validate the amount as user types
+                if (value === '') {
                   setAmountError(null);
+                } else {
+                  const num = parseFloat(value);
+                  if (isNaN(num)) {
+                    setAmountError('Please enter a valid number');
+                  } else if (num < MIN_STAKE) {
+                    setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
+                  } else if (availableBalance !== null && num > availableBalance) {
+                    setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
+                  } else {
+                    setAmountError(null);
+                  }
                 }
-              }
-            }}
-            className="stake-input"
-            style={{ 
-              borderColor: amountError ? '#ff554f' : '#ccc',
-              borderWidth: amountError ? '2px' : '1px'
-            }}
-          />
-          {amountError && (
-            <div style={{ 
-              color: '#ff554f', 
-              fontSize: '14px', 
-              marginTop: '5px',
-              fontWeight: 'bold'
-            }}>
-              {amountError}
+              }}
+              className="stake-input"
+              style={{ 
+                borderColor: amountError ? '#ff554f' : '#ccc',
+                borderWidth: amountError ? '2px' : '1px'
+              }}
+            />
+            {amountError && (
+              <div style={{ 
+                color: '#ff554f', 
+                fontSize: '14px', 
+                marginTop: '5px',
+                fontWeight: 'bold'
+              }}>
+                {amountError}
+              </div>
+            )}
+            <div className="stake-button-container">
+              <button 
+                onClick={handleConfirm}
+                className="stake-submit-btn"
+              >
+                Stake
+              </button>
             </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: '20px' }}>
-            <button 
-              onClick={onClose}
-              style={{
-                padding: '8px 16px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                backgroundColor: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleConfirm}
-              style={{
-                padding: '8px 16px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: '#ff554f',
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              Confirm
-            </button>
-          </div>
+            <span className="text-footer">
+              The maximum stake is your balance minus 0.01, to ensure you have some SOL left for fucture transaction
+            </span>
           </div>
         </div>
 

@@ -10,6 +10,10 @@
   left: 19px;
   top: 2px;
 }
+.wallet-adapter-button {
+  width: 170px;
+  min-width: 170px;
+}
 
 .wallet-adapter-button-trigger {
   background: #ff554f !important;
@@ -160,4 +164,23 @@ footer .wallet-widget-class {
   font-size: 30px;
   text-align: right;
   opacity: 1;
+}
+.stake-submit-btn {
+  background-color: #5b0b0b;
+  color: #fff;
+  text-transform: uppercase;
+  border-radius: 27px;
+  border: none;
+  padding: 20px 50px;
+  margin-top: 20px;
+  text-align: center;
+  margin: 20px auto;
+  font-size: 18px;
+}
+.stake-button-container {
+  text-align: center;
+}
+.text-footer {
+  color: black;
+  font-size: 14px;
 }
