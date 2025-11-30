@@ -1,4 +1,4 @@
-"use strict";(()=>{var x=Object.defineProperty;var h=Object.getOwnPropertySymbols;var y=Object.prototype.hasOwnProperty,N=Object.prototype.propertyIsEnumerable;var b=(d,t,e)=>t in d?x(d,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):d[t]=e,w=(d,t)=>{for(var e in t||(t={}))y.call(t,e)&&b(d,e,t[e]);if(h)for(var e of h(t))N.call(t,e)&&b(d,e,t[e]);return d};var u=class{constructor(){this.isInitialized=!1;this.wallets=[];this.selectedWallet=null;this.connectedPublicKey=null;this.options={network:"mainnet-beta",theme:"light"}}init(t){if(t&&(this.options=w(w({},this.options),t)),typeof window=="undefined"){console.warn("SolanaWidget: Window object not available. Widget can only run in browser environment.");return}typeof window.React!="undefined"&&typeof window.ReactDOM!="undefined"||console.warn("SolanaWidget: React and ReactDOM not found. Please include React CDN scripts."),this.loadStyles(),this.initializeWallets(),this.isInitialized=!0,console.log("SolanaWidget initialized successfully")}initializeWallets(){var t;try{let e=[],n=[],a=[{name:"Phantom",icon:this.getPhantomIcon(),installed:typeof window.phantom!="undefined"||typeof window.navigator!="undefined"&&((t=window.navigator.wallets)==null?void 0:t.Phantom)!==void 0},{name:"Solflare",icon:this.getSolflareIcon(),installed:typeof window.solflare!="undefined"},{name:"Coinbase Wallet",icon:this.getCoinbaseIcon(),installed:typeof window.coinbaseSolana!="undefined"}];a.forEach(o=>{try{let i=this.getWalletProviderIcon(o.name);i&&(o.icon=i)}catch(i){console.warn(`Failed to get icon for ${o.name}:`,i)}}),this.wallets=a,console.log("Wallets initialized:",this.wallets)}catch(e){console.error("Failed to initialize wallets:",e),console.log("Using mock wallets as fallback"),this.wallets=[{name:"Phantom",icon:this.getPhantomIcon(),installed:!0},{name:"Solflare",icon:this.getSolflareIcon(),installed:!0},{name:"Coinbase Wallet",icon:this.getCoinbaseIcon(),installed:!0}]}}getWalletProviderIcon(t){var e,n,a,o,i,l,r;try{switch(t){case"Phantom":if(typeof window.phantom!="undefined"&&((e=window.phantom)!=null&&e.icon))return window.phantom.icon;if(typeof window.navigator!="undefined"&&((a=(n=window.navigator.wallets)==null?void 0:n.Phantom)!=null&&a.icon))return(i=(o=window.navigator.wallets)==null?void 0:o.Phantom)==null?void 0:i.icon;break;case"Solflare":if(typeof window.solflare!="undefined"&&((l=window.solflare)!=null&&l.icon))return window.solflare.icon;break;case"Coinbase Wallet":if(typeof window.coinbaseSolana!="undefined"&&((r=window.coinbaseSolana)!=null&&r.icon))return window.coinbaseSolana.icon;break}}catch(c){console.warn(`Error getting icon for ${t}:`,c)}return null}getPhantomIcon(){return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTA4IiBoZWlnaHQ9IjEwOCIgdmlld0JveD0iMCAwIDEwOCAxMDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiByeD0iMjYiIGZpbGw9IiNBQjlGRjIiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00Ni41MjY3IDY5LjkyMjlDNDIuMDA1NCA3Ni44NTA5IDM0LjQyOTIgODUuNjE4MiAyNC4zNDggODUuNjE4MkMxOS41ODI0IDg1LjYxODIgMTUgODMuNjU2MyAxNSA3NS4xMzQyQzE1IDUzLjQzMDUgNDQuNjMyNiAxOS44MzI3IDcyLjEyNjggMTkuODMyN0M4Ny43NjggMTkuODMyNyA5NCAzMC42ODQ2IDk0IDQzLjAwNzlDOTQgNTguODI1OCA4My43MzU1IDc2LjkxMjIgNzMuNTMyMSA3Ni45MTIyQzcwLjI5MzkgNzYuOTEyMiA2OC43MDUzIDc1LjEzNDIgNjguNzA1MyA3Mi4zMTRDNjguNzA1MyA3MS41NzgzIDY4LjgyNzUgNzAuNzgxMiA2OSA5MjI5QzY1LjU4OTMgNzUuODY5OSA1OC44Njg1IDgxLjM4NzggNTIuNTc1NCA4MS4zODc4QzQ3Ljk5MzIDgxLjM4NzggNDUuNjcxMyA3OC41MDYzIDQ1LjY3MTMgNzQuNDU5OEM0NS42NzEzIDcyLjk4ODQgNDUuOTc2OCA3MS40NTU2IDQ2LjUyNjcgNjkuOTIyOVpNODMuNjc2MSA0Mi41Nzk0QzgzLjY3NjEgNDYuMTcwNCA4MS41NTc1IDQ3Ljk2NTggNzkuMTg3NSA0Ny45NjU4Qzc2Ljc4MTYgNDcuOTY1OCA3NC42OTg5IDQ2LjE3MDQgNzQuNjk4OSA0Mi41Nzk0Qzc0LjY5ODkgMzguOTg4NSA3Ni43ODE2IDM3LjE5MzEgNzkuMTg3NSAzNy4xOTMxQzgxLjU1NzUgMzcuMTkzMSA4My42NzYxIDM4Ljk4ODUgODMuNjc2MSA0Mi41Nzk0Wk03MC4yMTAzIDQyLjU3OTVDNzAuMjEwMyA0Ni4xNzA0IDY4LjA5MTYgNDcuOTY1OCA2NS43MjE2IDQ3Ljk2NThDNjMuMzE1NyA0Ny45NjU4IDYxLjIzMyA0Ni4xNzA0IDYxLjIzMyA0Mi41Nzk1QzYxLjIzMyAzOC45ODg1IDYzLjMxNTcgMzcuMTkzMSA2NS43MjE2IDM3LjE5MzFDNjguMDkxNiAzNy4xOTMxIDcwLjIxMDMgMzguOTg4NSA3MC4yMTAzIDQyLjU3OTVaIiBmaWxsPSIjRkZGREY4Ii8+Cjwvc3ZnPgo="}getSolflareIcon(){return"data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJTIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMjA1MGE7c3Ryb2tlOiNmZmVmNDY7c3Ryb2tlLW1pdGVybGltaXQ6MTA7c3Ryb2tlLXdpZHRoOi41cHg7fS5jbHMtMntmaWxsOiNmZmVmNDY7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiByeD0iMTIiIHJ5PSIxMiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTI0LjIzLDI2LjQybDIuNDYtMi4zOCw0LjU5LDEuNWMzLjAxLDEsNC41MSwyLjg0LDQuNTEsNS40MywwLDEuOTYtLjc1LDMuMjYtMi4yNSw0LjkzbC0uNDYuNS4xNy0xLjE3Yy42Ny00LjI2LS41OC02LjA5LTQuNzItNy40M2wtNC4zLTEuMzhoMFpNMTguMDUsMTEuODVsMTIuNTIsNC4xNy0yLjcxLDIuNTktNi41MS0yLjE3Yy0yLjI1LS43NS0zLjAxLTEuOTYtMy4zLTQuNTF2LS4wOGgwWk0xNy4zLDMzLjA2bDIuODQtMi43MSw1LjM0LDEuNzVjMi44LjkyLDMuNzYsMi4xMywzLjQ2LDUuMThsLTExLjY1LTQuMjJoMFpNMTMuNzEsMjAuOTVjMC0uNzkuNDItMS41NCwxLjEzLTIuMTcuNzUsMS4wOSwyLjA1LDIuMDUsNC4wOSwyLjcxbDQuNDIsMS40Ni0yLjQ2LDIuMzgtNC4zNC0xLjQyYy0yLS42Ny0yLjg0LTEuNjctMi44NC0yLjk2TTI2LjgyLDQyLjg3YzkuMTgtNi4wOSwxNC4xMS0xMC4yMywxNC4xMS0xNS4zMiwwLTMuMzgtMi01LjI2LTYuNDMtNi43MmwtMy4zNC0xLjEzLDkuMTQtOC43Ny0xLjg0LTEuOTYtMi43MSwyLjM4LTEyLjgxLTQuMjJjLTMuOTcsMS4yOS04Ljk3LDUuMDktOC45Nyw4Ljg5LDAsLjQyLjA0LjgzLjE3LDEuMjktMy4zLDEuODgtNC42MywzLjYzLTQuNjMsNS44LDAsMi4wNSwxLjA5LDQuMDksNC41NSw1LjIybDIuNzUuOTItOS41Miw5LjE0LDEuODQsMS45NiwyLjk2LTIuNzEsMTQuNzMsNS4yMmgwWiIvPjwvc3ZnPg=="}getCoinbaseIcon(){return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8Y2lyY2xlIGN4PSI1MTIiIGN5PSI1MTIiIHI9IjUxMiIgZmlsbD0iIzAwNTJGRiIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTE1MiA1MTJDMTUyIDcxMC44MjMgMzEzLjE3NyA4NzIgNTEyIDg3MkM3MTAuODIzIDg3MiA4NzIgNzEwLjgyMyA4NzIgNTEyQzg3MiAzMTMuMTc3IDcxMC44MjMgMTUyIDUxMiAxNTJDMzEzLjE3NyAxNTIgMTUyIDMxMy4xNzcgMTUyIDUxMlpNNDIwIDM5NkM0MDYuNzQ1IDM5NiAzOTYgNDA2Ljc0NSAzOTYgNDIwVjYwNEMzOTYgNjE3LjI1NSA0MDYuNzQ1IDYyOCA0MjAgNjI4SDYwNEM2MTcuMjU1IDYyOCA2MjggNjE3LjI1NSA2MjggNjA0VjQyMEM2MjggNDA2Ljc0NSA2MTcuMjU1IDM5NiA2MDQgMzk2SDQyMFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo="}replaceButtons(){this.isInitialized||(console.warn("SolanaWidget: Widget not initialized. Call init() first."),this.init());let t=document.querySelectorAll(".wallet-adapter-button");console.log("Found "+t.length+" wallet buttons to replace"),t.forEach((e,n)=>{var o;let a=document.createElement("div");a.id="solana-wallet-widget-"+n,a.className="solana-wallet-widget-container",(o=e.parentNode)==null||o.replaceChild(a,e),this.renderWidget(a.id)})}loadStyles(){if(document.getElementById("solana-widget-styles"))return;let e=document.createElement("style");e.id="solana-widget-styles",e.textContent=`
+"use strict";(()=>{var f=Object.defineProperty;var m=Object.getOwnPropertySymbols;var I=Object.prototype.hasOwnProperty,b=Object.prototype.propertyIsEnumerable;var w=(r,t,e)=>t in r?f(r,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):r[t]=e,c=(r,t)=>{for(var e in t||(t={}))I.call(t,e)&&w(r,e,t[e]);if(m)for(var e of m(t))b.call(t,e)&&w(r,e,t[e]);return r};var p=class{constructor(){this.isInitialized=!1;this.options={network:"mainnet-beta",theme:"light"}}init(t){if(t&&(this.options=c(c({},this.options),t)),typeof window=="undefined"){console.warn("SolanaWidget: Window object not available. Widget can only run in browser environment.");return}this.loadStyles(),this.isInitialized=!0,console.log("SolanaWidget initialized successfully")}replaceButtons(){this.isInitialized||(console.warn("SolanaWidget: Widget not initialized. Call init() first."),this.init());let t=document.querySelectorAll(".wallet-adapter-button");console.log("Found "+t.length+" wallet buttons to replace"),t.forEach((e,a)=>{var o;let n=document.createElement("div");n.id="solana-wallet-widget-"+a,n.className="solana-wallet-widget-container",(o=e.parentNode)==null||o.replaceChild(n,e),this.renderWidget(n.id)})}loadStyles(){if(document.getElementById("solana-widget-styles"))return;let e=document.createElement("style");e.id="solana-widget-styles",e.textContent=`
       /* Import DM Sans font like in wallet adapter */
       @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
       
@@ -278,210 +278,6 @@
         color: #000;
       }
       
-      .solana-widget-popup {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-      }
-      
-      .solana-widget-popup-content {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        padding: 24px;
-        width: 90%;
-        max-width: 400px;
-      }
-      
-      .solana-widget-popup-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-      
-      .solana-widget-popup-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0;
-      }
-      
-      .solana-widget-close-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 24px;
-        line-height: 1;
-      }
-      
-      .solana-widget-input {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 16px;
-        padding: 12px;
-        width: 100%;
-        margin-bottom: 16px;
-        box-sizing: border-box;
-      }
-      
-      .solana-widget-input:focus {
-        border-color: #9945FF;
-        outline: none;
-      }
-      
-      .solana-widget-balance {
-        background: #f5f5f5;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 16px;
-      }
-      
-      .solana-widget-actions {
-        display: flex;
-        gap: 12px;
-      }
-      
-      .solana-widget-action-btn {
-        flex: 1;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      
-      .solana-widget-confirm-btn {
-        background: #9945FF;
-        color: white;
-      }
-      
-      .solana-widget-cancel-btn {
-        background: #eee;
-        color: #333;
-      }
-      
-      .solana-widget-message {
-        margin-top: 16px;
-        padding: 12px;
-        border-radius: 8px;
-        text-align: center;
-      }
-      
-      .solana-widget-message-success {
-        background: #e6f4ea;
-        color: #0a6e22;
-      }
-      
-      .solana-widget-message-error {
-        background: #fce8e6;
-        color: #c5221f;
-      }
-      
-      .solana-widget-metrics {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
-      }
-      
-      .solana-widget-metric {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-      }
-      
-      .solana-widget-metric:last-child {
-        margin-bottom: 0;
-      }
-      
-      .solana-widget-metric-label {
-        font-weight: 500;
-      }
-      
-      .solana-widget-metric-value {
-        font-weight: 600;
-      }
-      
-      .solana-wallet-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      
-      .solana-wallet-item {
-        display: flex;
-        align-items: center;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        width: 100%;
-        text-align: left;
-        border: none;
-        background: transparent;
-      }
-      
-      .solana-wallet-item:hover {
-        background-color: #f5f5f5;
-      }
-      
-      .solana-wallet-item-start-icon {
-        width: 24px;
-        height: 24px;
-        margin-right: 12px;
-        border-radius: 50%;
-      }
-      
-      .solana-wallet-item-name {
-        flex: 1;
-        font-weight: 500;
-        text-align: left;
-      }
-      
-      .solana-wallet-item-detected {
-        font-size: 12px;
-        color: #666;
-        margin-left: 8px;
-      }
-      
-      .solana-wallet-collapse {
-        height: 0;
-        overflow: hidden;
-        transition: height 250ms ease-out;
-      }
-      
-      .solana-wallet-collapse.expanded {
-        height: auto;
-      }
-      
-      .solana-wallet-connected-info {
-        background: #f0f8ff;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 16px;
-        text-align: center;
-      }
-      
-      .solana-wallet-connected-name {
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-      
-      .solana-wallet-connected-address {
-        font-family: monospace;
-        font-size: 14px;
-        color: #666;
-        word-break: break-all;
-      }
-      
       /* Styles for connected wallet button */
       .wallet-adapter-button-connected {
         background: #1a1f2e !important;
@@ -555,7 +351,38 @@
         align-items: center;
         justify-content: center;
       }
-    `,document.head.appendChild(e)}renderWidget(t){let e=document.getElementById(t);if(!e){console.error("SolanaWidget: Container with id '"+t+"' not found");return}e.innerHTML="";let n=document.createElement("div");n.className="solana-widget-container";let a=document.createElement("button");a.className="wallet-adapter-button wallet-adapter-button-trigger";let o=document.createElement("i");o.className="pi-wallet";let i=document.createElement("span");i.className="w-caption",i.textContent="Wallet",a.appendChild(o),a.appendChild(i),a.onclick=()=>this.handleConnectClick(),n.appendChild(a),e.appendChild(n);let l=document.createElement("button");l.className="solana-widget-btn",l.style.marginTop="12px",l.textContent="Stake SOL",l.onclick=()=>this.handleStakeClick(),n.appendChild(l)}handleConnectClick(){this.selectedWallet?this.showContextMenu():this.showWalletSelectionModal()}showContextMenu(){let t=document.querySelector(".wallet-adapter-dropdown");t&&document.body.removeChild(t);let e=document.createElement("div");e.className="wallet-adapter-dropdown",e.innerHTML=`
+    `,document.head.appendChild(e)}renderWidget(t){let e=document.getElementById(t);if(!e){console.error("SolanaWidget: Container with id '"+t+"' not found");return}e.innerHTML="";let a=document.createElement("div");a.className="solana-widget-container";let n=document.createElement("button");n.className="wallet-adapter-button wallet-adapter-button-trigger";let o=document.createElement("i");o.className="pi-wallet";let i=document.createElement("span");i.className="w-caption",i.textContent="Wallet",n.appendChild(o),n.appendChild(i),n.onclick=()=>this.handleConnectClick(),a.appendChild(n),e.appendChild(a);let l=document.createElement("button");l.className="solana-widget-btn",l.style.marginTop="12px",l.textContent="Stake SOL",l.onclick=()=>this.handleStakeClick(),a.appendChild(l)}handleConnectClick(){this.showWalletSelectionModal()}showWalletSelectionModal(){let t=document.createElement("div");t.className="wallet-adapter-modal wallet-adapter-modal-fade-in";let e="",a=this.getAvailableWallets();a.forEach((l,d)=>{e+=`
+        <li>
+          <button class="wallet-adapter-button" data-wallet-name="${l.name}">
+            <div style="display: flex; align-items: center;">
+              <i class="wallet-adapter-button-start-icon">
+                <img src="${l.icon}" alt="${l.name} icon" style="width:24px;height:24px;border-radius:50%;">
+              </i>
+              <span class="wallet-adapter-button-name">${l.name}</span>
+            </div>
+            ${l.installed?'<span style="margin-left: auto;">Detected</span>':""}
+          </button>
+        </li>
+      `}),t.innerHTML=`
+      <div class="wallet-adapter-modal-overlay"></div>
+      <div class="wallet-adapter-modal-container">
+        <div class="wallet-adapter-modal-wrapper">
+          <button class="wallet-adapter-modal-button-close">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 12.461L8.3 6.772l5.234-5.233L12.006 0 6.772 5.234 1.54 0 0 1.539l5.234 5.233L0 12.006l1.539 1.528L6.772 8.3l5.69 5.7L14 12.461z" fill="currentColor"/>
+            </svg>
+          </button>
+          <h1 class="wallet-adapter-modal-title">Connect a wallet on Solana to continue</h1>
+          <ul class="wallet-adapter-modal-list">
+            ${e}
+          </ul>
+        </div>
+      </div>
+    `;let n=t.querySelector(".wallet-adapter-modal-button-close");n&&n.addEventListener("click",()=>{document.body.removeChild(t)}),t.querySelectorAll(".wallet-adapter-button").forEach(l=>{l.addEventListener("click",d=>{let s=d.currentTarget.getAttribute("data-wallet-name")||"",g=a.find(h=>h.name===s);g&&this.selectWallet(g),document.body.removeChild(t)})});let i=t.querySelector(".wallet-adapter-modal-overlay");i&&i.addEventListener("click",()=>{document.body.removeChild(t)}),document.body.appendChild(t)}getAvailableWallets(){let t=[];return typeof window.phantom!="undefined"?t.push({name:"Phantom",icon:this.getWalletIcon("Phantom"),installed:!0}):t.push({name:"Phantom",icon:this.getWalletIcon("Phantom"),installed:!1}),typeof window.solflare!="undefined"?t.push({name:"Solflare",icon:this.getWalletIcon("Solflare"),installed:!0}):t.push({name:"Solflare",icon:this.getWalletIcon("Solflare"),installed:!1}),typeof window.coinbaseSolana!="undefined"?t.push({name:"Coinbase Wallet",icon:this.getWalletIcon("Coinbase Wallet"),installed:!0}):t.push({name:"Coinbase Wallet",icon:this.getWalletIcon("Coinbase Wallet"),installed:!1}),t}getWalletIcon(t){var e,a,n;try{switch(t){case"Phantom":if(typeof window.phantom!="undefined"&&((e=window.phantom)!=null&&e.icon))return window.phantom.icon;break;case"Solflare":if(typeof window.solflare!="undefined"&&((a=window.solflare)!=null&&a.icon))return window.solflare.icon;break;case"Coinbase Wallet":if(typeof window.coinbaseSolana!="undefined"&&((n=window.coinbaseSolana)!=null&&n.icon))return window.coinbaseSolana.icon;break}}catch(o){console.warn(`Error getting icon for ${t}:`,o)}switch(t){case"Phantom":return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMkM2LjQ4IDAgMiA0LjQ4IDIgMTBTNi40OCAyMCAxMiAyMCAyMiAxNS41MiAyMiAxMFMyMS41MiAyIDEyIDJ6TTEyIDJDMTcuNTIgMiAyMiA2LjQ4IDIyIDEwUzE3LjUyIDIwIDEyIDIwIDIgMTUuNTIgMiAxMFMyLjQ4IDIgMTIgMnpNMTIgNkE2IDYgMCAxMDExIDE4QTYgNiAwIDAwMTIgNnpNMTIgOEE0IDQgMCAxMTExIDE2QzExLjU1IDE2IDEyIDE1LjU1IDEyIDh6IiBmaWxsPSIjQkMzRDk5Ii8+Cjwvc3ZnPg==";case"Solflare":return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMkM2LjQ4IDAgMiA0LjQ4IDIgMTBzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnpNMTIgMjBjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4eiIgZmlsbD0iI0ZGQTUwMCIvPgo8cGF0aCBkPSJNMTIgNkE2IDYgMCAxMDExIDE4QTYgNiAwIDAwMTIgNnpNMTIgOEE0IDQgMCAxMTExIDE2QzExLjU1IDE2IDEyIDE1LjU1IDEyIDh6IiBmaWxsPSIjRkZBNTAwIi8+Cjwvc3ZnPg==";case"Coinbase Wallet":return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMkM2LjQ4IDAgMiA0LjQ4IDIgMTBzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnpNMTIgMjBjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4eiIgZmlsbD0iIzAwNTJGRiIvPgo8cGF0aCBkPSJNMTIgNkE2IDYgMCAxMDExIDE4QTYgNiAwIDAwMTIgNnpNMTIgOEE0IDQgMCAxMTExIDE2QzExLjU1IDE2IDEyIDE1LjU1IDEyIDh6IiBmaWxsPSIjMDA1MkZGIi8+Cjwvc3ZnPg==";default:return"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMkM2LjQ4IDAgMiA0LjQ4IDIgMTBzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnpNMTIgMjBjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4eiIgZmlsbD0iIzAwNTJGRiIvPgo8cGF0aCBkPSJNMTIgNkE2IDYgMCAxMDExIDE4QTYgNiAwIDAwMTIgNnpNMTIgOEE0IDQgMCAxMTExIDE2QzExLjU1IDE2IDEyIDE1LjU1IDEyIDh6IiBmaWxsPSIjMDA1MkZGIi8+Cjwvc3ZnPg=="}}selectWallet(t){let e="DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV";console.log("Wallet selected:",t.name),this.updateButtonLabels(t),this.options.onConnect&&this.options.onConnect(e)}updateButtonLabels(t){document.querySelectorAll(".wallet-adapter-button-trigger").forEach(a=>{a.className="wallet-adapter-button wallet-adapter-button-trigger wallet-adapter-button-connected",a.innerHTML="";let n=document.createElement("i");n.className="wallet-adapter-button-start-icon";let o=document.createElement("img");o.src=t.icon,o.alt=t.name+" icon",o.style.width="24px",o.style.height="24px",o.style.borderRadius="50%",n.appendChild(o),a.appendChild(n);let i=document.createElement("span");i.className="wallet-adapter-button-name",i.textContent=t.name,a.appendChild(i);let l=document.createElement("i");l.className="wallet-adapter-button-end-icon",l.innerHTML=`
+        <svg width="10" height="6" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      `,a.appendChild(l),a.onclick=()=>this.showContextMenu(t)})}showContextMenu(t){let e=document.querySelector(".wallet-adapter-dropdown");e&&document.body.removeChild(e);let a=document.createElement("div");a.className="wallet-adapter-dropdown",a.innerHTML=`
       <ul class="wallet-adapter-dropdown-list">
         <li class="wallet-adapter-dropdown-list-item" data-action="copy">
           <i class="wallet-adapter-dropdown-list-item-icon">
@@ -587,59 +414,4 @@
           <span>Disconnect</span>
         </li>
       </ul>
-    `;let n=document.querySelector(".wallet-adapter-button-connected");if(n){let i=n.getBoundingClientRect();e.style.position="absolute",e.style.top=i.bottom+window.scrollY+"px",e.style.left=i.left+window.scrollX+"px",e.style.display="block"}e.querySelectorAll(".wallet-adapter-dropdown-list-item").forEach(i=>{i.addEventListener("click",l=>{let r=l.currentTarget.getAttribute("data-action");this.handleContextMenuAction(r||""),document.body.removeChild(e)})});let o=i=>{!e.contains(i.target)&&!i.target.closest(".wallet-adapter-button-connected")&&(document.body.removeChild(e),document.removeEventListener("click",o))};document.addEventListener("click",o),document.body.appendChild(e)}handleContextMenuAction(t){switch(t){case"copy":this.connectedPublicKey&&navigator.clipboard.writeText(this.connectedPublicKey).then(()=>{console.log("Address copied to clipboard")}).catch(e=>{console.error("Failed to copy address: ",e)});break;case"change":this.showWalletSelectionModal();break;case"disconnect":this.selectedWallet=null,this.connectedPublicKey=null,this.updateButtonLabels(),this.options.onDisconnect&&this.options.onDisconnect();break;default:console.warn("Unknown context menu action:",t)}}showWalletSelectionModal(){let t=document.createElement("div");t.className="wallet-adapter-modal wallet-adapter-modal-fade-in";let e=this.wallets.filter(s=>s.installed),n=this.wallets.filter(s=>!s.installed),a="";e.forEach((s,p)=>{a+=`
-        <li>
-          <button class="wallet-adapter-button" data-wallet-index="${p}">
-            <div style="display: flex; align-items: center;">
-              <i class="wallet-adapter-button-start-icon">
-                <img src="${s.icon}" alt="${s.name} icon" style="width:24px;height:24px;border-radius:50%;">
-              </i>
-              <span class="wallet-adapter-button-name">${s.name}</span>
-            </div>
-            ${s.installed?'<span style="margin-left: auto;">Detected</span>':""}
-          </button>
-        </li>
-      `});let o="";n.forEach((s,p)=>{let g=e.length+p;o+=`
-        <li>
-          <button class="wallet-adapter-button" data-wallet-index="${g}">
-            <div style="display: flex; align-items: center;">
-              <i class="wallet-adapter-button-start-icon">
-                <img src="${s.icon}" alt="${s.name} icon" style="width:24px;height:24px;border-radius:50%;">
-              </i>
-              <span class="wallet-adapter-button-name">${s.name}</span>
-            </div>
-          </button>
-        </li>
-      `}),t.innerHTML=`
-      <div class="wallet-adapter-modal-overlay"></div>
-      <div class="wallet-adapter-modal-container">
-        <div class="wallet-adapter-modal-wrapper">
-          <button class="wallet-adapter-modal-button-close">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 12.461L8.3 6.772l5.234-5.233L12.006 0 6.772 5.234 1.54 0 0 1.539l5.234 5.233L0 12.006l1.539 1.528L6.772 8.3l5.69 5.7L14 12.461z" fill="currentColor"/>
-            </svg>
-          </button>
-          <h1 class="wallet-adapter-modal-title">Connect a wallet on Solana to continue</h1>
-          <ul class="wallet-adapter-modal-list">
-            ${a}
-            ${n.length>0?`
-              <div class="wallet-adapter-collapse" id="wallet-adapter-modal-collapse" style="display: none;">
-                ${o}
-              </div>
-            `:""}
-          </ul>
-          ${n.length>0?`
-            <button class="wallet-adapter-modal-list-more" id="wallet-adapter-modal-list-more">
-              <span>More options</span>
-              <svg width="13" height="7" viewBox="0 0 13 7" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0.71418 1.626L5.83323 6.26188C5.91574 6.33657 6.0181 6.39652 6.13327 6.43762C6.24844 6.47872 6.37371 6.5 6.50048 6.5C6.62725 6.5 6.75252 6.47872 6.8677 6.43762C6.98287 6.39652 7.08523 6.33657 7.16774 6.26188L12.2868 1.626C12.7753 1.1835 12.3703 0.5 11.6195 0.5H1.37997C0.629216 0.5 0.224175 1.1835 0.71418 1.626Z"></path>
-              </svg>
-            </button>
-          `:""}
-        </div>
-      </div>
-    `;let i=t.querySelector(".wallet-adapter-modal-button-close");i&&i.addEventListener("click",()=>{document.body.removeChild(t)}),t.querySelectorAll(".wallet-adapter-button").forEach(s=>{s.addEventListener("click",p=>{let g=parseInt(p.currentTarget.getAttribute("data-wallet-index")||"0"),f=this.wallets[g];this.selectWallet(f),document.body.removeChild(t)})});let r=t.querySelector("#wallet-adapter-modal-list-more"),c=t.querySelector("#wallet-adapter-modal-collapse");r&&c&&r.addEventListener("click",()=>{c.style.display==="none"?(c.style.display="block",r.classList.add("wallet-adapter-modal-list-more-icon-rotate")):(c.style.display="none",r.classList.remove("wallet-adapter-modal-list-more-icon-rotate"))});let m=t.querySelector(".wallet-adapter-modal-overlay");m&&m.addEventListener("click",()=>{document.body.removeChild(t)}),document.body.appendChild(t)}selectWallet(t){this.selectedWallet=t,this.connectedPublicKey="DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV",console.log("Wallet selected:",t.name),this.updateButtonLabels(),this.options.onConnect&&this.options.onConnect(this.connectedPublicKey)}updateButtonLabels(){document.querySelectorAll(".wallet-adapter-button-trigger").forEach(e=>{if(this.selectedWallet){e.className="wallet-adapter-button wallet-adapter-button-trigger wallet-adapter-button-connected",e.innerHTML="";let n=document.createElement("i");n.className="wallet-adapter-button-start-icon";let a=document.createElement("img");a.src=this.selectedWallet.icon,a.alt=this.selectedWallet.name+" icon",a.style.width="24px",a.style.height="24px",a.style.borderRadius="50%",n.appendChild(a),e.appendChild(n);let o=document.createElement("span");o.className="wallet-adapter-button-name",o.textContent=this.selectedWallet.name,e.appendChild(o);let i=document.createElement("i");i.className="wallet-adapter-button-end-icon",i.innerHTML=`
-          <svg width="10" height="6" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        `,e.appendChild(i),e.onclick=()=>this.handleConnectClick()}else{e.className="wallet-adapter-button wallet-adapter-button-trigger",e.innerHTML="";let n=document.createElement("i");n.className="pi-wallet",e.appendChild(n);let a=document.createElement("span");a.className="w-caption",a.textContent="Wallet",e.appendChild(a),e.onclick=()=>this.handleConnectClick()}})}handleStakeClick(){if(!this.selectedWallet){alert("Please connect a wallet first");return}this.showStakePopup()}showStakePopup(){var o;let t=document.createElement("div");t.className="solana-widget-popup",t.innerHTML='<div class="solana-widget-popup-content">  <div class="solana-widget-popup-header">    <h2 class="solana-widget-popup-title">Stake SOL</h2>    <button class="solana-widget-close-btn">&times;</button>  </div>    <div class="solana-wallet-connected-info">    <div class="solana-wallet-connected-name">Connected to '+(((o=this.selectedWallet)==null?void 0:o.name)||"Unknown Wallet")+'</div>    <div class="solana-wallet-connected-address">'+(this.connectedPublicKey||"Unknown Address")+'</div>  </div>    <div class="solana-widget-metrics">    <div class="solana-widget-metric">      <span class="solana-widget-metric-label">Uptime:</span>      <span class="solana-widget-metric-value">99.8%</span>    </div>    <div class="solana-widget-metric">      <span class="solana-widget-metric-label">Skip Rate:</span>      <span class="solana-widget-metric-value">0.2%</span>    </div>    <div class="solana-widget-metric">      <span class="solana-widget-metric-label">MEV Score:</span>      <span class="solana-widget-metric-value">8.5</span>    </div>  </div>    <div class="solana-widget-balance">    <div>Available Balance: Checking...</div>    <div id="solana-widget-balance-amount"></div>  </div>    <input type="number" class="solana-widget-input" placeholder="Amount in SOL" min="0.01" step="0.01">    <div class="solana-widget-actions">    <button class="solana-widget-action-btn solana-widget-confirm-btn">Confirm</button>    <button class="solana-widget-action-btn solana-widget-cancel-btn">Cancel</button>  </div></div>';let e=t.querySelector(".solana-widget-close-btn"),n=t.querySelector(".solana-widget-cancel-btn"),a=t.querySelector(".solana-widget-confirm-btn");e&&e.addEventListener("click",()=>{document.body.removeChild(t)}),n&&n.addEventListener("click",()=>{document.body.removeChild(t)}),a&&a.addEventListener("click",()=>{let i=t.querySelector(".solana-widget-input"),l=parseFloat(i.value);if(isNaN(l)||l<.01){this.showMessage(t,"Please enter a valid amount (minimum 0.01 SOL)","error");return}this.showMessage(t,"Staking "+l+" SOL...","success")}),document.body.appendChild(t),this.fetchWalletBalance()}async fetchWalletBalance(){if(!this.connectedPublicKey){console.error("No connected public key");return}let t=document.getElementById("solana-widget-balance-amount");if(!t){console.error("Balance element not found");return}try{let e=t.parentElement;if(e&&(e.innerHTML='<div>Available Balance: Checking...</div><div id="solana-widget-balance-amount"></div>'),typeof window.solanaWeb3=="undefined")throw console.error("Solana Web3.js library not found"),new Error("Solana Web3.js library not found. Please include the Solana Web3.js CDN script.");let{Connection:n,PublicKey:a,LAMPORTS_PER_SOL:o}=window.solanaWeb3,i=new n("http://103.167.235.81/api/rpc-proxy"),l=new a(this.connectedPublicKey),c=await i.getBalance(l)/o;e&&(e.innerHTML="<div>Available Balance: "+c.toFixed(3)+" SOL</div>")}catch(e){console.error("Failed to fetch wallet balance:",e);let n=t.parentElement;n&&(n.innerHTML="<div>Available Balance: Error fetching balance</div>")}}showMessage(t,e,n){let a=t.querySelector(".solana-widget-message");a&&a.remove();let o=document.createElement("div");o.className="solana-widget-message solana-widget-message-"+n,o.textContent=e;let i=t.querySelector(".solana-widget-popup-content");i&&(i.appendChild(o),setTimeout(()=>{o.parentNode&&o.parentNode.removeChild(o)},3e3))}},M=new u;window.SolanaWalletWidget={init:d=>M.init(d),replaceButtons:()=>M.replaceButtons()};document.addEventListener("DOMContentLoaded",function(){console.log("SolanaWalletWidget: Auto-initializing...");try{window.SolanaWalletWidget.init(),window.SolanaWalletWidget.replaceButtons()}catch(d){console.error("SolanaWalletWidget auto-initialization failed:",d);try{window.SolanaWalletWidget.replaceButtons()}catch(t){console.error("SolanaWalletWidget button replacement failed:",t)}}});})();
+    `;let n=document.querySelector(".wallet-adapter-button-connected");if(n){let l=n.getBoundingClientRect();a.style.position="absolute",a.style.top=l.bottom+window.scrollY+"px",a.style.left=l.left+window.scrollX+"px",a.style.display="block"}a.querySelectorAll(".wallet-adapter-dropdown-list-item").forEach(l=>{l.addEventListener("click",d=>{let s=d.currentTarget.getAttribute("data-action");this.handleContextMenuAction(s||"",t),document.body.removeChild(a)})});let i=l=>{!a.contains(l.target)&&!l.target.closest(".wallet-adapter-button-connected")&&(document.body.removeChild(a),document.removeEventListener("click",i))};document.addEventListener("click",i),document.body.appendChild(a)}handleContextMenuAction(t,e){switch(t){case"copy":navigator.clipboard.writeText("DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV").then(()=>{console.log("Address copied to clipboard")}).catch(a=>{console.error("Failed to copy address: ",a)});break;case"change":this.showWalletSelectionModal();break;case"disconnect":this.resetButtonLabels(),this.options.onDisconnect&&this.options.onDisconnect();break;default:console.warn("Unknown context menu action:",t)}}resetButtonLabels(){document.querySelectorAll(".wallet-adapter-button-trigger").forEach(e=>{e.className="wallet-adapter-button wallet-adapter-button-trigger",e.innerHTML="";let a=document.createElement("i");a.className="pi-wallet",e.appendChild(a);let n=document.createElement("span");n.className="w-caption",n.textContent="Wallet",e.appendChild(n),e.onclick=()=>this.handleConnectClick()})}handleStakeClick(){alert("Please connect a wallet first to stake SOL")}},u=new p;window.SolanaWalletWidget={init:r=>u.init(r),replaceButtons:()=>u.replaceButtons()};document.addEventListener("DOMContentLoaded",function(){console.log("SolanaWalletWidget: Auto-initializing...");try{window.SolanaWalletWidget.init(),window.SolanaWalletWidget.replaceButtons()}catch(r){console.error("SolanaWalletWidget auto-initialization failed:",r);try{window.SolanaWalletWidget.replaceButtons()}catch(t){console.error("SolanaWalletWidget button replacement failed:",t)}}});})();

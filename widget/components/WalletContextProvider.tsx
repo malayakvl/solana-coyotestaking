@@ -1,21 +1,37 @@
-import React, { FC, ReactNode } from 'react';
+'use client';
+
+import React, { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter, CoinbaseWalletAdapter } from '@solana/wallet-adapter-wallets';
 
-const NETWORK = 'https://api.mainnet-beta.solana.com';
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  CoinbaseWalletAdapter
+} from '@solana/wallet-adapter-wallets';
 
-export const WalletContextProvider: FC<{children: ReactNode}> = ({ children }) => {
-  const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter(), new CoinbaseWalletAdapter()];
+interface Props {
+  children: ReactNode;
+}
+
+const RPC_ENDPOINT = 'http://103.167.235.81/api/rpc-proxy';
+
+export const WalletContextProvider: FC<Props> = ({ children }) => {
+  // Memoized wallets array to prevent re-instantiation on every render
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new CoinbaseWalletAdapter()
+    ],
+    []
+  );
+
   return (
-    <ConnectionProvider endpoint={NETWORK}>
+    <ConnectionProvider endpoint={RPC_ENDPOINT}>
       <WalletProvider wallets={wallets} autoConnect={false}>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
 };
-
-window.WalletContextProvider = WalletContextProvider;

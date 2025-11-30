@@ -31,7 +31,7 @@ export default function Home() {
 
         <button
           onClick={() => setPopupOpen(true)}
-          style={{ padding:'8px 16px', background:'green', color:'white', borderRadius:6 }}
+          className="stake-sol-btn"
         >
           Stake SOL
         </button>

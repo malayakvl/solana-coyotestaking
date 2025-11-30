@@ -11,11 +11,12 @@ esbuild.build({
   define: {
     'process.env.NODE_ENV': '"production"', // реакту сказать, что это продакшн
   },
+  // Mark node-specific packages as external for browser
   external: ['crypto', 'stream'],
   loader: {
     '.tsx': 'tsx',
     '.ts': 'ts',
     '.css': 'css'
-  },
+  }
 }).then(() => console.log('✅ WidgetBundle built'))
   .catch(err => console.error(err));

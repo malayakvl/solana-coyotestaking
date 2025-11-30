@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Solana Wallet Widget Test</title>
+</head>
+<body>
+  <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1>Clean Solana Wallet Widget Demo</h1>
+    <p>This is a clean demo showing the standalone Solana Wallet Widget working correctly.</p>
+    
+    <!-- These buttons will be automatically replaced by the widget -->
+    <p>Wallet button that will be replaced:</p>
+    <button class="wallet-adapter-button">Connect Wallet</button>
+    
+    <p>Another wallet button:</p>
+    <button class="wallet-adapter-button">Connect Another Wallet</button>
+  </div>
+
+  <!-- Widget script -->
+  <script src="dist/solana-widget.js"></script>
+  
+  <script>
+    // The widget auto-initializes, but we can also customize it
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Widget should be working now!');
+      
+      // Optional: Customize the widget behavior
+      if (window.SolanaWalletWidget) {
+        window.SolanaWalletWidget.init({
+          network: 'mainnet-beta',
+          onConnect: function(publicKey) {
+            console.log('Wallet connected with public key:', publicKey);
+            alert('Wallet connected! Public key: ' + publicKey);
+          },
+          onDisconnect: function() {
+            console.log('Wallet disconnected');
+            alert('Wallet disconnected');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

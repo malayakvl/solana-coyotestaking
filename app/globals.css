@@ -85,3 +85,37 @@ button.wallet-adapter-modal-button-close:not(.custom) svg {
 footer .wallet-widget-class {
   padding-top: 30px;
 }
+.stake-sol-btn {
+  border: none;
+  border-radius: 5em;
+  background: #ff554f !important;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff !important;
+  padding: 20px 55px;
+}
+.stake-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.stake-popup-content {
+  background-color: #fff;
+  width: 520px;
+}
+.stake-popup-header-logo {
+  background-image: url(../public/popup/popup-top.png);
+  background-repeat: no-repeat;
+  width: 517px;
+  height: 314px;
+  position: absolute;
+}

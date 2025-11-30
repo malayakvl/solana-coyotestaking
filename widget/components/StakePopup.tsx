@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
   Connection,
@@ -8,11 +8,9 @@ import {
   PublicKey,
   Transaction,
   Keypair,
-  StakeProgram,
-  Authorized,
-  Lockup
+  StakeProgram
 } from '@solana/web3.js';
-import { StakeButton } from './StakeButton'; // 👈 Импортируем локально
+import { StakeButton } from './StakeButton';
 
 const VOTE_ACCOUNT = new PublicKey('53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWag6PbGHnfvR');
 const MIN_STAKE = 0.01;
@@ -26,33 +24,47 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+
   const wallet = useWallet();
 
-  // Используем proxy роут Laravel
-  const connection = new Connection('http://103.167.235.81/api/rpc-proxy');
+  // Мемоизированное подключение к RPC (иначе на каждом рендере создается новый Connection)
+  const connection = useMemo(
+    () => new Connection('http://103.167.235.81/api/rpc-proxy'),
+    []
+  );
 
-  // Получение баланса кошелька
+  // Получение текущего баланса
   useEffect(() => {
     if (!isOpen || !wallet.connected || !wallet.publicKey) return;
+
+    let isMounted = true;
 
     const fetchBalance = async () => {
       try {
         const lamports = await connection.getBalance(wallet.publicKey);
-        setAvailableBalance(lamports / LAMPORTS_PER_SOL);
+        if (isMounted) {
+          setAvailableBalance(lamports / LAMPORTS_PER_SOL);
+        }
       } catch (err) {
         console.error('Ошибка получения баланса:', err);
-        setAvailableBalance(null);
+        if (isMounted) setAvailableBalance(null);
       }
     };
 
     fetchBalance();
-    const interval = setInterval(fetchBalance, 15000); // обновляем каждые 15 сек
-    return () => clearInterval(interval);
-  }, [isOpen, wallet.connected, wallet.publicKey]);
 
-  // Обработчик стейка
+    const interval = setInterval(fetchBalance, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isOpen, wallet.connected, wallet.publicKey, connection]);
+
+  // Обработчик отправки стейка
   const handleConfirm = async () => {
     const num = parseFloat(amount);
+
+    // Валидация
     if (isNaN(num) || num < MIN_STAKE) {
       setMessage(`❌ Минимум ${MIN_STAKE} SOL`);
       return;
@@ -68,24 +80,32 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
     try {
       setMessage('🔄 Подготовка транзакции...');
+
+      // Rent-exempt — динамический, не hardcode!
       const stakeAccount = Keypair.generate();
-      const rentExempt = 0.00228288 * LAMPORTS_PER_SOL;
+      const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+
       const lamports = num * LAMPORTS_PER_SOL + rentExempt;
 
-      const createTx = StakeProgram.createAccount({
+      // 1. Создание аккаунта для стейка
+      const createIx = StakeProgram.createAccount({
         fromPubkey: wallet.publicKey,
         stakePubkey: stakeAccount.publicKey,
-        authorized: { staker: wallet.publicKey, withdrawer: wallet.publicKey },
+        authorized: {
+          staker: wallet.publicKey,
+          withdrawer: wallet.publicKey
+        },
         lamports
       });
 
-      const delegateTx = StakeProgram.delegate({
+      // 2. Делегирование на валидатора
+      const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
         authorizedPubkey: wallet.publicKey,
         votePubkey: VOTE_ACCOUNT
       });
 
-      const transaction = new Transaction().add(createTx, delegateTx);
+      const tx = new Transaction().add(createIx, delegateIx);
 
       if (!window.confirm(`Вы хотите застейкать ${num} SOL на валидатор?`)) {
         setMessage('❌ Пользователь отменил стейк');
@@ -93,11 +113,17 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       }
 
       setMessage('⏳ Отправка транзакции...');
-      const signature = await wallet.sendTransaction(transaction, connection, { signers: [stakeAccount] });
+
+      const signature = await wallet.sendTransaction(tx, connection, {
+        signers: [stakeAccount]
+      });
+
       await connection.confirmTransaction(signature, 'finalized');
 
       setMessage(`✅ Stake успешно отправлен! Tx: ${signature}`);
-      onClose();
+
+      // Закрываем попап спустя 1 сек
+      setTimeout(onClose, 1000);
 
     } catch (err: unknown) {
       console.error(err);
@@ -108,30 +134,34 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position:'fixed', top:0, left:0, right:0, bottom:0,
-      background:'rgba(0,0,0,0.5)', display:'flex',
-      justifyContent:'center', alignItems:'center', zIndex:9999
-    }}>
-      <div style={{ background:'white', padding:20, borderRadius:10, minWidth:320 }}>
+    <div className="stake-popup-overlay">
+      <div className="stake-popup-content">
+
         <h2>Stake SOL</h2>
         <p>Wallet: {wallet.connected ? wallet.publicKey?.toBase58() : 'Not connected'}</p>
-        <p>Available balance: {availableBalance !== null ? availableBalance.toFixed(3) + ' SOL' : wallet.connected ? 'Loading...' : 'Connect wallet'}</p>
+        <p>
+          Available balance:{' '}
+          {availableBalance !== null
+            ? `${availableBalance.toFixed(3)} SOL`
+            : wallet.connected
+              ? 'Loading...'
+              : 'Connect wallet'}
+        </p>
 
         <input
           type="number"
           placeholder={`${MIN_STAKE} SOL`}
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          style={{ width:'100%', padding:8, marginBottom:12 }}
+          style={{ width: '100%', padding: 8, marginBottom: 12 }}
         />
 
-        <div style={{ display:'flex', justifyContent:'flex-end', gap:10 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={onClose}>Cancel</button>
           <StakeButton onClick={handleConfirm} />
         </div>
 
-        {message && <p style={{ marginTop:12 }}>{message}</p>}
+        {message && <p style={{ marginTop: 12 }}>{message}</p>}
       </div>
     </div>
   );

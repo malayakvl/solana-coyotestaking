@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Test Page</title>
+  <link rel="stylesheet" href="./dist/bundle.iife.css">
+  <style>
+    header, main {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    .wallet-wrapper, .stake-wrapper {
+      display: inline-block;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header id="header">
+    <h2>Header</h2>
+    <div class="wallet-wrapper">
+      <button class="wallet-adapter-button">Wallet</button>
+    </div>
+  </header>
+
+  <main id="content">
+    <h2>Content Area</h2>
+    <div class="wallet-wrapper">
+      <button class="wallet-adapter-button">Wallet</button>
+    </div>
+    <div class="stake-wrapper">
+      <button class="stake-button">Stake SOL</button>
+    </div>
+  </main>
+
+  <script src="./dist/bundle.iife.js" defer></script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const bundle = window.WidgetBundle;
+      if (!bundle) return console.error('WidgetBundle not found');
+
+      // Викликаємо replaceButtons з bundle
+      if (bundle.replaceButtons) {
+        bundle.replaceButtons();
+      }
+    });
+  </script>
+</body>
+</html>

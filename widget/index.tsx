@@ -1,40 +1,59 @@
-// index.tsx - Entry point for widget bundle
-'use strict';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { WalletContextProvider } from './components/WalletContextProvider';
+import { ConnectButton } from './components/ConnectButton';
+import { StakeButton } from './components/StakeButton';
+import './globals.css';
 
-// Use global React and ReactDOM from CDN
-const React = window.React;
-const ReactDOM = window.ReactDOM;
+// Один глобальний root для всіх кнопок
+let globalRoot: ReactDOM.Root | null = null;
 
-// Import components from window globals (set by individual component files)
-const { WalletContextProvider } = window;
-const { ConnectButton } = window;
-const { StakePopup } = window;
+export const replaceButtons = () => {
+  const containerId = 'wallet-global-root';
+  let container = document.getElementById(containerId);
 
-// Create the main widget app component
-const WalletApp = () => {
-  return React.createElement(
-    WalletContextProvider,
-    null,
-    React.createElement(ConnectButton, null),
-    React.createElement(StakePopup, { isOpen: false, onClose: () => {} })
-  );
-};
+  if (!container) {
+    container = document.createElement('div');
+    container.id = containerId;
+    document.body.appendChild(container);
+  }
 
-// Create root container and render
-const rootContainer = document.createElement('div');
-rootContainer.id = 'solana-wallet-widget';
-document.body.appendChild(rootContainer);
-const root = ReactDOM.createRoot(rootContainer);
+  if (!globalRoot) {
+    globalRoot = ReactDOM.createRoot(container);
 
-// Create and export the WidgetBundle
-const WidgetBundle = {
-  mountWidget: () => {
-    console.log('Mounting Solana Wallet Widget...');
-    root.render(React.createElement(WalletApp));
+    // Збираємо кнопки на сторінці
+    const walletButtons = Array.from(document.querySelectorAll('.wallet-adapter-button')).map((btn, i) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'inline-block'; // зберігаємо позицію
+      btn.replaceWith(wrapper);
+      return <ConnectButton key={`wallet-${i}`} />;
+    });
+
+    const stakeButtons = Array.from(document.querySelectorAll('.stake-button')).map((btn, i) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'inline-block';
+      btn.replaceWith(wrapper);
+      return <StakeButton key={`stake-${i}`} onClick={() => console.log('Stake clicked')} />;
+    });
+
+    // Один React root з WalletContextProvider
+    globalRoot.render(
+      <WalletContextProvider>
+        <div id="widget-buttons-wrapper">
+          {walletButtons}
+          {stakeButtons}
+        </div>
+      </WalletContextProvider>
+    );
   }
 };
 
-// Make it available globally
-window.WidgetBundle = WidgetBundle;
-
-console.log('WidgetBundle created and attached to window:', window.WidgetBundle);
+// Глобально для WordPress
+if (typeof window !== 'undefined') {
+  (window as any).WidgetBundle = {
+    replaceButtons,
+    ConnectButton,
+    StakeButton,
+    WalletContextProvider
+  };
+}
