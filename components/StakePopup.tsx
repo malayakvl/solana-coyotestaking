@@ -75,18 +75,20 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
   // Получение баланса кошелька
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
 
     const fetchBalance = async () => {
       if (!wallet.connected || !wallet.publicKey) {
         setAvailableBalance(null);
         return;
       }
+      
       try {
         const lamports = await connection.getBalance(wallet.publicKey);
-        setAvailableBalance(lamports / LAMPORTS_PER_SOL);
-        console.log('Wallet connected:', wallet.publicKey.toBase58());
-        console.log('Balance:', lamports / LAMPORTS_PER_SOL);
+        const balanceInSol = lamports / LAMPORTS_PER_SOL;
+        setAvailableBalance(balanceInSol);
       } catch (err) {
         console.error('Ошибка получения баланса:', err);
         setAvailableBalance(null);

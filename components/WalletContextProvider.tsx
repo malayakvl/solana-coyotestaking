@@ -9,7 +9,7 @@ import {
   CoinbaseWalletAdapter
 } from '@solana/wallet-adapter-wallets';
 
-const NETWORK = 'https://api.mainnet-beta.solana.com';
+const NETWORK = 'http://103.167.235.81/api/rpc-proxy';
 
 interface Props {
   children: ReactNode;
