@@ -61,8 +61,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   }, []);
 
   // Determine which state to use (global state is the absolute truth)
-  const effectiveConnected = globalWalletState?.connected ?? wallet.connected;
-  const effectivePublicKey = globalWalletState?.publicKey ?? (wallet.publicKey?.toBase58() ?? null);
+  const effectiveConnected = globalWalletState?.connected ?? false;
+  const effectivePublicKey = globalWalletState?.publicKey ?? null;
 
   // Мемоизированное подключение к RPC (иначе на каждом рендере создается новый Connection)
   const connection = useMemo(
@@ -70,7 +70,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     []
   );
 
-  // Получение текущего баланса
+  // Update the useEffect for balance fetching to depend on global state
   useEffect(() => {
     if (!isOpen || !effectiveConnected || !effectivePublicKey) return;
 

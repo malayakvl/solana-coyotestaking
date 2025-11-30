@@ -5,7 +5,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 export const ConnectButton = () => {
-  const { wallet, connected, publicKey, wallets, select } = useWallet();
+  const { wallet, connected, publicKey, wallets, select, disconnect } = useWallet();
   const [globalState, setGlobalState] = useState<{
     connected: boolean;
     publicKey: string | null;
@@ -13,6 +13,8 @@ export const ConnectButton = () => {
   } | null>(null);
   const hasSentInitialState = useRef(false);
   const isUpdatingFromLocal = useRef(false);
+  const previousWalletName = useRef<string | null>(null);
+  const previousConnectedState = useRef<boolean>(false);
 
   // Subscribe to global wallet state changes
   useEffect(() => {
@@ -24,11 +26,22 @@ export const ConnectButton = () => {
       console.log('ConnectButton: Received global state update', newGlobalState);
       // When we receive a global state update, we should update our state
       setGlobalState(newGlobalState);
-      // Reset the flag so we can send updates again if needed
-      isUpdatingFromLocal.current = false;
+      
+      // Handle disconnect from other buttons - reset to initial state
+      if (!newGlobalState.connected && (connected || wallet)) {
+        console.log('ConnectButton: Global disconnect received, resetting to initial state');
+        try {
+          // Disconnect locally if connected
+          if (connected) {
+            disconnect();
+          }
+        } catch (error) {
+          console.error('ConnectButton: Error during disconnect', error);
+        }
+      }
       
       // If we receive a wallet selection from another button, try to select the same wallet
-      if (newGlobalState.walletName && !wallet && wallets.length > 0) {
+      if (newGlobalState.walletName && wallets.length > 0 && !wallet) {
         const matchingWallet = wallets.find(w => w.adapter.name === newGlobalState.walletName);
         if (matchingWallet) {
           console.log('ConnectButton: Auto-selecting wallet', newGlobalState.walletName);
@@ -38,6 +51,12 @@ export const ConnectButton = () => {
             console.error('ConnectButton: Error auto-selecting wallet', error);
           }
         }
+      }
+      
+      // Handle global reset to initial state (no wallet selected)
+      if (!newGlobalState.walletName && !newGlobalState.connected && wallet) {
+        console.log('ConnectButton: Global reset to initial state');
+        // This will trigger a re-render with no wallet selected
       }
     });
 
@@ -53,55 +72,75 @@ export const ConnectButton = () => {
         unsubscribe();
       }
     };
-  }, [wallet, wallets, select]);
+  }, [wallet, wallets, select, disconnect, connected]);
 
   // Emit events when this button's state changes (but only for genuine user actions)
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.updateGlobalWalletState || isUpdatingFromLocal.current) {
+    if (typeof window === 'undefined' || !window.updateGlobalWalletState) {
       return;
     }
 
-    // Only send updates when we have a real connection state change initiated by user
-    if (connected && publicKey && !hasSentInitialState.current) {
-      console.log('ConnectButton: Updating global state - connected', {
+    const currentWalletName = wallet?.adapter?.name || null;
+    const currentConnected = connected;
+    
+    // Detect changes in wallet or connection state
+    const walletChanged = currentWalletName !== previousWalletName.current;
+    const connectedChanged = currentConnected !== previousConnectedState.current;
+    
+    // Update previous states
+    previousWalletName.current = currentWalletName;
+    previousConnectedState.current = currentConnected;
+    
+    console.log('ConnectButton: State change detected', {
+      walletChanged,
+      connectedChanged,
+      currentWalletName,
+      currentConnected,
+      hasSentInitialState: hasSentInitialState.current
+    });
+
+    // Handle wallet selection
+    if (walletChanged && currentWalletName) {
+      console.log('ConnectButton: Wallet selected', currentWalletName);
+      window.updateGlobalWalletState({
+        walletName: currentWalletName
+      });
+    }
+
+    // Handle connection
+    if (connectedChanged && currentConnected && publicKey) {
+      console.log('ConnectButton: Wallet connected', {
         connected: true,
         publicKey: publicKey.toBase58(),
-        walletName: wallet?.adapter?.name || null
+        walletName: currentWalletName
       });
       
       window.updateGlobalWalletState({
         connected: true,
         publicKey: publicKey.toBase58(),
-        walletName: wallet?.adapter?.name || null
+        walletName: currentWalletName
       });
       
       hasSentInitialState.current = true;
-    } else if (connected && publicKey) {
-      // Update global state when connection details change
-      window.updateGlobalWalletState({
-        connected: true,
-        publicKey: publicKey.toBase58(),
-        walletName: wallet?.adapter?.name || null
-      });
-    } else if (!connected && hasSentInitialState.current) {
-      // Only send disconnect if we previously sent a connect event
-      console.log('ConnectButton: Updating global state - disconnected');
+    } 
+    // Handle disconnection - reset to initial state
+    else if (connectedChanged && !currentConnected) {
+      console.log('ConnectButton: Wallet disconnected, resetting to initial state');
       window.updateGlobalWalletState({
         connected: false,
         publicKey: null,
-        walletName: null
+        walletName: null  // Reset wallet name to null to return to initial state
       });
       hasSentInitialState.current = false;
     }
-    
-    // Also send wallet selection updates
-    if (wallet?.adapter?.name && (!globalState || globalState.walletName !== wallet.adapter.name)) {
-      console.log('ConnectButton: Updating global state - wallet selected', wallet.adapter.name);
+    // Handle wallet selection without connection
+    else if (!currentConnected && currentWalletName && !hasSentInitialState.current) {
+      console.log('ConnectButton: Wallet selected but not connected', currentWalletName);
       window.updateGlobalWalletState({
-        walletName: wallet.adapter.name
+        walletName: currentWalletName
       });
     }
-  }, [connected, publicKey, wallet, globalState]);
+  }, [connected, publicKey, wallet]);
 
   // Determine which state to use (global state is the absolute truth)
   const effectiveConnected = globalState?.connected ?? false;
@@ -124,7 +163,19 @@ export const ConnectButton = () => {
   // State 3: Wallet connected - show wallet icon and public key
   if (effectiveConnected && effectivePublicKey) {
     return (
-      <WalletMultiButton className="wallet-btn">
+      <WalletMultiButton 
+        className="wallet-btn"
+        onClick={async (e) => {
+          // Handle disconnect action
+          e.preventDefault();
+          console.log('ConnectButton: User initiated disconnect');
+          try {
+            await disconnect();
+          } catch (error) {
+            console.error('ConnectButton: Error during disconnect', error);
+          }
+        }}
+      >
         <div className="flex items-center relative">
           <span className="w-caption">{effectivePublicKey.substring(0, 4) + '..' + effectivePublicKey.substring(effectivePublicKey.length - 4)}</span>
         </div>
@@ -135,7 +186,15 @@ export const ConnectButton = () => {
   // State 2: Wallet selected but not connected - show wallet icon and "Connect"
   if (walletInstance && walletInstance.adapter) {
     return (
-      <WalletMultiButton className="wallet-btn">
+      <WalletMultiButton 
+        className="wallet-btn"
+        onClick={async (e) => {
+          // Handle connect action
+          e.preventDefault();
+          console.log('ConnectButton: User initiated connect');
+          // The wallet adapter will handle the connection flow
+        }}
+      >
         <div className="flex items-center relative">
           <span className="w-caption">Connect</span>
         </div>
@@ -145,7 +204,15 @@ export const ConnectButton = () => {
 
   // State 1: No wallet selected - show pi-wallet icon and "Wallet"
   return (
-    <WalletMultiButton className="wallet-btn">
+    <WalletMultiButton 
+      className="wallet-btn"
+      onClick={async (e) => {
+        // Handle wallet selection
+        e.preventDefault();
+        console.log('ConnectButton: User initiated wallet selection');
+        // The wallet adapter will handle the wallet selection flow
+      }}
+    >
       <div className="flex items-center btn-s-wallet">
         <i className="pi-wallet"></i>
         <span className="w-caption">Wallet</span>
