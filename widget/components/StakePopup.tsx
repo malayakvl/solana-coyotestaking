@@ -216,12 +216,44 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
       const tx = new Transaction().add(createIx, delegateIx);
 
+      // REQUIRED FIELDS
+      tx.feePayer = new PublicKey(effectivePublicKey);
+      const { blockhash } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
+
+      // SIMULATION: Show what would happen without actually sending
+      // Show simulation message below input instead of in message area
+      setAmountError('Проверка транзакции, симуляция...');
+      setMessage(''); // Clear the main message area
+      
+      // In a FULL IMPLEMENTATION, you would do this:
+      // 1. Simulate the transaction first (safety check)
+      const simulation = await connection.simulateTransaction(tx);
+      if (simulation.value.err) {
+        // Show error below input instead of in message area
+        setAmountError(`Transaction fee payer required`);
+        return;
+      }
+      
+      // Display transaction details for verification
+      setMessage(`✅ Транзакция готова к отправке:
+      
+Сумма: ${num} SOL
+Валидатор: ${VOTE_ACCOUNT.toBase58()}
+Комиссия за аренду: ${(rentExempt / LAMPORTS_PER_SOL).toFixed(6)} SOL
+
+После отправки вы сможете отследить транзакцию в Solana Explorer.`);
+
       if (!window.confirm(`Вы хотите застейкать ${num} SOL на валидатор?`)) {
-        setMessage('❌ Пользователь отменил стейк');
+        // Show error below input instead of in message area
+        setAmountError('Пользователь отменил стейк');
+        setMessage(''); // Clear the main message area
         return;
       }
 
-      setMessage('⏳ Отправка транзакции...');
+      // Show sending message below input instead of in message area
+      setAmountError('Отправка транзакции...');
+      setMessage(''); // Clear the main message area
 
       // For now, we'll show a message that the transaction is prepared
       // In a real implementation, we would need to handle signing differently
@@ -234,7 +266,9 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
     } catch (err: unknown) {
       console.error(err);
-      setMessage(err instanceof Error ? '❌ Ошибка: ' + err.message : '❌ Неизвестная ошибка');
+      // Show error below input instead of in message area
+      setAmountError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setMessage(''); // Clear the main message area
     }
   };
 
@@ -334,12 +368,12 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           />
           {amountError && (
             <div style={{ 
-              color: '#ff554f', 
+              color: '#fff', 
               fontSize: '14px', 
               marginTop: '5px',
               fontWeight: 'bold'
             }}>
-              {amountError}
+              ❌ {amountError}
             </div>
           )}
           <div className="stake-button-container">
