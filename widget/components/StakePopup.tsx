@@ -298,7 +298,11 @@ Status: simulated only
                 display: 'flex',
                 alignItems: 'center',
                 marginBottom: '10px',
-                marginTop: '10px'
+                marginTop: '10px',
+                padding: '8px 12px',
+                backgroundColor: '#2d2d2d',
+                borderRadius: '6px',
+                border: devMode ? '1px solid #ff554f' : '1px solid #444'
               }}
             >
               <input
@@ -306,9 +310,23 @@ Status: simulated only
                 checked={devMode}
                 onChange={() => setDevMode(!devMode)}
                 id="devModeToggle"
-                style={{ marginRight: '6px' }}
+                style={{ 
+                  marginRight: '8px',
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer',
+                  accentColor: '#ff554f'
+                }}
               />
-              <label htmlFor="devModeToggle" style={{ color: '#fff' }}>
+              <label 
+                htmlFor="devModeToggle" 
+                style={{ 
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: devMode ? '600' : 'normal'
+                }}
+              >
                 Developer mode (simulation only)
               </label>
             </div>
@@ -369,7 +387,7 @@ Status: simulated only
         {message && (
           <div
             style={{
-              marginTop: 12,
+              marginTop: -310,
               padding: '8px 12px',
               borderRadius: '4px',
               backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da',
