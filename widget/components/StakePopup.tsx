@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
   Connection,
@@ -23,132 +23,117 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+
   const [jitoValue, setJitoValue] = useState<number | null>(null);
-  const [uptime, setUptime] = useState<number | null>(null); // Add uptime state
-  const [skipRate, setSkipRate] = useState<number | null>(null); // Add skip rate state
-  const [amountError, setAmountError] = useState<string | null>(null); // Add amount validation error state
+  const [uptime, setUptime] = useState<number | null>(null);
+  const [skipRate, setSkipRate] = useState<number | null>(null);
+
+  const [amountError, setAmountError] = useState<string | null>(null);
+
+  // 🔥 Developer Mode
+  const [devMode, setDevMode] = useState(false);
+
+  // GLOBAL WALLET
   const [globalWalletState, setGlobalWalletState] = useState<{
     connected: boolean;
     publicKey: string | null;
-    walletName: string | null;
+    walletName: string | null;tx
   } | null>(null);
 
   const wallet = useWallet();
 
-  // Subscribe to global wallet state changes
+  // GLOBAL SUBSCRIBE
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) {
-      return;
-    }
+    if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) return;
 
-    const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
-      console.log('StakePopup: Received global state update', newGlobalState);
-      setGlobalWalletState(newGlobalState);
+    const unsubscribe = window.subscribeToGlobalWalletState((newState) => {
+      setGlobalWalletState(newState);
     });
 
-    // Also get the initial state
     setTimeout(() => {
       if (window.globalWalletState) {
         setGlobalWalletState(window.globalWalletState);
       }
     }, 0);
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe && unsubscribe();
   }, []);
 
-  // Determine which state to use (global state is the absolute truth)
   const effectiveConnected = globalWalletState?.connected ?? wallet.connected;
-  const effectivePublicKey = globalWalletState?.publicKey ?? (wallet.publicKey?.toBase58() ?? null);
+  const effectivePublicKey = globalWalletState?.publicKey ?? wallet.publicKey?.toBase58() ?? null;
 
-  // Мемоизированное подключение к RPC (иначе на каждом рендере создается новый Connection)
+  // RPC
   const connection = useMemo(
     () => new Connection('http://103.167.235.81/api/rpc-proxy'),
     []
   );
 
-  // Получение текущего баланса
+  // BALANCE
   useEffect(() => {
     if (!isOpen || !effectiveConnected || !effectivePublicKey) return;
 
-    let isMounted = true;
+    let active = true;
 
-    const fetchBalance = async () => {
+    const pubkey = new PublicKey(effectivePublicKey);
+
+    const load = async () => {
       try {
-        // Convert string publicKey to PublicKey object
-        const pubKey = new PublicKey(effectivePublicKey);
-        const lamports = await connection.getBalance(pubKey);
-        if (isMounted) {
-          setAvailableBalance(lamports / LAMPORTS_PER_SOL);
-        }
-      } catch (err) {
-        console.error('Ошибка получения баланса:', err);
-        if (isMounted) setAvailableBalance(null);
+        const lamports = await connection.getBalance(pubkey);
+        if (active) setAvailableBalance(lamports / LAMPORTS_PER_SOL);
+      } catch (e) {
+        if (active) setAvailableBalance(null);
       }
     };
 
-    fetchBalance();
+    load();
+    const timer = setInterval(load, 15000);
 
-    const interval = setInterval(fetchBalance, 15000);
     return () => {
-      isMounted = false;
-      clearInterval(interval);
+      active = false;
+      clearInterval(timer);
     };
   }, [isOpen, effectiveConnected, effectivePublicKey, connection]);
 
-  // Fetch Jito data when popup opens
+  // JITO
   useEffect(() => {
     if (!isOpen) return;
-
     let cancelled = false;
-    
-    const fetchJito = async () => {
+
+    const load = async () => {
       try {
-        const response = await fetch("https://kobe.mainnet.jito.network/api/v1/steward_events?limit=1&event_type=ScoreComponentsV2&vote_account=53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
-        const data = await response.json();
-        const jitoScore = Math.round(data.events[0].data.score * 100 * 100) / 100;
-        
+        const res = await fetch(
+          "https://kobe.mainnet.jito.network/api/v1/steward_events?limit=1&event_type=ScoreComponentsV2&vote_account=53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR"
+        );
+        const data = await res.json();
         if (!cancelled) {
-          setJitoValue(jitoScore);
+          const score = Math.round(data.events[0].data.score * 100 * 100) / 100;
+          setJitoValue(score);
         }
-      } catch (error) {
-        console.error("Failed to fetch Jito:", error);
-        if (!cancelled) {
-          setJitoValue(null);
-        }
+      } catch {
+        if (!cancelled) setJitoValue(null);
       }
     };
 
-    fetchJito();
-
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => (cancelled = true);
   }, [isOpen]);
 
-  // Fetch Stakewiz data when popup opens
+  // Stakewiz
   useEffect(() => {
     if (!isOpen) return;
-
     let cancelled = false;
-    
-    const fetchStakewizData = async () => {
+
+    const load = async () => {
       try {
-        const validatorResponse = await fetch("https://api.stakewiz.com/validator/53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR");
-        const validatorData = await validatorResponse.json();
-        
+        const res = await fetch(
+          "https://api.stakewiz.com/validator/53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR"
+        );
+        const data = await res.json();
         if (!cancelled) {
-          const skipRateValue = Math.round(validatorData.skip_rate * 100) / 100;
-          const uptimeValue = validatorData.uptime;
-          
-          setSkipRate(skipRateValue);
-          setUptime(uptimeValue);
+          setSkipRate(Math.round(data.skip_rate * 100) / 100);
+          setUptime(data.uptime);
         }
-      } catch (error) {
-        console.error("Failed to fetch Stakewiz data:", error);
+      } catch {
         if (!cancelled) {
           setSkipRate(null);
           setUptime(null);
@@ -156,47 +141,37 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       }
     };
 
-    fetchStakewizData();
-
-    return () => {
-      cancelled = true;
-    };
+    load();
+    return () => (cancelled = true);
   }, [isOpen]);
 
-  // Обработчик отправки стейка
+  // HANDLE STAKE
   const handleConfirm = async () => {
-    // Check for validation errors before proceeding
     if (amountError) {
       setMessage(`❌ ${amountError}`);
       return;
     }
-    
+
     const num = parseFloat(amount);
 
-    // Валидация
     if (isNaN(num) || num < MIN_STAKE) {
       setMessage(`❌ Минимум ${MIN_STAKE} SOL`);
       return;
     }
-    if (availableBalance !== null && num > availableBalance) {
-      setMessage('❌ Недостаточно SOL на кошельке');
-      return;
-    }
     if (!effectiveConnected || !effectivePublicKey) {
-      setMessage('❌ Сначала подключите кошелек');
+      setMessage('❌ Connect wallet first');
       return;
     }
 
     try {
-      setMessage('🔄 Подготовка транзакции...');
+      setMessage('🔄 Preparing transaction...');
 
-      // Rent-exempt — динамический, не hardcode!
       const stakeAccount = Keypair.generate();
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
 
       const lamports = num * LAMPORTS_PER_SOL + rentExempt;
 
-      // 1. Создание аккаунта для стейка
+      // BUILD IXS
       const createIx = StakeProgram.createAccount({
         fromPubkey: new PublicKey(effectivePublicKey),
         stakePubkey: stakeAccount.publicKey,
@@ -207,7 +182,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         lamports
       });
 
-      // 2. Делегирование на валидатора
       const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
         authorizedPubkey: new PublicKey(effectivePublicKey),
@@ -215,100 +189,88 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       });
 
       const tx = new Transaction().add(createIx, delegateIx);
-
-      // REQUIRED FIELDS
-      tx.feePayer = new PublicKey(effectivePublicKey);
-      const { blockhash } = await connection.getLatestBlockhash();
-      tx.recentBlockhash = blockhash;
-
-      // SIMULATION: Show what would happen without actually sending
-      // Show simulation message below input instead of in message area
-      setAmountError('Проверка транзакции, симуляция...');
-      setMessage(''); // Clear the main message area
       
-      // In a FULL IMPLEMENTATION, you would do this:
-      // 1. Simulate the transaction first (safety check)
+      // Set fee payer — обовʼязково
+      tx.feePayer = new PublicKey(effectivePublicKey);
+
+      // Set recent blockhash — обовʼязково
+      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      // 🔥 DEVELOPER MODE
+      if (devMode) {
+        setMessage('🛠 Developer mode: simulating...');
+
+        const sim = await connection.simulateTransaction(tx);
+
+        if (sim.value.err) {
+          setAmountError(`Simulation error: ${JSON.stringify(sim.value.err)}`);
+          return;
+        }
+
+        const fakeSignature = [...Array(88)]
+          .map(() => Math.random().toString(36)[2])
+          .join('');
+
+        setMessage(`✅ Developer simulation SUCCESS
+
+Signature: ${fakeSignature}
+Slot: ${Math.floor(Math.random() * 100000000)}
+Status: simulated only
+(Not broadcast to network)
+`);
+
+        setTimeout(onClose, 3000);
+        return;
+      }
+
+      // NORMAL SIMULATION
+      setMessage('🔍 Simulating...');
       const simulation = await connection.simulateTransaction(tx);
+
       if (simulation.value.err) {
-        // Show error below input instead of in message area
         setAmountError(`Transaction fee payer required`);
         return;
       }
-      
-      // Display transaction details for verification
-      setMessage(`✅ Транзакция готова к отправке:
-      
-Сумма: ${num} SOL
-Валидатор: ${VOTE_ACCOUNT.toBase58()}
-Комиссия за аренду: ${(rentExempt / LAMPORTS_PER_SOL).toFixed(6)} SOL
 
-После отправки вы сможете отследить транзакцию в Solana Explorer.`);
+      setMessage('✅ Transaction prepared (not sent)');
 
-      if (!window.confirm(`Вы хотите застейкать ${num} SOL на валидатор?`)) {
-        // Show error below input instead of in message area
-        setAmountError('Пользователь отменил стейк');
-        setMessage(''); // Clear the main message area
-        return;
-      }
-
-      // Show sending message below input instead of in message area
-      setAmountError('Отправка транзакции...');
-      setMessage(''); // Clear the main message area
-
-      // For now, we'll show a message that the transaction is prepared
-      // In a real implementation, we would need to handle signing differently
-      // since we don't have direct access to the wallet's signTransaction function
-      // in this isolated context
-      setMessage(`✅ Transaction prepared. In a full implementation, this would be sent to your wallet for signing.`);
-
-      // Закрываем попап спустя 2 сек
       setTimeout(onClose, 2000);
 
-    } catch (err: unknown) {
-      console.error(err);
-      // Show error below input instead of in message area
-      setAmountError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-      setMessage(''); // Clear the main message area
+    } catch (err: any) {
+      setAmountError(err.message);
+      setMessage('');
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="stake-popup-overlay" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
+    <div
+      className="stake-popup-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}
+    >
       <div className="stake-popup-content">
         <div className="stake-popup-header"></div>
+
         <div className="stake-popup-tips">
-          This is your staking jackpot 0% comission + MEV rewards. Stake smart, earn more.
-          Your SOL deserves this kind of luck!
+          This is your staking jackpot 0% comission + MEV rewards.
         </div>
+
         <div className="flex">
-          <div className="col-param">
-            {uptime !== null ? `${uptime}%` : '?'}
-            <br />
-            <span>Uptime:</span>
-          </div>
-          <div className="col-param">
-            {skipRate !== null ? `${skipRate}%` : '?'}<br />
-            <span>Skip Rate</span>
-          </div>
-          <div className="col-param">
-            {jitoValue !== null ? jitoValue : '?'}<br />
-            <span>Jito MEV score</span>
-          </div>
-        </div>  
-        <button 
+          <div className="col-param">{uptime ?? '?'}%<br /><span>Uptime</span></div>
+          <div className="col-param">{skipRate ?? '?'}%<br /><span>Skip Rate</span></div>
+          <div className="col-param">{jitoValue ?? '?'}<br /><span>Jito Score</span></div>
+        </div>
+
+        <button
           onClick={onClose}
           style={{
             position: 'absolute',
@@ -322,77 +284,94 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         >
           ×
         </button>
-        <div className="red-content-popup">  
+
+        <div className="red-content-popup">
           <div className="red-content">
-          {/* <p>Wallet: {effectiveConnected ? effectivePublicKey : 'Not connected'}</p> */}
-          <p className="text-amount">
-            Available amount:{' '}
-            <span className="amount-value">
-              {availableBalance !== null
-                ? `${availableBalance.toFixed(3)}`
-                : effectiveConnected
+
+            {/* ❗ DEVELOPER MODE TOGGLE */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '10px',
+                marginTop: '10px'
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={devMode}
+                onChange={() => setDevMode(!devMode)}
+                id="devModeToggle"
+                style={{ marginRight: '6px' }}
+              />
+              <label htmlFor="devModeToggle" style={{ color: '#fff' }}>
+                Developer mode (simulation only)
+              </label>
+            </div>
+
+            <p className="text-amount">
+              Available amount:{' '}
+              <span className="amount-value">
+                {availableBalance !== null
+                  ? availableBalance.toFixed(3)
+                  : effectiveConnected
                   ? 'Loading...'
                   : 'Connect wallet'}
-            </span>
-          </p>
+              </span>
+            </p>
 
-          <input
-            type="text"
-            placeholder={`${MIN_STAKE} SOL`}
-            value={amount}
-            onChange={(e) => {
-              const value = e.target.value;
-              setAmount(value);
-              
-              // Validate the amount as user types
-              if (value === '') {
-                setAmountError(null);
-              } else {
-                const num = parseFloat(value);
-                if (isNaN(num)) {
-                  setAmountError('Please enter a valid number');
-                } else if (num < MIN_STAKE) {
-                  setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
-                } else if (availableBalance !== null && num > availableBalance) {
-                  setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
-                } else {
-                  setAmountError(null);
-                }
-              }
-            }}
-            className="stake-input"
-            style={{ 
-              borderColor: amountError ? '#ff554f' : '#ccc',
-              borderWidth: amountError ? '2px' : '1px'
-            }}
-          />
-          {amountError && (
-            <div style={{ 
-              color: '#fff', 
-              fontSize: '14px', 
-              marginTop: '5px',
-              fontWeight: 'bold'
-            }}>
-              ❌ {amountError}
-            </div>
-          )}
-          <div className="stake-button-container">
-              <button 
-                onClick={handleConfirm}
-                className="stake-submit-btn"
-              >
+            {/* INPUT */}
+            <input
+              type="text"
+              placeholder={`${MIN_STAKE} SOL`}
+              value={amount}
+              onChange={(e) => {
+                const v = e.target.value;
+                setAmount(v);
+
+                const n = parseFloat(v);
+                if (v === '') setAmountError(null);
+                else if (isNaN(n)) setAmountError('Enter valid number');
+                else if (n < MIN_STAKE)
+                  setAmountError(`Minimum ${MIN_STAKE} SOL`);
+                else if (availableBalance && n > availableBalance)
+                  setAmountError(`Exceeds balance (${availableBalance.toFixed(3)} SOL)`);
+                else setAmountError(null);
+              }}
+              className="stake-input"
+              style={{
+                borderColor: amountError ? '#ff554f' : '#ccc',
+                borderWidth: amountError ? 2 : 1
+              }}
+            />
+            {amountError && (
+              <div style={{ color: '#fff', marginTop: 5, fontWeight: 'bold' }}>
+                ❌ {amountError}
+              </div>
+            )}
+
+            <div className="stake-button-container">
+              <button onClick={handleConfirm} className="stake-submit-btn">
                 Stake
               </button>
-          </div>
-          <span className="text-footer">
-            The maximum stake is your balance minus 0.01, to ensure you have some SOL left for fucture transaction
-          </span>
+            </div>
 
-          
+            <span className="text-footer">
+              The maximum stake is your balance minus 0.01
+            </span>
           </div>
         </div>
 
-        {message && <p style={{ marginTop: 12, color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}
+        {message && (
+          <p
+            style={{
+              marginTop: 12,
+              color: message.includes('✅') ? 'green' : 'red'
+            }}
+          >
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );

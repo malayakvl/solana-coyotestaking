@@ -74,7 +74,7 @@ export const StakeButton = () => {
           {errorMessage}
         </div>
       )}
-      <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} />
+      <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} devModeEnabled={true} />
     </>
   );
 };
