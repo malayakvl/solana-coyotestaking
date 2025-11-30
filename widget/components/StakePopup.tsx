@@ -61,8 +61,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   }, []);
 
   // Determine which state to use (global state is the absolute truth)
-  const effectiveConnected = globalWalletState?.connected ?? false;
-  const effectivePublicKey = globalWalletState?.publicKey ?? null;
+  const effectiveConnected = globalWalletState?.connected ?? wallet.connected;
+  const effectivePublicKey = globalWalletState?.publicKey ?? (wallet.publicKey?.toBase58() ?? null);
 
   // Мемоизированное подключение к RPC (иначе на каждом рендере создается новый Connection)
   const connection = useMemo(
@@ -70,7 +70,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     []
   );
 
-  // Update the useEffect for balance fetching to depend on global state
+  // Получение текущего баланса
   useEffect(() => {
     if (!isOpen || !effectiveConnected || !effectivePublicKey) return;
 
@@ -278,7 +278,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '-70px',
+            top: '-60px',
             right: '10px',
             background: 'none',
             border: 'none',
@@ -302,57 +302,59 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
             </span>
           </p>
 
-            <input
-              type="text"
-              placeholder={`${MIN_STAKE} SOL`}
-              value={amount}
-              onChange={(e) => {
-                const value = e.target.value;
-                setAmount(value);
-                
-                // Validate the amount as user types
-                if (value === '') {
-                  setAmountError(null);
+          <input
+            type="text"
+            placeholder={`${MIN_STAKE} SOL`}
+            value={amount}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAmount(value);
+              
+              // Validate the amount as user types
+              if (value === '') {
+                setAmountError(null);
+              } else {
+                const num = parseFloat(value);
+                if (isNaN(num)) {
+                  setAmountError('Please enter a valid number');
+                } else if (num < MIN_STAKE) {
+                  setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
+                } else if (availableBalance !== null && num > availableBalance) {
+                  setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
                 } else {
-                  const num = parseFloat(value);
-                  if (isNaN(num)) {
-                    setAmountError('Please enter a valid number');
-                  } else if (num < MIN_STAKE) {
-                    setAmountError(`Minimum amount is ${MIN_STAKE} SOL`);
-                  } else if (availableBalance !== null && num > availableBalance) {
-                    setAmountError(`Amount exceeds available balance of ${availableBalance.toFixed(3)} SOL`);
-                  } else {
-                    setAmountError(null);
-                  }
+                  setAmountError(null);
                 }
-              }}
-              className="stake-input"
-              style={{ 
-                borderColor: amountError ? '#ff554f' : '#ccc',
-                borderWidth: amountError ? '2px' : '1px'
-              }}
-            />
-            {amountError && (
-              <div style={{ 
-                color: '#ff554f', 
-                fontSize: '14px', 
-                marginTop: '5px',
-                fontWeight: 'bold'
-              }}>
-                {amountError}
-              </div>
-            )}
-            <div className="stake-button-container">
+              }
+            }}
+            className="stake-input"
+            style={{ 
+              borderColor: amountError ? '#ff554f' : '#ccc',
+              borderWidth: amountError ? '2px' : '1px'
+            }}
+          />
+          {amountError && (
+            <div style={{ 
+              color: '#ff554f', 
+              fontSize: '14px', 
+              marginTop: '5px',
+              fontWeight: 'bold'
+            }}>
+              {amountError}
+            </div>
+          )}
+          <div className="stake-button-container">
               <button 
                 onClick={handleConfirm}
                 className="stake-submit-btn"
               >
                 Stake
               </button>
-            </div>
-            <span className="text-footer">
-              The maximum stake is your balance minus 0.01, to ensure you have some SOL left for fucture transaction
-            </span>
+          </div>
+          <span className="text-footer">
+            The maximum stake is your balance minus 0.01, to ensure you have some SOL left for fucture transaction
+          </span>
+
+          
           </div>
         </div>
 
