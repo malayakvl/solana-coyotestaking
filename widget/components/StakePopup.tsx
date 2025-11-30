@@ -387,17 +387,34 @@ Status: simulated only
         {message && (
           <div
             style={{
-              marginTop: -310,
-              padding: '8px 12px',
-              borderRadius: '4px',
+              position: 'absolute',
+              top: '-170px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'calc(100% - 40px)',
+              padding: '12px 16px',
+              borderRadius: '8px',
               backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da',
               color: message.includes('✅') ? '#155724' : '#721c24',
-              border: `1px solid ${message.includes('✅') ? '#c3e6cb' : '#f5c6cb'}`,
+              border: `2px solid ${message.includes('✅') ? '#c3e6cb' : '#f5c6cb'}`,
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '500',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              zIndex: 1001,
+              maxWidth: '500px',
+              textAlign: 'left'
             }}
           >
-            {message}
+            <div 
+              style={{ 
+                whiteSpace: 'pre-line',
+                wordBreak: 'break-all',
+                overflowWrap: 'break-word',
+                lineHeight: '1.4'
+              }}
+            >
+              {message}
+            </div>
           </div>
         )}
       </div>
