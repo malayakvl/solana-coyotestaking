@@ -236,8 +236,12 @@ Status: simulated only
 
       setTimeout(onClose, 2000);
 
-    } catch (err: any) {
-      setAmountError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setAmountError(err.message);
+      } else {
+        setAmountError('An unknown error occurred');
+      }
       setMessage('');
     }
   };
@@ -363,14 +367,20 @@ Status: simulated only
         </div>
 
         {message && (
-          <p
+          <div
             style={{
               marginTop: 12,
-              color: message.includes('✅') ? 'green' : 'red'
+              padding: '8px 12px',
+              borderRadius: '4px',
+              backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da',
+              color: message.includes('✅') ? '#155724' : '#721c24',
+              border: `1px solid ${message.includes('✅') ? '#c3e6cb' : '#f5c6cb'}`,
+              fontSize: '14px',
+              fontWeight: '500'
             }}
           >
             {message}
-          </p>
+          </div>
         )}
       </div>
     </div>
