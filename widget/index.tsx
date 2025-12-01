@@ -4,6 +4,7 @@ import { WalletContextProvider } from './components/WalletContextProvider';
 import { ConnectButton } from './components/ConnectButton';
 import { StakeButton } from './components/StakeButton';
 import { StakePopup } from './components/StakePopup';
+import { Transaction } from '@solana/web3.js';
 import './globals.css';
 
 // Extend the Window interface
@@ -17,12 +18,14 @@ declare global {
     globalWalletEventListeners: Array<(state: Window['globalWalletState']) => void>;
     updateGlobalWalletState: (newState: Partial<Window['globalWalletState']>) => void;
     subscribeToGlobalWalletState: (callback: (state: Window['globalWalletState']) => void) => () => void;
+    globalWalletSendTransaction?: (transaction: Transaction, connection: Connection, options?: SendOptions) => Promise<string>;
+    globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
+    globalWalletSignAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>;
     WidgetBundle?: {
       replaceButtons: () => void;
       ConnectButton: typeof ConnectButton;
       StakeButton: typeof StakeButton;
       StakePopup: typeof StakePopup;
-      WalletContextProvider: typeof WalletContextProvider;
     };
   }
 }

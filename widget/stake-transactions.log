@@ -1,0 +1,69 @@
+[2025-12-01T13:23:11.289Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Starting stake process, amount: 0.01, devMode: false
+[2025-12-01T13:23:11.299Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial wallet state - connected: false, has publicKey: false
+[2025-12-01T13:23:11.304Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing transaction, amount: 0.01, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:11.305Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:11.309Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective connection - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:11.310Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Parsed amount, input: 0.01, parsed: 0.01
+[2025-12-01T13:23:11.310Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Using wallet: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:11.313Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Generated stake account: FoYCzuAaoLAqNgVe9sRMzEjz82EKbow5UeTx7WGtgjRg
+[2025-12-01T13:23:11.809Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Rent exemption amount: 2282880
+[2025-12-01T13:23:11.811Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Total lamports calculation, stakeAmount: 0.01, lamportsPerSol: 1000000000, rentExempt: 2282880, totalLamports: 12282880
+[2025-12-01T13:23:11.812Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating stake account instruction
+[2025-12-01T13:23:11.815Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Stake account instruction created
+[2025-12-01T13:23:11.816Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating delegate instruction
+[2025-12-01T13:23:11.817Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Delegate instruction created
+[2025-12-01T13:23:11.817Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Transaction created
+[2025-12-01T13:23:11.818Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Fee payer set: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:12.338Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Blockhash set: Ct8Cxmene6F5EEJFc4hUNZySEph7Fu4rUcNeWPsLwouR
+[2025-12-01T13:23:12.339Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing real transaction
+[2025-12-01T13:23:12.339Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Wallet state - connected: false, has signAndSendTransaction: false
+[2025-12-01T13:23:12.344Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:12.344Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective wallet - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:23:12.345Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global signing functions available - signAndSendTransaction: false
+[2025-12-01T13:23:12.346Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Error: Wallet signing functions not available. Please reconnect your wallet or try a different wallet.
+[2025-12-01T13:24:19.267Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Starting stake process, amount: 0.01, devMode: false
+[2025-12-01T13:24:19.279Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing transaction, amount: 0.01, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.289Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial wallet state - connected: false, has publicKey: false
+[2025-12-01T13:24:19.290Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.291Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective connection - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.292Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Parsed amount, input: 0.01, parsed: 0.01
+[2025-12-01T13:24:19.297Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Using wallet: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.298Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Generated stake account: CdsGgqewV9PdwXztjvGnjJVN5G2rRGxzCshvDTDeDbu2
+[2025-12-01T13:24:19.473Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Rent exemption amount: 2282880
+[2025-12-01T13:24:19.475Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Total lamports calculation, stakeAmount: 0.01, lamportsPerSol: 1000000000, rentExempt: 2282880, totalLamports: 12282880
+[2025-12-01T13:24:19.475Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating stake account instruction
+[2025-12-01T13:24:19.476Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Stake account instruction created
+[2025-12-01T13:24:19.477Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating delegate instruction
+[2025-12-01T13:24:19.479Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Delegate instruction created
+[2025-12-01T13:24:19.479Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Transaction created
+[2025-12-01T13:24:19.480Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Fee payer set: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.670Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Blockhash set: B45qMu5CiAxS4NyAWpTGEZRCBy3qAE96xA442P948WWC
+[2025-12-01T13:24:19.671Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing real transaction
+[2025-12-01T13:24:19.671Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Wallet state - connected: false, has signAndSendTransaction: false
+[2025-12-01T13:24:19.675Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.678Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective wallet - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:24:19.680Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global signing functions available - signAndSendTransaction: false
+[2025-12-01T13:24:19.691Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Error: Wallet signing functions not available. Please reconnect your wallet or try a different wallet.
+[2025-12-01T13:27:31.487Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Starting stake process, amount: 0.01, devMode: false
+[2025-12-01T13:27:31.492Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial wallet state - connected: false, has publicKey: false
+[2025-12-01T13:27:31.497Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing transaction, amount: 0.01, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.498Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Initial global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.499Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective connection - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.500Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Using wallet: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.501Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Parsed amount, input: 0.01, parsed: 0.01
+[2025-12-01T13:27:31.531Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Generated stake account: Gur8tGTdEqYGYWUkPXdNxP4xitETdGtdhErTudNrtY4X
+[2025-12-01T13:27:31.690Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Rent exemption amount: 2282880
+[2025-12-01T13:27:31.691Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Total lamports calculation, stakeAmount: 0.01, lamportsPerSol: 1000000000, rentExempt: 2282880, totalLamports: 12282880
+[2025-12-01T13:27:31.693Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating stake account instruction
+[2025-12-01T13:27:31.736Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Stake account instruction created
+[2025-12-01T13:27:31.737Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Creating delegate instruction
+[2025-12-01T13:27:31.738Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Delegate instruction created
+[2025-12-01T13:27:31.738Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Transaction created
+[2025-12-01T13:27:31.739Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Fee payer set: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.885Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Blockhash set: DMbBpdQzsYfoJYBK4CK3SDLTKVeeGC3XDo1UgWenp4PP
+[2025-12-01T13:27:31.887Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Preparing real transaction
+[2025-12-01T13:27:31.889Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Wallet state - connected: false, has sendTransaction: true
+[2025-12-01T13:27:31.890Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global wallet state - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.890Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Effective wallet - connected: true, publicKey: DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV
+[2025-12-01T13:27:31.912Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Global signing functions available - sendTransaction: false
+[2025-12-01T13:27:31.912Z] [wallet(DzBFCSAGswVQ1f4V9oiX3sXfJSPnd89W5L47hEc8SZvV, connected)] [STAKE] Error: Wallet signing functions not available. Please reconnect your wallet.

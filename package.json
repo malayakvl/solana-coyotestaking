@@ -9,7 +9,8 @@
     "start": "next start",
     "build:widget": "node widget/build.js",
     "build:standalone": "node standalone-widget/build.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "log-server": "node widget/log-server.js"
   },
   "dependencies": {
     "@solana/wallet-adapter-base": "^0.9.27",
