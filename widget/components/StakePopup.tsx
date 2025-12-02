@@ -146,105 +146,148 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   // HANDLE STAKE
-  const handleConfirm = async () => {
-    if (amountError) {
-      setMessage(`❌ ${amountError}`);
-      return;
-    }
+  const handleConfirmOld = async () => {
+    setMessage('');
+    setAmountError(null);
 
     const num = parseFloat(amount);
-
     if (isNaN(num) || num < MIN_STAKE) {
-      setMessage(`❌ Минимум ${MIN_STAKE} SOL`);
+      setAmountError(`Минимум ${MIN_STAKE} SOL`);
       return;
     }
+
     if (!effectiveConnected || !effectivePublicKey) {
-      setMessage('❌ Connect wallet first');
+      setAmountError('Подключи кошелёк');
+      return;
+    }
+
+    if (!window.globalWalletSignTransaction) {
+      setAmountError('Кошелёк не готов. Переподключись.');
       return;
     }
 
     try {
-      setMessage('🔄 Preparing transaction...');
+      setMessage('Готовим транзакцию...');
 
       const stakeAccount = Keypair.generate();
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+      const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
 
-      const lamports = num * LAMPORTS_PER_SOL + rentExempt;
-
-      // BUILD IXS
       const createIx = StakeProgram.createAccount({
         fromPubkey: new PublicKey(effectivePublicKey),
         stakePubkey: stakeAccount.publicKey,
         authorized: {
           staker: new PublicKey(effectivePublicKey),
-          withdrawer: new PublicKey(effectivePublicKey)
+          withdrawer: new PublicKey(effectivePublicKey),
         },
-        lamports
+        lamports,
       });
 
       const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
         authorizedPubkey: new PublicKey(effectivePublicKey),
-        votePubkey: VOTE_ACCOUNT
+        votePubkey: VOTE_ACCOUNT,
       });
 
       const tx = new Transaction().add(createIx, delegateIx);
-      
-      // Set fee payer — обовʼязково
       tx.feePayer = new PublicKey(effectivePublicKey);
+      const { blockhash } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
 
-      // Set recent blockhash — обовʼязково
-      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+      setMessage('Подписываем транзакцию...');
 
-      // 🔥 DEVELOPER MODE
-      if (devMode) {
-        setMessage('🛠 Developer mode: simulating...');
+      // ←←← ЭТО БОЕВОЙ ШАГ: ПОДПИСЫВАЕМ ЧЕРЕЗ КОШЕЛЁК
+      const signedTx = await window.globalWalletSignTransaction(tx);
+      const serializedTx = signedTx.serialize();
+      const signature = signedTx.signatures[0].signature?.toString('base64');
 
-        const sim = await connection.simulateTransaction(tx);
+      console.log('%c[STAKE] Транзакция подписана!', 'color: #51cf66; font-weight: bold; font-size: 16px;');
+      console.log('Signature:', signature);
+      console.log('Serialized size:', serializedTx.length, 'bytes');
 
-        if (sim.value.err) {
-          setAmountError(`Simulation error: ${JSON.stringify(sim.value.err)}`);
-          return;
-        }
+      setMessage('Симулируем в сети...');
 
-        const fakeSignature = [...Array(88)]
-          .map(() => Math.random().toString(36)[2])
-          .join('');
+      // ←←← Симуляция подписанной транзакции
+      const sim = await connection.simulateTransaction(signedTx);
 
-        setMessage(`✅ Developer simulation SUCCESS
-
-Signature: ${fakeSignature}
-Slot: ${Math.floor(Math.random() * 100000000)}
-Status: simulated only
-(Not broadcast to network)
-`);
-
-        setTimeout(onClose, 3000);
+      if (sim.value.err) {
+        console.error('Simulation failed:', sim.value.err);
+        setAmountError(`Ошибка симуляции: ${JSON.stringify(sim.value.err)}`);
         return;
       }
 
-      // NORMAL SIMULATION
-      setMessage('🔍 Simulating...');
-      const simulation = await connection.simulateTransaction(tx);
+      // ←←← ВСЁ ГОТОВО, НО НЕ ОТПРАВЛЯЕМ
+      setMessage(`ГОТОВО К ОТПРАВКЕ!\n\nСигнатура:\n${signature}\n\nТранзакция подписана и прошла симуляцию\n(без отправки в сеть — безопасно)`);
 
-      if (simulation.value.err) {
-        setAmountError(`Transaction fee payer required`);
-        return;
-      }
+      console.log('%c[STAKE] БОЕВОЙ РЕЖИМ — ВСЁ УСПЕШНО, НО НЕ ОТПРАВЛЕНО', 'color: #9775fa; font-weight: bold; font-size: 18px; background: #000; padding: 10px;');
 
-      setMessage('✅ Transaction prepared (not sent)');
+      setTimeout(onClose, 8000);
 
-      setTimeout(onClose, 2000);
-
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setAmountError(err.message);
-      } else {
-        setAmountError('An unknown error occurred');
-      }
-      setMessage('');
+    } catch (err: any) {
+      console.error('Stake error:', err);
+      setAmountError(err?.message || 'Ошибка подписи/симуляции');
     }
   };
+
+const handleConfirm = async () => {
+  setMessage('');
+  setAmountError(null);
+
+  const num = parseFloat(amount);
+  if (isNaN(num) || num < MIN_STAKE) return setAmountError(`Минимум ${MIN_STAKE} SOL`);
+  if (!effectiveConnected || !effectivePublicKey) return setAmountError('Подключи кошелёк');
+  if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) 
+    return setAmountError('Кошелёк не готов');
+
+  try {
+    setMessage('Готовим...');
+
+    const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+    const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
+    const stakeAccount = Keypair.generate();
+
+    const createIx = StakeProgram.createAccount({
+      fromPubkey: new PublicKey(effectivePublicKey),
+      stakePubkey: stakeAccount.publicKey,
+      authorized: {
+        staker: new PublicKey(effectivePublicKey),
+        withdrawer: new PublicKey(effectivePublicKey),
+      },
+      lamports,
+    });
+
+    const delegateIx = StakeProgram.delegate({
+      stakePubkey: stakeAccount.publicKey,
+      authorizedPubkey: new PublicKey(effectivePublicKey),
+      votePubkey: VOTE_ACCOUNT,
+    });
+
+    const tx = new Transaction().add(createIx, delegateIx);
+    tx.feePayer = new PublicKey(effectivePublicKey);
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+    // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
+    tx.partialSign(stakeAccount);
+
+    setMessage('Подпиши в кошельке...');
+    const signedTx = await window.globalWalletSignTransaction(tx);
+
+    setMessage('Симуляция...');
+    const sim = await connection.simulateTransaction(signedTx);
+    if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
+
+    setMessage('Отправляем в сеть...');
+    const signature = await window.globalWalletSendTransaction(signedTx, connection);
+
+    setMessage(`ГОТОВО!\n\n${signature}\n\nsolana.fm/tx/${signature}`);
+    console.log('VLADIKA STAKED:', signature);
+    setTimeout(onClose, 15000);
+
+  } catch (err: any) {
+    console.error(err);
+    setAmountError(err?.message || 'Ошибка');
+  }
+};
 
   if (!isOpen) return null;
 

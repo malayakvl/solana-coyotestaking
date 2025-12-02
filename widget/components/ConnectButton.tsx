@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
+import type { Transaction, Connection, SendOptions } from '@solana/web3.js';
 
 export const ConnectButton = () => {
   const { wallet, connected, publicKey, wallets, select, disconnect } = useWallet();
@@ -16,56 +17,99 @@ export const ConnectButton = () => {
   const previousWalletName = useRef<string | null>(null);
   const previousConnectedState = useRef<boolean>(false);
 
-  // Subscribe to global wallet state changes
+    // ВЕШАЕМ ФУНКЦИИ СТЕЙКА — ГАРАНТИРОВАННО РАБОТАЕТ
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) {
+    console.log('%c[VLADIKA WIDGET] useEffect for globalWallet functions triggered', 'color: #ffd43b; font-weight: bold; background: #333; padding: 4px 8px;');
+
+    if (!connected || !publicKey || !wallet?.adapter) {
+      console.log('%c[VLADIKA WIDGET] Wallet NOT connected → removing functions', 'color: #ff6b6b');
+      delete (window as any).globalWalletSignTransaction;
+      delete (window as any).globalWalletSignAllTransactions;
+      delete (window as any).globalWalletSendTransaction;
       return;
     }
 
-    const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
-      console.log('ConnectButton: Received global state update', newGlobalState);
-      setGlobalState(newGlobalState);
-      
-      // Handle disconnect - reset to initial state
-      if (!newGlobalState.connected) {
-        console.log('ConnectButton: Global disconnect received');
-        // Always disconnect locally if we're connected
-        if (connected) {
-          try {
-            disconnect();
-          } catch (error) {
-            console.error('ConnectButton: Error disconnecting', error);
-          }
-        }
-      }
-      
-      // Handle wallet selection from other buttons
-      if (newGlobalState.walletName && wallets.length > 0 && !connected) {
-        const matchingWallet = wallets.find(w => w.adapter.name === newGlobalState.walletName);
-        if (matchingWallet && (!wallet || wallet.adapter.name !== newGlobalState.walletName)) {
-          console.log('ConnectButton: Auto-selecting wallet', newGlobalState.walletName);
-          try {
-            select(matchingWallet.adapter.name);
-          } catch (error) {
-            console.error('ConnectButton: Error auto-selecting wallet', error);
-          }
-        }
-      }
-    });
+    const adapter = wallet.adapter;
 
-    // Get initial state
-    setTimeout(() => {
-      if (window.globalWalletState) {
-        setGlobalState(window.globalWalletState);
-      }
-    }, 0);
+    console.log('%c[VLADIKA WIDGET] Wallet CONNECTED → INSTALLING FUNCTIONS', 'color: #51cf66; font-weight: bold; background: #000; padding: 6px 12px; font-size: 14px;');
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+    (window as any).globalWalletSignTransaction = async (tx: Transaction) => {
+      console.log('%c→ globalWalletSignTransaction called', 'color: #9775fa; font-weight: bold;');
+      return await adapter.signTransaction!(tx);
     };
-  }, [wallet, wallets, select, disconnect, connected]);
+
+    (window as any).globalWalletSignAllTransactions = async (txs: Transaction[]) => {
+      console.log('%c→ globalWalletSignAllTransactions called', 'color: #9775fa; font-weight: bold;');
+      return await adapter.signAllTransactions!(txs);
+    };
+
+    (window as any).globalWalletSendTransaction = async (
+      tx: Transaction,
+      connection: Connection,
+      options?: SendOptions
+    ) => {
+      console.log('%c→ globalWalletSendTransaction called', 'color: #3399ff; font-weight: bold;');
+      return await adapter.sendTransaction!(tx, connection, options);
+    };
+
+    console.log('%cGLOBAL FUNCTIONS INSTALLED SUCCESSFULLY!', 'color: #51cf66; font-weight: bold; font-size: 16px;');
+    console.log('signTransaction →', typeof window.globalWalletSignTransaction);
+    console.log('signAllTransactions →', typeof window.globalWalletSignAllTransactions);
+    console.log('sendTransaction →', typeof window.globalWalletSendTransaction);
+
+  }, [connected, publicKey, wallet?.adapter]); // ← ВОТ ЭТО ГЛАВНОЕ: wallet?.adapter в зависимостях!
+  
+
+  
+  // useEffect(() => {
+  //   if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) {
+  //     return;
+  //   }
+
+  //   const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
+  //     console.log('ConnectButton: Received global state update', newGlobalState);
+  //     setGlobalState(newGlobalState);
+      
+  //     // Handle disconnect - reset to initial state
+  //     if (!newGlobalState.connected) {
+  //       console.log('ConnectButton: Global disconnect received');
+  //       // Always disconnect locally if we're connected
+  //       if (connected) {
+  //         try {
+  //           disconnect();
+  //         } catch (error) {
+  //           console.error('ConnectButton: Error disconnecting', error);
+  //         }
+  //       }
+  //     }
+      
+  //     // Handle wallet selection from other buttons
+  //     if (newGlobalState.walletName && wallets.length > 0 && !connected) {
+  //       const matchingWallet = wallets.find(w => w.adapter.name === newGlobalState.walletName);
+  //       if (matchingWallet && (!wallet || wallet.adapter.name !== newGlobalState.walletName)) {
+  //         console.log('ConnectButton: Auto-selecting wallet', newGlobalState.walletName);
+  //         try {
+  //           select(matchingWallet.adapter.name);
+  //         } catch (error) {
+  //           console.error('ConnectButton: Error auto-selecting wallet', error);
+  //         }
+  //       }
+  //     }
+  //   });
+
+  //   // Get initial state
+  //   setTimeout(() => {
+  //     if (window.globalWalletState) {
+  //       setGlobalState(window.globalWalletState);
+  //     }
+  //   }, 0);
+
+  //   return () => {
+  //     if (unsubscribe) {
+  //       unsubscribe();
+  //     }
+  //   };
+  // }, [wallet, wallets, select, disconnect, connected]);
   
   // Emit events when this button's state changes (but only for genuine user actions)
   useEffect(() => {
