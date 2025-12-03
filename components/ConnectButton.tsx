@@ -23,7 +23,7 @@ export const ConnectButton = () => {
     return (
       <WalletMultiButton className="wallet-btn">
         <div className="flex items-center relative">
-          <span className="w-caption">Connect</span>
+          <span className="text-connect">Connect</span>
         </div>
       </WalletMultiButton>
     );

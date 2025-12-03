@@ -1,263 +1,141 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
-import type { Transaction, Connection, SendOptions } from '@solana/web3.js';
+
+const WALLET_ICONS: Record<string, string> = {
+  Phantom: '/wallets/phantom.svg',
+  Coinbase: '/wallets/coinbase.png',
+  Backpack: '/wallets/backpack.svg',
+  Solflare: '/wallets/solflare.png',
+  OKX: '/wallets/okx.svg',
+  Brave: '/wallets/brave.svg',
+  Trust: '/wallets/trust.svg',
+  Ledger: '/wallets/ledger.svg',
+};
+
+interface GlobalWalletState {
+  connected: boolean;
+  publicKey: string | null;
+  walletName: string | null;
+}
+
+declare global {
+  interface Window {
+    globalWalletState?: GlobalWalletState;
+    updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
+    subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
+  }
+}
 
 export const ConnectButton = () => {
-  const { wallet, connected, publicKey, wallets, select, disconnect } = useWallet();
-  const [globalState, setGlobalState] = useState<{
-    connected: boolean;
-    publicKey: string | null;
-    walletName: string | null;
-  } | null>(null);
-  const hasSentInitialState = useRef(false);
-  const isUpdatingFromLocal = useRef(false);
-  const previousWalletName = useRef<string | null>(null);
-  const previousConnectedState = useRef<boolean>(false);
-
-    // ВЕШАЕМ ФУНКЦИИ СТЕЙКА — ГАРАНТИРОВАННО РАБОТАЕТ
-  useEffect(() => {
-    console.log('%c[VLADIKA WIDGET] useEffect for globalWallet functions triggered', 'color: #ffd43b; font-weight: bold; background: #333; padding: 4px 8px;');
-
-    if (!connected || !publicKey || !wallet?.adapter) {
-      console.log('%c[VLADIKA WIDGET] Wallet NOT connected → removing functions', 'color: #ff6b6b');
-      delete (window as any).globalWalletSignTransaction;
-      delete (window as any).globalWalletSignAllTransactions;
-      delete (window as any).globalWalletSendTransaction;
-      return;
-    }
-
-    const adapter = wallet.adapter;
-
-    console.log('%c[VLADIKA WIDGET] Wallet CONNECTED → INSTALLING FUNCTIONS', 'color: #51cf66; font-weight: bold; background: #000; padding: 6px 12px; font-size: 14px;');
-
-    (window as any).globalWalletSignTransaction = async (tx: Transaction) => {
-      console.log('%c→ globalWalletSignTransaction called', 'color: #9775fa; font-weight: bold;');
-      return await adapter.signTransaction!(tx);
-    };
-
-    (window as any).globalWalletSignAllTransactions = async (txs: Transaction[]) => {
-      console.log('%c→ globalWalletSignAllTransactions called', 'color: #9775fa; font-weight: bold;');
-      return await adapter.signAllTransactions!(txs);
-    };
-
-    (window as any).globalWalletSendTransaction = async (
-      tx: Transaction,
-      connection: Connection,
-      options?: SendOptions
-    ) => {
-      console.log('%c→ globalWalletSendTransaction called', 'color: #3399ff; font-weight: bold;');
-      return await adapter.sendTransaction!(tx, connection, options);
-    };
-
-    console.log('%cGLOBAL FUNCTIONS INSTALLED SUCCESSFULLY!', 'color: #51cf66; font-weight: bold; font-size: 16px;');
-    console.log('signTransaction →', typeof window.globalWalletSignTransaction);
-    console.log('signAllTransactions →', typeof window.globalWalletSignAllTransactions);
-    console.log('sendTransaction →', typeof window.globalWalletSendTransaction);
-
-  }, [connected, publicKey, wallet?.adapter]); // ← ВОТ ЭТО ГЛАВНОЕ: wallet?.adapter в зависимостях!
-  
-
-  
-  // useEffect(() => {
-  //   if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) {
-  //     return;
-  //   }
-
-  //   const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
-  //     console.log('ConnectButton: Received global state update', newGlobalState);
-  //     setGlobalState(newGlobalState);
-      
-  //     // Handle disconnect - reset to initial state
-  //     if (!newGlobalState.connected) {
-  //       console.log('ConnectButton: Global disconnect received');
-  //       // Always disconnect locally if we're connected
-  //       if (connected) {
-  //         try {
-  //           disconnect();
-  //         } catch (error) {
-  //           console.error('ConnectButton: Error disconnecting', error);
-  //         }
-  //       }
-  //     }
-      
-  //     // Handle wallet selection from other buttons
-  //     if (newGlobalState.walletName && wallets.length > 0 && !connected) {
-  //       const matchingWallet = wallets.find(w => w.adapter.name === newGlobalState.walletName);
-  //       if (matchingWallet && (!wallet || wallet.adapter.name !== newGlobalState.walletName)) {
-  //         console.log('ConnectButton: Auto-selecting wallet', newGlobalState.walletName);
-  //         try {
-  //           select(matchingWallet.adapter.name);
-  //         } catch (error) {
-  //           console.error('ConnectButton: Error auto-selecting wallet', error);
-  //         }
-  //       }
-  //     }
-  //   });
-
-  //   // Get initial state
-  //   setTimeout(() => {
-  //     if (window.globalWalletState) {
-  //       setGlobalState(window.globalWalletState);
-  //     }
-  //   }, 0);
-
-  //   return () => {
-  //     if (unsubscribe) {
-  //       unsubscribe();
-  //     }
-  //   };
-  // }, [wallet, wallets, select, disconnect, connected]);
-  
-  // Emit events when this button's state changes (but only for genuine user actions)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.updateGlobalWalletState) {
-      return;
-    }
-
-    const currentWalletName = wallet?.adapter?.name || null;
-    const currentConnected = connected;
-    
-    // Detect changes in wallet or connection state
-    const walletChanged = currentWalletName !== previousWalletName.current;
-    const connectedChanged = currentConnected !== previousConnectedState.current;
-    
-    // Update previous states
-    previousWalletName.current = currentWalletName;
-    previousConnectedState.current = currentConnected;
-    
-    console.log('ConnectButton: State change detected', {
-      walletChanged,
-      connectedChanged,
-      currentWalletName,
-      currentConnected,
-      hasSentInitialState: hasSentInitialState.current
-    });
-
-    // Handle connection
-    if (connectedChanged && currentConnected && publicKey) {
-      console.log('ConnectButton: Wallet connected', {
-        connected: true,
-        publicKey: publicKey.toBase58(),
-        walletName: currentWalletName
-      });
-      
-      window.updateGlobalWalletState({
-        connected: true,
-        publicKey: publicKey.toBase58(),
-        walletName: currentWalletName
-      });
-      
-      hasSentInitialState.current = true;
-    } 
-    // Handle disconnection - reset to initial state completely
-    else if (connectedChanged && !currentConnected) {
-      console.log('ConnectButton: Wallet disconnected, resetting to initial state');
-      window.updateGlobalWalletState({
-        connected: false,
-        publicKey: null,
-        walletName: null  // This is crucial - reset wallet name to null
-      });
-      hasSentInitialState.current = false;
-    }
-    // Handle wallet selection
-    else if (walletChanged && currentWalletName) {
-      console.log('ConnectButton: Wallet selected', currentWalletName);
-      window.updateGlobalWalletState({
-        walletName: currentWalletName
-      });
-    }
-    // Handle wallet deselection (return to initial state)
-    else if (walletChanged && !currentWalletName && !currentConnected) {
-      console.log('ConnectButton: Wallet deselected, returning to initial state');
-      window.updateGlobalWalletState({
-        connected: false,
-        publicKey: null,
-        walletName: null
-      });
-    }
-  }, [connected, publicKey, wallet]);
-
-  // Determine which state to use (global state is the absolute truth)
-  const effectiveConnected = globalState?.connected ?? false;
-  const effectivePublicKey = globalState?.publicKey ?? null;
-  const effectiveWalletName = globalState?.walletName ?? null;
-  
-  // If global state has a wallet selected but not connected, use that wallet
-  const walletInstance = effectiveWalletName && !effectiveConnected 
-    ? wallets.find(w => w.adapter.name === effectiveWalletName) || wallet
-    : wallet;
-
-  console.log('ConnectButton: Render with state', {
-    localConnected: connected,
-    globalConnected: globalState?.connected,
-    effectiveConnected,
-    localPublicKey: publicKey?.toBase58(),
-    globalPublicKey: globalState?.publicKey,
-    effectivePublicKey,
-    walletName: wallet?.adapter?.name,
-    effectiveWalletName,
-    localWallet: wallet?.adapter?.name
+  const { wallet, connected, publicKey, disconnect } = useWallet();
+  const [globalState, setGlobalState] = useState<GlobalWalletState>({
+    connected: false,
+    publicKey: null,
+    walletName: null,
   });
 
-  // State 3: Wallet connected - show wallet icon and public key
-  if (effectiveConnected && effectivePublicKey) {
+  useEffect(() => {
+    if (!window.updateGlobalWalletState) {
+      const subs = new Set<(s: GlobalWalletState) => void>();
+      window.globalWalletState = { connected: false, publicKey: null, walletName: null };
+
+      window.updateGlobalWalletState = (newState) => {
+        window.globalWalletState = { ...window.globalWalletState!, ...newState };
+        subs.forEach(cb => cb(window.globalWalletState!));
+      };
+
+      window.subscribeToGlobalWalletState = (cb) => {
+        subs.add(cb);
+        return () => subs.delete(cb);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    const unsub = window.subscribeToGlobalWalletState?.(setGlobalState);
+    if (window.globalWalletState) setGlobalState(window.globalWalletState);
+    return unsub;
+  }, []);
+
+  // Update global state
+  useEffect(() => {
+    const name = wallet?.adapter?.name || null;
+    if (connected && publicKey) {
+      window.updateGlobalWalletState?.({
+        connected: true,
+        publicKey: publicKey.toBase58(),
+        walletName: name,
+      });
+    } else if (!connected && !name) {
+      window.updateGlobalWalletState?.({
+        connected: false,
+        publicKey: null,
+        walletName: null,
+      });
+    } else if (name) {
+      window.updateGlobalWalletState?.({ walletName: name });
+    }
+  }, [connected, publicKey, wallet?.adapter?.name]);
+
+  // Global function for staking
+  useEffect(() => {
+    if (!connected || !publicKey || !wallet?.adapter) {
+      delete (window as any).globalWalletSignTransaction;
+      delete (window as any).globalWalletSignAllTransactions;
+      delete (window as any).globalWalletSignTransaction;
+      return;
+    }
+    const a = wallet.adapter;
+    (window as any).globalWalletSignTransaction = (tx: any) => a.signTransaction!(tx);
+    (window as any).globalWalletSignAllTransactions = (txs: any[]) => a.signAllTransactions!(txs);
+    (window as any).globalWalletSendTransaction = (tx: any, c: any, o?: any) => a.sendTransaction!(tx, c, o);
+  }, [connected, publicKey, wallet]);
+
+  const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
+  const icon = gWalletName ? WALLET_ICONS[gWalletName] || '/wallets/phantom.svg' : null;
+
+  // 1. Connected
+  if (gConnected && gPubkey) {
     return (
-      <WalletMultiButton 
-        className="wallet-btn"
-        onClick={async (e) => {
-          // Handle disconnect action
-          e.preventDefault();
-          console.log('ConnectButton: User initiated disconnect');
-          try {
-            await disconnect();
-          } catch (error) {
-            console.error('ConnectButton: Error during disconnect', error);
-          }
+      <WalletMultiButton
+        className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg"
+        onClick={() => {
+          disconnect();
+          window.updateGlobalWalletState?.({ connected: false, publicKey: null, walletName: null });
         }}
       >
-        <div className="flex items-center relative">
-          <span className="w-caption">{effectivePublicKey.substring(0, 4) + '..' + effectivePublicKey.substring(effectivePublicKey.length - 4)}</span>
+        <div className="flex items-center gap-3">
+          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+          <div>
+            <span className="text-connected">• Connected</span>
+            {/* <span className="text-connected-key">{gPubkey.slice(0, 2)}...{gPubkey.slice(-2)}</span> */}
+          </div>
         </div>
       </WalletMultiButton>
     );
   }
 
-  // State 2: Wallet selected but not connected - show wallet icon and "Connect"
-  if (walletInstance && walletInstance.adapter && effectiveWalletName) {
+  // 2. Wallet selected
+  if (gWalletName) {
     return (
-      <WalletMultiButton 
-        className="wallet-btn"
-        onClick={async (e) => {
-          // Handle connect action
-          e.preventDefault();
-          console.log('ConnectButton: User initiated connect');
-          // The wallet adapter will handle the connection flow
-        }}
-      >
-        <div className="flex items-center relative">
-          <span className="w-caption">Connect</span>
+      <WalletMultiButton className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20">
+        <div className="flex items-center gap-3">
+          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+          <span className="text-connect">Connect</span>
         </div>
       </WalletMultiButton>
     );
   }
 
-  // State 1: No wallet selected - show pi-wallet icon and "Wallet"
+  // 3. Nothing selected
   return (
-    <WalletMultiButton 
-      className="wallet-btn"
-      onClick={async (e) => {
-        // Handle wallet selection
-        e.preventDefault();
-        console.log('ConnectButton: User initiated wallet selection');
-        // The wallet adapter will handle the wallet selection flow
-      }}
-    >
-      <div className="flex items-center btn-s-wallet">
-        <i className="pi-wallet"></i>
-        <span className="w-caption">Wallet</span>
+    <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
+      <div className="flex items-center gap-3 btn-s-wallet">
+        <i className="pi-wallet text-xl"></i>
+        <span className="font-bold">Wallet</span>
       </div>
     </WalletMultiButton>
   );

@@ -32,6 +32,7 @@
 .wallet-adapter-button-trigger .wallet-adapter-button-start-icon {
   position: absolute !important;
   top: 12px !important;
+  display: none !important;
 }
 
 .w-caption{
@@ -183,4 +184,49 @@ footer .wallet-widget-class {
 .text-footer {
   color: black;
   font-size: 14px;
+}
+.i-wallet-phantom {
+  background-image: url(../public/wallets/phantom-icon.png);
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  display: inline-block;
+  background-size: contain;
+  position: absolute;
+  top: 12px;
+  left: 15px;
+}
+.i-wallet-solflare {
+  background-image: url(../public/wallets/solflare.png);
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 12px;
+  left: 15px;
+}
+.i-wallet-coinbase {
+  background-image: url(../public/wallets/coinbase.png);
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 12px;
+  left: 15px;
+}
+.text-connected-key {
+  font-size: 11px;
+}
+.text-connected {
+  display: inline-block;
+  color: white;
+}
+.text-connect {
+  color: #fff;
 }

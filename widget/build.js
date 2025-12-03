@@ -3,13 +3,13 @@ import esbuild from 'esbuild';
 esbuild.build({
   entryPoints: ['widget/index.tsx'],
   bundle: true,
-  minify: true,                  // включаем минификацию
+  minify: true, 
   format: 'iife',
   outfile: 'widget/dist/bundle.iife.js',
-  globalName: 'WidgetBundle',    // This creates window.WidgetBundle
+  globalName: 'WidgetBundle',
   platform: 'browser',
   define: {
-    'process.env.NODE_ENV': '"production"', // реакту сказать, что это продакшн
+    'process.env.NODE_ENV': '"production"', 
   },
   // Mark node-specific packages as external for browser
   external: ['crypto', 'stream'],

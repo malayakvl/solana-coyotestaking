@@ -6,7 +6,6 @@ import { StakeButton } from './components/StakeButton';
 import { StakePopup } from './components/StakePopup';
 import './globals.css';
 
-// Extend the Window interface
 declare global {
   interface Window {
     globalWalletState: {
