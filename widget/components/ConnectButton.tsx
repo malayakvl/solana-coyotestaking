@@ -83,15 +83,15 @@ export const ConnectButton = () => {
   // Global function for staking
   useEffect(() => {
     if (!connected || !publicKey || !wallet?.adapter) {
-      delete (window as any).globalWalletSignTransaction;
-      delete (window as any).globalWalletSignAllTransactions;
-      delete (window as any).globalWalletSignTransaction;
+      delete (window).globalWalletSignTransaction;
+      delete (window).globalWalletSignAllTransactions;
+      delete (window).globalWalletSignTransaction;
       return;
     }
     const a = wallet.adapter;
-    (window as any).globalWalletSignTransaction = (tx: any) => a.signTransaction!(tx);
-    (window as any).globalWalletSignAllTransactions = (txs: any[]) => a.signAllTransactions!(txs);
-    (window as any).globalWalletSendTransaction = (tx: any, c: any, o?: any) => a.sendTransaction!(tx, c, o);
+    (window).globalWalletSignTransaction = (tx) => a.signTransaction!(tx);
+    (window).globalWalletSignAllTransactions = (txs) => a.signAllTransactions!(txs);
+    (window).globalWalletSendTransaction = (tx, c, o) => a.sendTransaction!(tx, c, o);
   }, [connected, publicKey, wallet]);
 
   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
@@ -121,7 +121,9 @@ export const ConnectButton = () => {
   // 2. Wallet selected
   if (gWalletName) {
     return (
-      <WalletMultiButton className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20">
+      <WalletMultiButton 
+        className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20"
+      >
         <div className="flex items-center gap-3">
           {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
           <span className="text-connect">Connect</span>
@@ -132,7 +134,10 @@ export const ConnectButton = () => {
 
   // 3. Nothing selected
   return (
-    <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
+    
+    <WalletMultiButton 
+      className="wallet-btn"
+    >
       <div className="flex items-center gap-3 btn-s-wallet">
         <i className="pi-wallet text-xl"></i>
         <span className="font-bold">Wallet</span>

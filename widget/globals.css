@@ -66,6 +66,54 @@ footer .wallet-widget-class {
   padding-top: 30px;
 }
 
+/* Tooltip for ConnectButton */
+.wallet-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+.wallet-btn::after {
+  content: "Connect or disconnect your wallet";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.wallet-btn::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  border: 6px solid transparent;
+  border-top-color: #667eea;
+  margin-bottom: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.wallet-btn:hover::after,
+.wallet-btn:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 .stake-sol-btn {
   text-transform: uppercase;
   border: none;
@@ -75,6 +123,41 @@ footer .wallet-widget-class {
   font-weight: 700;
   color: #fff !important;
   background: #ff554f !important;
+  position: relative;
+  cursor: pointer;
+}
+
+.stake-sol-btn:hover {
+  background: #e04a46 !important;
+}
+
+.stake-sol-btn:hover::after {
+  content: "Click to stake your SOL tokens";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: normal;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.stake-sol-btn:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  margin-bottom: 5px;
 }
 
 .stake-btn-error {
@@ -225,7 +308,8 @@ footer .wallet-widget-class {
 }
 .text-connected {
   display: inline-block;
-  color: white;
+  color: #000;
+  margin-left: 10px;
 }
 .text-connect {
   color: #fff;

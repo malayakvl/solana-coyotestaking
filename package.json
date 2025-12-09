@@ -8,7 +8,6 @@
     "build": "next build",
     "start": "next start",
     "build:widget": "node widget/build.js",
-    "build:standalone": "node standalone-widget/build.js",
     "lint": "eslint"
   },
   "dependencies": {

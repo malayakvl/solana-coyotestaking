@@ -65,6 +65,7 @@ export const StakeButton = () => {
       <button 
         onClick={handleStake} 
         className="stake-sol-btn"
+        title="Click to stake your SOL tokens"
       >
         Stake SOL
       </button>
