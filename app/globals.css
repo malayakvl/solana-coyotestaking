@@ -286,3 +286,6 @@ footer .wallet-widget-class {
   border-style: solid;
   border-color: rgba(17, 24, 39, 0.95) transparent transparent transparent;
 }
+footer .uk-container{
+  text-align: center !important;
+}

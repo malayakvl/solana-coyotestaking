@@ -65,6 +65,11 @@ php -S 127.0.0.1:8000
 
 Then visit http://127.0.0.1:8001/test.html to test the widget.
 
+```bash
+Start log server
+php -S 127.0.0.1:8001
+```
+
 ## Customization
 
 The widget uses the same styling as the main Next.js application, including:

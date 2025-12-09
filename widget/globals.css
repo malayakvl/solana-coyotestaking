@@ -196,6 +196,8 @@ footer .wallet-widget-class {
 .stake-popup-tips {
   margin-top: 117px;
   font-family: DM Sans,Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
+  color:#000 !important;
+  line-height: 20px;
 }
 .col-param {
   width: 33%;
@@ -225,13 +227,14 @@ footer .wallet-widget-class {
   color: #fff;
   margin: -15px;
   width: calc(100% + 30px);
-  margin-top: 40px !important
+  margin-top: 25px !important
 }
 .red-content {
-  padding: 15px;
+  padding: 0px 15px 10px 15px !important;
 }
 .text-amount {
   text-align: right;
+  margin: 0px;
 }
 .amount-value {
   font-size: 20px;
@@ -249,13 +252,27 @@ footer .wallet-widget-class {
   text-align: right;
   opacity: 1;
 }
+.input-container {
+  position: relative;
+}
+.i-sol {
+  background-image: url(../public/popup/sol.png);
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  background-size: contain;
+  position: absolute;
+  top: 12px;
+  left: 15px;
+}
+
 .stake-submit-btn {
   background-color: #5b0b0b;
   color: #fff;
   text-transform: uppercase;
-  border-radius: 27px;
   border: none;
-  padding: 20px 50px;
+  border-radius: 5em;
+  padding: 20px 55px;
   margin-top: 20px;
   text-align: center;
   margin: 20px auto;
@@ -267,6 +284,9 @@ footer .wallet-widget-class {
 .text-footer {
   color: black;
   font-size: 14px;
+  display: inline-block;
+  line-height: 18px;
+  padding-bottom: 15px;
 }
 .i-wallet-phantom {
   background-image: url(../public/wallets/phantom-icon.png);
@@ -414,6 +434,12 @@ footer .wallet-widget-class {
 }
 
 .shift-right {
-  left: calc(100% - 46px) !important;
+  left: calc(100% + 18px) !important;
   transform: translateX(-100%) translateY(0) scale(0.9) !important;
+}
+footer .uk-container{
+  text-align: center !important;
+}
+#page\#3 {
+    text-align: center;
 }

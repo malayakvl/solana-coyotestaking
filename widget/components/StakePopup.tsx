@@ -23,6 +23,9 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add this state for blocking UI during submission
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State for showing success popup
+  const [transactionSignature, setTransactionSignature] = useState(''); // State for transaction signature
 
   const [jitoValue, setJitoValue] = useState<number | null>(null);
   const [uptime, setUptime] = useState<number | null>(null);
@@ -58,14 +61,95 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
     return () => unsubscribe && unsubscribe();
   }, []);
+  
+  // Add showSuccessPopup function to window object for WordPress integration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.showSuccessPopup = (message: string) => {
+        // Create container div
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.background = 'rgba(0,0,0,0.5)';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.zIndex = '1000';
+        container.style.fontFamily = 'Arial, sans-serif';
+        
+        // Create popup content
+        const popup = document.createElement('div');
+        popup.style.background = '#1a1a1a';
+        popup.style.borderRadius = '12px';
+        popup.style.padding = '30px';
+        popup.style.width = '90%';
+        popup.style.maxWidth = '400px';
+        popup.style.textAlign = 'center';
+        popup.style.border = '2px solid #ff8480';
+        popup.style.position = 'relative';
+        
+        // Create title
+        const title = document.createElement('h2');
+        title.textContent = '✅ Transaction Successful!';
+        title.style.color = '#ff8480';
+        title.style.marginBottom = '20px';
+        title.style.fontSize = '24px';
+        
+        // Create message container
+        const messageContainer = document.createElement('div');
+        messageContainer.style.color = '#fff';
+        messageContainer.style.marginBottom = '20px';
+        messageContainer.style.fontSize = '16px';
+        messageContainer.style.whiteSpace = 'pre-line';
+        messageContainer.style.wordBreak = 'break-all';
+        messageContainer.textContent = message;
+        
+        // Create close button
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.style.background = '#ff8480';
+        closeButton.style.color = '#fff';
+        closeButton.style.border = 'none';
+        closeButton.style.borderRadius = '5em';
+        closeButton.style.padding = '12px 30px';
+        closeButton.style.fontSize = '16px';
+        closeButton.style.fontWeight = 'bold';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.width = '100%';
+        closeButton.onclick = () => {
+          document.body.removeChild(container);
+        };
+        
+        // Assemble popup
+        popup.appendChild(title);
+        popup.appendChild(messageContainer);
+        popup.appendChild(closeButton);
+        container.appendChild(popup);
+        
+        // Add to DOM
+        document.body.appendChild(container);
+      };
+    }
+    
+    // Cleanup function
+    return () => {
+      if (typeof window !== 'undefined' && window.showSuccessPopup) {
+        delete window.showSuccessPopup;
+      }
+    };
+  }, []);
 
   const effectiveConnected = globalWalletState?.connected ?? wallet.connected;
   const effectivePublicKey = globalWalletState?.publicKey ?? wallet.publicKey?.toBase58() ?? null;
 
   // RPC
+  // const connection = useMemo(
+  //   () => new Connection('http://103.167.235.81/api/rpc-proxy'),
+  //   []
+  // );
   const connection = useMemo(
-    () => new Connection('http://103.167.235.81/api/rpc-proxy'),
-    []
+    () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
+      []
   );
 
   // Get the effective wallet for transactions
@@ -230,17 +314,62 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
   // HANDLE STAKE
   const handleConfirm = async () => {
+    // Block UI during submission
+    setIsSubmitting(true);
     setMessage('');
     setAmountError(null);
 
     const num = parseFloat(amount);
-    if (isNaN(num) || num < MIN_STAKE) return setAmountError(`Минимум ${MIN_STAKE} SOL`);
-    if (!effectiveConnected || !effectivePublicKey) return setAmountError('Подключи кошелёк');
-    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) 
-      return setAmountError('Кошелёк не готов');
+    if (isNaN(num) || num < MIN_STAKE) {
+      setAmountError(`Минимум ${MIN_STAKE} SOL`);
+      setIsSubmitting(false);
+      return;
+    }
+    if (!effectiveConnected || !effectivePublicKey) {
+      setAmountError('Подключи кошёк');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
+      setAmountError('Кошелёк не готов');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // If developer mode is enabled, simulate successful transaction without sending
+    if (devMode) {
+      setMessage('Подготовка...');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setMessage('Подпиши в кошельке...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setMessage('Симуляция...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate a fake signature for demonstration
+      const fakeSignature = '5SigFakeSignatureDemo1234567890abcdef1234567890abcdef1234567890abcdef123456789';
+      
+      // Close current popup
+      setIsSubmitting(false);
+      onClose();
+      
+      // Show success message in a new popup
+      setTimeout(() => {
+        showSuccessPopup(`Transaction Successful!
+
+Signature: ${fakeSignature}
+
+View on Solana Explorer: solana.fm/tx/${fakeSignature}`);
+      }, 100);
+      
+      return;
+    }
 
     try {
-      setMessage('Готовим...');
+      setMessage('Подготовка...');
 
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
       const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
@@ -285,11 +414,29 @@ ${signature}
 
 solana.fm/tx/${signature}`);
       console.log('VLADIKA STAKED:', signature);
-      setTimeout(onClose, 15000);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onClose();
+      }, 15000);
 
     } catch (err) {
       console.error(err);
-      setAmountError(err && err.message ? err.message : 'Ошибка');
+      
+      // Check if user cancelled the transaction
+      if (err?.message?.includes('User rejected the request') || 
+          err?.message?.includes('Transaction cancelled') ||
+          err?.message?.includes('rejected') ||
+          err?.code === 4001) {  // Common error code for user rejection
+        // Clear all messages and unblock UI when user cancels
+        setMessage('');
+        setAmountError(null);
+      } else {
+        // Show error message for other errors
+        setAmountError(err && err.message ? err.message : 'Ошибка');
+      }
+      
+      // Always unblock UI on error
+      setIsSubmitting(false);
     }
   };
 
@@ -313,6 +460,7 @@ solana.fm/tx/${signature}`);
 
         <div className="stake-popup-tips">
           This is your staking jackpot 0% comission + MEV rewards.
+          Stake smart, earn more. Your SOL deserves this kind of luck!
         </div>
 
         <div className="flex">
@@ -389,7 +537,8 @@ solana.fm/tx/${signature}`);
                   color: '#fff',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: devMode ? '600' : 'normal'
+                  fontWeight: devMode ? '600' : 'normal',
+                  display: 'none'
                 }}
               >
                 Developer mode (simulation only)
@@ -408,43 +557,57 @@ solana.fm/tx/${signature}`);
             </p>
 
             {/* INPUT */}
-            <input
-              type="text"
-              placeholder={`${MIN_STAKE} SOL`}
-              value={amount}
-              onChange={(e) => {
-                const v = e.target.value;
-                setAmount(v);
+            <div className="input-container">
+              <span className="input-icon i-sol"></span>
+              <input
+                type="text"
+                placeholder={`${MIN_STAKE} SOL`}
+                value={amount}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAmount(v);
 
-                const n = parseFloat(v);
-                if (v === '') setAmountError(null);
-                else if (isNaN(n)) setAmountError('Enter valid number');
-                else if (n < MIN_STAKE)
-                  setAmountError(`Minimum ${MIN_STAKE} SOL`);
-                else if (availableBalance && n > availableBalance)
-                  setAmountError(`Exceeds balance (${availableBalance.toFixed(3)} SOL)`);
-                else setAmountError(null);
-              }}
-              className="stake-input"
-              style={{
-                borderColor: amountError ? '#ff554f' : '#ccc',
-                borderWidth: amountError ? 2 : 1
-              }}
-            />
-            {amountError && (
-              <div style={{ color: '#fff', marginTop: 5, fontWeight: 'bold' }}>
-                ❌ {amountError}
-              </div>
-            )}
+                  const n = parseFloat(v);
+                  if (v === '') setAmountError(null);
+                  else if (isNaN(n)) setAmountError('Enter valid number');
+                  else if (n < MIN_STAKE)
+                    setAmountError(`Minimum ${MIN_STAKE} SOL`);
+                  else if (availableBalance && n > availableBalance)
+                    setAmountError(`Exceeds balance (${availableBalance.toFixed(3)} SOL)`);
+                  else setAmountError(null);
+                }}
+                className="stake-input"
+                disabled={isSubmitting}
+                style={{
+                  borderColor: amountError ? '#ff554f' : '#ccc',
+                  borderWidth: amountError ? 2 : 1,
+                  opacity: isSubmitting ? 0.3 : 1
+                }}
+              />
+              {amountError && (
+                <div style={{ color: '#fff', marginTop: 5, fontWeight: 'bold' }}>
+                  ❌ {amountError}
+                </div>
+              )}
+            </div>
 
             <div className="stake-button-container">
-              <button onClick={handleConfirm} className="stake-submit-btn">
-                Stake
+              <button 
+                onClick={handleConfirm} 
+                className="stake-submit-btn"
+                disabled={isSubmitting}
+                style={{
+                  opacity: isSubmitting ? 0.3 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSubmitting ? 'Sending...' : 'Stake'}
               </button>
             </div>
 
             <span className="text-footer">
-              The maximum stake is your balance minus 0.01
+              The maximum stake is your balance minus 0.01,
+              to ensure you have some SOL left for future transactions.
             </span>
           </div>
         </div>

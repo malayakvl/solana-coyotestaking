@@ -14,7 +14,7 @@ export default defineConfig({
       fileName: 'bundle.iife'
     },
     rollupOptions: {
-      external: ['react', 'react-dom'], // не включати React у бандл
+      external: ['react', 'react-dom', 'react-dom/client'], // не включати React у бандл
       output: {
         globals: {
           react: 'React',
