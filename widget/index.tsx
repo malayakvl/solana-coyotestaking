@@ -7,7 +7,6 @@ import { StakePopup } from './components/StakePopup';
 import { Transaction } from '@solana/web3.js';
 import './globals.css';
 
-// Extend the Window interface
 declare global {
   interface Window {
     globalWalletState: {

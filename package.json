@@ -1,5 +1,5 @@
 {
-  "name": "widget-test",
+  "name": "widget-app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,7 @@
     "log-server": "node widget/log-server.js"
   },
   "dependencies": {
+    "@solana/wallet-adapter-backpack": "^0.1.14",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-coinbase": "^0.1.23",
     "@solana/wallet-adapter-phantom": "^0.9.28",

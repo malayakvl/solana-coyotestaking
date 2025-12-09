@@ -24,7 +24,6 @@ export const StakeButton = () => {
       setGlobalState(newGlobalState);
     });
 
-    // Also get the initial state
     setTimeout(() => {
       if (window.globalWalletState) {
         setGlobalState(window.globalWalletState);
@@ -38,7 +37,7 @@ export const StakeButton = () => {
     };
   }, []);
 
-  // Determine which state to use (global state is the absolute truth)
+  // Determine which state to use
   const effectiveConnected = globalState?.connected ?? false;
 
   console.log('StakeButton: Render with state', {
@@ -66,6 +65,7 @@ export const StakeButton = () => {
       <button 
         onClick={handleStake} 
         className="stake-sol-btn"
+        title="Click to stake your SOL tokens"
       >
         Stake SOL
       </button>

@@ -89,6 +89,54 @@ footer .wallet-widget-class {
   padding-top: 30px;
 }
 
+/* Tooltip for ConnectButton */
+.wallet-adapter-button-trigger {
+  position: relative;
+  cursor: pointer;
+}
+
+.wallet-adapter-button-trigger::after {
+  content: "Connect or disconnect your wallet";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.wallet-adapter-button-trigger::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  border: 6px solid transparent;
+  border-top-color: #667eea;
+  margin-bottom: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.wallet-adapter-button-trigger:hover::after,
+.wallet-adapter-button-trigger:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 .stake-sol-btn {
   border: none;
   border-radius: 5em;

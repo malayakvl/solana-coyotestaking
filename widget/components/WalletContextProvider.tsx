@@ -17,7 +17,6 @@ interface Props {
 const RPC_ENDPOINT = 'http://103.167.235.81/api/rpc-proxy';
 
 export const WalletContextProvider: FC<Props> = ({ children }) => {
-  // Memoized wallets array to prevent re-instantiation on every render
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
