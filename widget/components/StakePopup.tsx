@@ -68,6 +68,25 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     []
   );
 
+  // Get the effective wallet for transactions
+  const effectiveWallet = useMemo(() => {
+    // Prefer global wallet state if available
+    if (globalWalletState?.connected && globalWalletState?.publicKey) {
+      return {
+        publicKey: new PublicKey(globalWalletState.publicKey),
+        connected: globalWalletState.connected
+      };
+    }
+    // Fallback to local wallet
+    if (wallet.connected && wallet.publicKey) {
+      return {
+        publicKey: wallet.publicKey,
+        connected: wallet.connected
+      };
+    }
+    return null;
+  }, [globalWalletState, wallet]);
+
   // BALANCE
   useEffect(() => {
     if (!isOpen || !effectiveConnected || !effectivePublicKey) return;
@@ -145,34 +164,125 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     return () => (cancelled = true);
   }, [isOpen]);
 
+  const [logMessages, setLogMessages] = useState<string[]>([]);
+
+  // Function to send log messages to the server and auto-save on key events
+  const sendLogMessage = async (message: string, autoSave: boolean = false) => {
+    const timestamp = new Date().toISOString();
+    const walletInfo = effectiveWallet 
+      ? { 
+          publicKey: effectiveWallet.publicKey.toBase58(), 
+          connected: effectiveWallet.connected 
+        } 
+      : null;
+    const logEntry = `[${timestamp}] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`;
+    
+    // Also log to console for immediate visibility
+    console.log(`[SENDING LOG] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`);
+    
+    // Update local log state for UI purposes
+    setLogMessages(prev => {
+      const newLogs = [...prev, logEntry];
+      return newLogs;
+    });
+    
+    // Send log to server
+    try {
+      console.log(`[NETWORK] Sending log to http://localhost:8081/`);
+      const response = await fetch('http://localhost:8081/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          walletInfo,
+          filename: 'stake-transactions.log' // Use a single log file for all transactions
+        })
+      });
+      
+      console.log(`[NETWORK] Response status: ${response.status}`);
+      console.log(`[NETWORK] Response headers:`, [...response.headers.entries()]);
+      
+      // Try to read the response body
+      const responseBody = await response.text();
+      console.log(`[NETWORK] Response body:`, responseBody);
+      
+      if (!response.ok) {
+        console.error('Failed to send log to server:', response.statusText);
+      } else {
+        console.log('[NETWORK] Log sent successfully');
+      }
+    } catch (error) {
+      console.error('[NETWORK ERROR] Failed to send log to server:', error);
+      // Log more details about the error
+      if (error instanceof TypeError) {
+        console.error('[NETWORK ERROR] This might be a CORS or network connectivity issue');
+      }
+    }
+  };
+
+  // Test function to verify logging
+  const testLogging = () => {
+    console.log('[TEST] Testing logging functionality');
+    sendLogMessage('[TEST] This is a test log message');
+  };
+
   // HANDLE STAKE
-  const handleConfirmOld = async () => {
-    setMessage('');
-    setAmountError(null);
+  const handleConfirm = async () => {
+    sendLogMessage('[STAKE] Starting stake process, amount: ' + amount + ', devMode: ' + devMode);
+    
+    // Log wallet state at the beginning
+    sendLogMessage(`[STAKE] Initial wallet state - connected: ${wallet.connected}, has publicKey: ${!!wallet.publicKey}`);
+    sendLogMessage(`[STAKE] Initial global wallet state - connected: ${globalWalletState?.connected}, publicKey: ${globalWalletState?.publicKey}`);
+    sendLogMessage(`[STAKE] Effective connection - connected: ${effectiveConnected}, publicKey: ${effectivePublicKey}`);
+    
+    if (amountError) {
+      const errorMsg = `❌ ${amountError}`;
+      sendLogMessage('[STAKE] Amount validation error: ' + amountError);
+      setMessage(errorMsg);
+      return;
+    }
 
     const num = parseFloat(amount);
+    sendLogMessage('[STAKE] Parsed amount, input: ' + amount + ', parsed: ' + num);
+
     if (isNaN(num) || num < MIN_STAKE) {
-      setAmountError(`Минимум ${MIN_STAKE} SOL`);
+      const errorMsg = `❌ Минимум ${MIN_STAKE} SOL`;
+      sendLogMessage('[STAKE] Amount below minimum, amount: ' + num + ', minimum: ' + MIN_STAKE);
+      setMessage(errorMsg);
       return;
     }
-
+    
     if (!effectiveConnected || !effectivePublicKey) {
-      setAmountError('Подключи кошелёк');
+      const errorMsg = '❌ Connect wallet first';
+      sendLogMessage('[STAKE] Wallet not connected, connected: ' + effectiveConnected + ', publicKey: ' + effectivePublicKey);
+      setMessage(errorMsg);
       return;
     }
 
-    if (!window.globalWalletSignTransaction) {
-      setAmountError('Кошелёк не готов. Переподключись.');
-      return;
-    }
+    // Log wallet information
+    sendLogMessage('[STAKE] Using wallet: ' + (effectiveWallet ? effectiveWallet.publicKey.toBase58() : 'none'));
 
     try {
-      setMessage('Готовим транзакцию...');
+      const preparingMsg = '🔄 Preparing transaction...';
+      sendLogMessage('[STAKE] Preparing transaction, amount: ' + num + ', publicKey: ' + effectivePublicKey);
+      setMessage(preparingMsg);
 
       const stakeAccount = Keypair.generate();
+      sendLogMessage('[STAKE] Generated stake account: ' + stakeAccount.publicKey.toBase58());
+      
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
-      const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
+      sendLogMessage('[STAKE] Rent exemption amount: ' + rentExempt);
 
+      const lamports = num * LAMPORTS_PER_SOL + rentExempt;
+      sendLogMessage('[STAKE] Total lamports calculation, stakeAmount: ' + num + 
+                   ', lamportsPerSol: ' + LAMPORTS_PER_SOL + 
+                   ', rentExempt: ' + rentExempt + 
+                   ', totalLamports: ' + lamports);
+
+      // BUILD IXS
+      sendLogMessage('[STAKE] Creating stake account instruction');
       const createIx = StakeProgram.createAccount({
         fromPubkey: new PublicKey(effectivePublicKey),
         stakePubkey: stakeAccount.publicKey,
@@ -182,33 +292,57 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         },
         lamports,
       });
+      sendLogMessage('[STAKE] Stake account instruction created');
 
+      sendLogMessage('[STAKE] Creating delegate instruction');
       const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
         authorizedPubkey: new PublicKey(effectivePublicKey),
         votePubkey: VOTE_ACCOUNT,
       });
+      sendLogMessage('[STAKE] Delegate instruction created');
 
       const tx = new Transaction().add(createIx, delegateIx);
+      sendLogMessage('[STAKE] Transaction created');
+
+      // Set fee payer — обовʼязково
       tx.feePayer = new PublicKey(effectivePublicKey);
+      sendLogMessage('[STAKE] Fee payer set: ' + effectivePublicKey);
+
+      // Set recent blockhash — обовʼязково
       const { blockhash } = await connection.getLatestBlockhash();
       tx.recentBlockhash = blockhash;
+      sendLogMessage('[STAKE] Blockhash set: ' + blockhash);
 
-      setMessage('Подписываем транзакцию...');
+      // 🔥 DEVELOPER MODE
+      if (devMode) {
+        const devMessage = '🛠 Developer mode: simulating...';
+        sendLogMessage('[STAKE] Developer mode simulation: ' + devMessage);
+        setMessage(devMessage);
 
-      // ←←← ЭТО БОЕВОЙ ШАГ: ПОДПИСЫВАЕМ ЧЕРЕЗ КОШЕЛЁК
-      const signedTx = await window.globalWalletSignTransaction(tx);
-      const serializedTx = signedTx.serialize();
-      const signature = signedTx.signatures[0].signature?.toString('base64');
+        sendLogMessage('[STAKE] Simulating transaction');
+        const sim = await connection.simulateTransaction(tx);
+        sendLogMessage('[STAKE] Simulation result: ' + JSON.stringify(sim));
 
-      console.log('%c[STAKE] Транзакция подписана!', 'color: #51cf66; font-weight: bold; font-size: 16px;');
-      console.log('Signature:', signature);
-      console.log('Serialized size:', serializedTx.length, 'bytes');
+        if (sim.value.err) {
+          const errorMsg = `Simulation error: ${JSON.stringify(sim.value.err)}`;
+          sendLogMessage('[STAKE] Simulation error: ' + JSON.stringify(sim.value.err));
+          setAmountError(errorMsg);
+          return;
+        }
 
-      setMessage('Симулируем в сети...');
+        const fakeSignature = [...Array(88)]
+          .map(() => Math.random().toString(36)[2])
+          .join('');
+        sendLogMessage('[STAKE] Developer simulation successful, signature: ' + fakeSignature, true); // Auto-save on success
 
-      // ←←← Симуляция подписанной транзакции
-      const sim = await connection.simulateTransaction(signedTx);
+        const successMessage = `✅ Developer simulation SUCCESS
+
+Signature: ${fakeSignature}
+Slot: ${Math.floor(Math.random() * 100000000)}
+Status: simulated only
+(Not broadcast to network)`;
+        setMessage(successMessage);
 
       if (sim.value.err) {
         console.error('Simulation failed:', sim.value.err);
@@ -216,16 +350,59 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         return;
       }
 
-      // ←←← ВСЁ ГОТОВО, НО НЕ ОТПРАВЛЯЕМ
-      setMessage(`ГОТОВО К ОТПРАВКЕ!\n\nСигнатура:\n${signature}\n\nТранзакция подписана и прошла симуляцию\n(без отправки в сеть — безопасно)`);
+      // NORMAL MODE - REAL TRANSACTION
+      sendLogMessage('[STAKE] Preparing real transaction');
+      
+      // Log wallet state for debugging
+      sendLogMessage(`[STAKE] Wallet state - connected: ${wallet.connected}, has sendTransaction: ${!!wallet.sendTransaction}`);
+      sendLogMessage(`[STAKE] Global wallet state - connected: ${globalWalletState?.connected}, publicKey: ${globalWalletState?.publicKey}`);
+      sendLogMessage(`[STAKE] Effective wallet - connected: ${effectiveWallet?.connected}, publicKey: ${effectiveWallet?.publicKey.toBase58()}`);
+      sendLogMessage(`[STAKE] Global signing functions available - sendTransaction: ${!!(typeof window !== 'undefined' && window.globalWalletSendTransaction)}`);
+      
+      // Check if wallet is connected through global state
+      if (!globalWalletState?.connected || !globalWalletState?.publicKey) {
+        const errorMsg = 'Wallet not connected. Please connect your wallet first.';
+        sendLogMessage('[STAKE] Error: ' + errorMsg);
+        setAmountError(errorMsg);
+        return;
+      }
+      
+      // Check if global signing functions are available
+      if (typeof window === 'undefined' || !window.globalWalletSendTransaction) {
+        const errorMsg = 'Wallet signing functions not available. Please reconnect your wallet.';
+        sendLogMessage('[STAKE] Error: ' + errorMsg);
+        setAmountError(errorMsg);
+        return;
+      }
 
-      console.log('%c[STAKE] БОЕВОЙ РЕЖИМ — ВСЁ УСПЕШНО, НО НЕ ОТПРАВЛЕНО', 'color: #9775fa; font-weight: bold; font-size: 18px; background: #000; padding: 10px;');
+      try {
+        sendLogMessage('[STAKE] Sending transaction for signing');
+        // Use the global sendTransaction function with connection parameter
+        const signature = await window.globalWalletSendTransaction(tx, connection);
+        sendLogMessage('[STAKE] Transaction sent successfully, signature: ' + signature, true); // Auto-save on success
+        
+        const successMessage = `✅ Transaction sent successfully!
+        
+Signature: ${signature}
+Check explorer for confirmation.`;
+        setMessage(successMessage);
+        
+        setTimeout(onClose, 3000);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        sendLogMessage('[STAKE] Error sending transaction: ' + errorMessage, true); // Auto-save on error
+        setAmountError(errorMessage);
+        return;
+      }
 
-      setTimeout(onClose, 8000);
-
-    } catch (err: any) {
-      console.error('Stake error:', err);
-      setAmountError(err?.message || 'Ошибка подписи/симуляции');
+    } catch (err: unknown) {
+      sendLogMessage('[STAKE] Error during stake process: ' + (err instanceof Error ? err.message : 'Unknown error'), true); // Auto-save on error
+      if (err instanceof Error) {
+        setAmountError(err.message);
+      } else {
+        setAmountError('An unknown error occurred');
+      }
+      setMessage('');
     }
   };
 
@@ -334,6 +511,23 @@ const handleConfirm = async () => {
 
         <div className="red-content-popup">
           <div className="red-content">
+            {/* Test Logging Button */}
+            <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+              <button
+                onClick={testLogging}
+                style={{
+                  background: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Test Logging
+              </button>
+            </div>
 
             {/* ❗ DEVELOPER MODE TOGGLE */}
             <div

@@ -41,13 +41,26 @@ This will generate the widget bundle at `standalone-widget/dist/solana-widget.js
 
 4. The widget will automatically replace the button with the full wallet functionality.
 
+## Logging
+
+The widget can write transaction logs directly to the widget directory using a separate logging server:
+
+1. Start the log server:
+   ```bash
+   npm run log-server
+   ```
+
+2. Use the widget as normal - logs will be written to the widget directory with timestamped filenames.
+
+See `widget/README-LOGGING.md` for detailed instructions.
+
 ## Development
 
 To run the development server for testing:
 
 ```bash
-cd standalone-widget
-php -S 127.0.0.1:8001
+cd widget
+php -S 127.0.0.1:8000
 ```
 
 Then visit http://127.0.0.1:8001/test.html to test the widget.

@@ -4,16 +4,17 @@ import React, { useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-const WALLET_ICONS: Record<string, string> = {
-  Phantom: '/wallets/phantom.svg',
-  Coinbase: '/wallets/coinbase.png',
-  Backpack: '/wallets/backpack.svg',
-  Solflare: '/wallets/solflare.png',
-  OKX: '/wallets/okx.svg',
-  Brave: '/wallets/brave.svg',
-  Trust: '/wallets/trust.svg',
-  Ledger: '/wallets/ledger.svg',
-};
+export const ConnectButton = () => {
+  const { wallet, connected, publicKey, wallets, select, disconnect } = useWallet();
+  const [globalState, setGlobalState] = useState<{
+    connected: boolean;
+    publicKey: string | null;
+    walletName: string | null;
+  } | null>(null);
+  const hasSentInitialState = useRef(false);
+  // const isUpdatingFromLocal = useRef(false);
+  const previousWalletName = useRef<string | null>(null);
+  const previousConnectedState = useRef<boolean>(false);
 
 interface GlobalWalletState {
   connected: boolean;
@@ -60,17 +61,65 @@ export const ConnectButton = () => {
     return unsub;
   }, []);
 
-  // Update global state
-  useEffect(() => {
-    const name = wallet?.adapter?.name || null;
-    if (connected && publicKey) {
-      window.updateGlobalWalletState?.({
+    // Handle connection
+    if (connectedChanged && currentConnected && publicKey) {
+      console.log('ConnectButton: Wallet connected', {
+        connected: true,
+        publicKey: publicKey.toBase58(),
+        walletName: currentWalletName
+      });
+      
+      // Expose wallet signing functions globally when connected
+      if (typeof window !== 'undefined' && wallet?.adapter) {
+        // Log available wallet adapter methods for debugging
+        console.log('Wallet adapter methods:', Object.keys(wallet.adapter));
+        console.log('Wallet adapter sendTransaction:', typeof wallet.sendTransaction);
+        console.log('Wallet adapter signTransaction:', typeof wallet.signTransaction);
+        console.log('Wallet adapter signAllTransactions:', typeof wallet.signAllTransactions);
+        
+        // Check each function before exposing
+        if (wallet.sendTransaction) {
+          window.globalWalletSendTransaction = wallet.sendTransaction.bind(wallet);
+        } else {
+          console.warn('Wallet does not have sendTransaction function');
+          delete window.globalWalletSendTransaction;
+        }
+        
+        if (wallet.signTransaction) {
+          window.globalWalletSignTransaction = wallet.signTransaction.bind(wallet);
+        } else {
+          console.warn('Wallet does not have signTransaction function');
+          delete window.globalWalletSignTransaction;
+        }
+        
+        if (wallet.signAllTransactions) {
+          window.globalWalletSignAllTransactions = wallet.signAllTransactions.bind(wallet);
+        } else {
+          console.warn('Wallet does not have signAllTransactions function');
+          delete window.globalWalletSignAllTransactions;
+        }
+      }
+      
+      window.updateGlobalWalletState({
         connected: true,
         publicKey: publicKey.toBase58(),
         walletName: name,
       });
-    } else if (!connected && !name) {
-      window.updateGlobalWalletState?.({
+      
+      hasSentInitialState.current = true;
+    } 
+    // Handle disconnection - reset to initial state completely
+    else if (connectedChanged && !currentConnected) {
+      console.log('ConnectButton: Wallet disconnected, resetting to initial state');
+      
+      // Remove global wallet signing functions when disconnected
+      if (typeof window !== 'undefined') {
+        delete window.globalWalletSendTransaction;
+        delete window.globalWalletSignTransaction;
+        delete window.globalWalletSignAllTransactions;
+      }
+      
+      window.updateGlobalWalletState({
         connected: false,
         publicKey: null,
         walletName: null,
