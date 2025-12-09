@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Transaction, Connection } from '@solana/web3.js';
 
-export const ConnectButton = () => {
-  const { wallet, connected, publicKey, wallets, select, disconnect } = useWallet();
-  const [globalState, setGlobalState] = useState<{
-    connected: boolean;
-    publicKey: string | null;
-    walletName: string | null;
-  } | null>(null);
-  const hasSentInitialState = useRef(false);
-  // const isUpdatingFromLocal = useRef(false);
-  const previousWalletName = useRef<string | null>(null);
-  const previousConnectedState = useRef<boolean>(false);
+const WALLET_ICONS: Record<string, string> = {
+  Phantom: '/wallets/phantom.svg',
+  Coinbase: '/wallets/coinbase.png',
+  Backpack: '/wallets/backpack.svg',
+  Solflare: '/wallets/solflare.png',
+  OKX: '/wallets/okx.svg',
+  Brave: '/wallets/brave.svg',
+  Trust: '/wallets/trust.svg',
+  Ledger: '/wallets/ledger.svg',
+};
 
 interface GlobalWalletState {
   connected: boolean;
@@ -22,21 +22,35 @@ interface GlobalWalletState {
   walletName: string | null;
 }
 
+// Define proper function types for wallet methods
+type SendTransactionFn = (transaction: Transaction, connection: Connection, options?: Record<string, unknown>) => Promise<string>;
+type SignTransactionFn = (transaction: Transaction) => Promise<Transaction>;
+type SignAllTransactionsFn = (transactions: Transaction[]) => Promise<Transaction[]>;
+
 declare global {
   interface Window {
     globalWalletState?: GlobalWalletState;
     updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
     subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
+    globalWalletSendTransaction?: SendTransactionFn;
+    globalWalletSignTransaction?: SignTransactionFn;
+    globalWalletSignAllTransactions?: SignAllTransactionsFn;
   }
 }
 
-export const ConnectButton = () => {
+const ConnectButton = () => {
   const { wallet, connected, publicKey, disconnect } = useWallet();
   const [globalState, setGlobalState] = useState<GlobalWalletState>({
     connected: false,
     publicKey: null,
     walletName: null,
   });
+  
+  const hasSentInitialState = useRef(false);
+  const previousWalletName = useRef<string | null>(null);
+  const previousConnectedState = useRef<boolean>(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!window.updateGlobalWalletState) {
@@ -57,50 +71,58 @@ export const ConnectButton = () => {
 
   useEffect(() => {
     const unsub = window.subscribeToGlobalWalletState?.(setGlobalState);
-    if (window.globalWalletState) setGlobalState(window.globalWalletState);
+    // Use setTimeout to avoid calling setState synchronously within effect
+    setTimeout(() => {
+      if (window.globalWalletState) setGlobalState(window.globalWalletState);
+    }, 0);
     return unsub;
   }, []);
+
+  // Update global state
+  useEffect(() => {
+    const name = wallet?.adapter?.name || null;
+    const currentConnected = connected && !!publicKey;
+    const previousConnected = previousConnectedState.current;
+    const connectedChanged = currentConnected !== previousConnected;
+    
+    // Track previous states
+    previousConnectedState.current = currentConnected;
+    if (name) previousWalletName.current = name;
 
     // Handle connection
     if (connectedChanged && currentConnected && publicKey) {
       console.log('ConnectButton: Wallet connected', {
         connected: true,
         publicKey: publicKey.toBase58(),
-        walletName: currentWalletName
+        walletName: name
       });
       
       // Expose wallet signing functions globally when connected
       if (typeof window !== 'undefined' && wallet?.adapter) {
-        // Log available wallet adapter methods for debugging
-        console.log('Wallet adapter methods:', Object.keys(wallet.adapter));
-        console.log('Wallet adapter sendTransaction:', typeof wallet.sendTransaction);
-        console.log('Wallet adapter signTransaction:', typeof wallet.signTransaction);
-        console.log('Wallet adapter signAllTransactions:', typeof wallet.signAllTransactions);
-        
         // Check each function before exposing
-        if (wallet.sendTransaction) {
-          window.globalWalletSendTransaction = wallet.sendTransaction.bind(wallet);
+        if (wallet.adapter.sendTransaction) {
+          window.globalWalletSendTransaction = wallet.adapter.sendTransaction.bind(wallet.adapter) as SendTransactionFn;
         } else {
           console.warn('Wallet does not have sendTransaction function');
           delete window.globalWalletSendTransaction;
         }
         
-        if (wallet.signTransaction) {
-          window.globalWalletSignTransaction = wallet.signTransaction.bind(wallet);
+        if (wallet.adapter.signTransaction) {
+          window.globalWalletSignTransaction = wallet.adapter.signTransaction.bind(wallet.adapter) as SignTransactionFn;
         } else {
           console.warn('Wallet does not have signTransaction function');
           delete window.globalWalletSignTransaction;
         }
         
-        if (wallet.signAllTransactions) {
-          window.globalWalletSignAllTransactions = wallet.signAllTransactions.bind(wallet);
+        if (wallet.adapter.signAllTransactions) {
+          window.globalWalletSignAllTransactions = wallet.adapter.signAllTransactions.bind(wallet.adapter) as SignAllTransactionsFn;
         } else {
           console.warn('Wallet does not have signAllTransactions function');
           delete window.globalWalletSignAllTransactions;
         }
       }
       
-      window.updateGlobalWalletState({
+      window.updateGlobalWalletState?.({
         connected: true,
         publicKey: publicKey.toBase58(),
         walletName: name,
@@ -119,7 +141,7 @@ export const ConnectButton = () => {
         delete window.globalWalletSignAllTransactions;
       }
       
-      window.updateGlobalWalletState({
+      window.updateGlobalWalletState?.({
         connected: false,
         publicKey: null,
         walletName: null,
@@ -129,19 +151,38 @@ export const ConnectButton = () => {
     }
   }, [connected, publicKey, wallet?.adapter?.name]);
 
-  // Global function for staking
   useEffect(() => {
-    if (!connected || !publicKey || !wallet?.adapter) {
-      delete (window).globalWalletSignTransaction;
-      delete (window).globalWalletSignAllTransactions;
-      delete (window).globalWalletSignTransaction;
-      return;
-    }
-    const a = wallet.adapter;
-    (window).globalWalletSignTransaction = (tx) => a.signTransaction!(tx);
-    (window).globalWalletSignAllTransactions = (txs) => a.signAllTransactions!(txs);
-    (window).globalWalletSendTransaction = (tx, c, o) => a.sendTransaction!(tx, c, o);
-  }, [connected, publicKey, wallet]);
+    const wrapper = wrapperRef.current;
+    const tooltip = tooltipRef.current;
+    if (!wrapper || !tooltip) return;
+
+    const updatePosition = () => {
+      const wRect = wrapper.getBoundingClientRect();
+      const tRect = tooltip.getBoundingClientRect();
+
+      tooltip.classList.remove(
+        "tooltip-top",
+        "tooltip-bottom",
+        "shift-left",
+        "shift-right"
+      );
+
+      const hasSpaceAbove = wRect.top > tRect.height + 16;
+      if (hasSpaceAbove) tooltip.classList.add("tooltip-top");
+      else tooltip.classList.add("tooltip-bottom");
+
+      const newRect = tooltip.getBoundingClientRect();
+
+      if (newRect.left < 8) tooltip.classList.add("shift-left");
+      if (newRect.right > window.innerWidth - 8)
+        tooltip.classList.add("shift-right");
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+
+    return () => window.removeEventListener("resize", updatePosition);
+  }, []);
 
   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
   const icon = gWalletName ? WALLET_ICONS[gWalletName] || '/wallets/phantom.svg' : null;
@@ -183,14 +224,29 @@ export const ConnectButton = () => {
 
   // 3. Nothing selected
   return (
-    
-    <WalletMultiButton 
-      className="wallet-btn"
-    >
-      <div className="flex items-center gap-3 btn-s-wallet">
-        <i className="pi-wallet text-xl"></i>
-        <span className="font-bold">Wallet</span>
+    <div className="wallet-wrapper" ref={wrapperRef}>
+      <WalletMultiButton 
+        className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg"
+      >
+        <div className="flex items-center gap-3 btn-s-wallet">
+          <i className="pi-wallet text-xl"></i>
+          <span className="font-bold">Wallet</span>
+        </div>
+      </WalletMultiButton>
+      <div className="wallet-tooltip phantom-style" ref={tooltipRef}>
+        <span style={{ display: "block", paddingBottom: "8px" }}>To Stake SOL from your wallet:</span>
+        <span>1. Connect your wallet</span><br />
+        <span>2. Click Stake SOL Button</span><br />
+        <span>3. Enter amount of SOL you want to stake</span><br />  
+        <span>Done! You have staked your SOL to Vladika</span>
       </div>
-    </WalletMultiButton>
+    </div>
   );
 };
+
+// For IIFE build compatibility
+if (typeof window !== 'undefined') {
+  (window as unknown as { ConnectButton: typeof ConnectButton }).ConnectButton = ConnectButton;
+}
+
+export { ConnectButton };

@@ -8,8 +8,6 @@
   <style>
     header, main {
       margin-bottom: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
     }
     /* .wallet-adapter-button, .stake-button {
       display: inline-block;
@@ -19,17 +17,23 @@
   </style>
 </head>
 <body>
-  <header>
+  <header style="width: 100%;">
     <h2>Header</h2>
-    <button class="wallet-adapter-button">Wallet</button>
-    <button class="stake-button">Stake SOL</button>
+    <div style="align-items: center;text-align: center;">
+      <button class="wallet-adapter-button">Wallet</button>
+    </div>
+    <!-- <button class="stake-button">Stake SOL</button> -->
   </header>
 
-  <main>
+  <main style="text-align: center;">
     <h2>Content Area Here</h2>
-    <button class="wallet-adapter-button">Wallet</button>
+    <!-- <button class="wallet-adapter-button">Wallet</button> -->
     <button class="stake-button">Stake SOL</button>
   </main>
+  <footer style="text-align: center;">
+    <h2>Footer</h2>
+    <button class="wallet-adapter-button">Wallet</button>
+  </footer>
 
   <script src="./dist/bundle.iife.js"></script>
 

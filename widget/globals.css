@@ -176,7 +176,7 @@ footer .wallet-widget-class {
 
 .stake-popup-content {
   width: 487px;
-  height: 460px;
+  height: 340px;
   border-radius: 10px;
   padding: 15px;
   background: #fff;
@@ -312,5 +312,108 @@ footer .wallet-widget-class {
   margin-left: 10px;
 }
 .text-connect {
-  color: #fff;
+  color: #000;
+}
+/* Base wrapper */
+.wallet-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* ------------------------
+    PHANTOM TOOLTIP STYLE
+   ------------------------ */
+.phantom-style {
+  position: absolute;
+  text-align: left;
+  padding: 16px 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f5f3ff;
+  font-family: "DM Sans", Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+
+  background: #7c1010; /* deep phantom purple */
+  border: 1px solid #7c1010;
+
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999999;
+
+  opacity: 0;
+  transform: translateY(5px) scale(0.9);
+  transition: opacity .18s ease, transform .18s cubic-bezier(.18,.89,.32,1.28);
+
+  /* Phantom glow */
+  box-shadow:
+    0 0 20px rgba(122, 4, 6, 0.2),
+    0 0 40px rgba(154, 21, 21, 0.15);
+}
+
+/* Show on wrapper hover */
+.wallet-wrapper:hover .phantom-style {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ---------------------------
+      ARROW (PHANTOM STYLE)
+   --------------------------- */
+
+.phantom-style::after {
+  content: "";
+  position: absolute;
+  border-style: solid;
+  border-width: 8px;
+  filter: drop-shadow(0 0 6px rgba(90, 2, 12, 0.25));
+}
+
+/* Top placement */
+.tooltip-top {
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%) translateY(5px) scale(0.9);
+}
+
+.wallet-wrapper:hover .tooltip-top {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.tooltip-top::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-color: #7c1010 transparent transparent transparent;
+}
+
+/* Bottom placement */
+.tooltip-bottom {
+  left: 50%;
+  top: calc(100% + 14px);
+  transform: translateX(-50%) translateY(-5px) scale(0.9);
+}
+
+.wallet-wrapper:hover .tooltip-bottom {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.tooltip-bottom::after {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  border-color: #7c1010 transparent transparent transparent;
+}
+
+/* X-shifts for edges */
+.shift-left {
+  left: 146px !important;
+  transform: translateY(0) scale(0.9) !important;
+}
+
+.shift-right {
+  left: calc(100% - 46px) !important;
+  transform: translateX(-100%) translateY(0) scale(0.9) !important;
 }
