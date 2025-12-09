@@ -245,3 +245,44 @@ footer .wallet-widget-class {
 .stake-message:empty {
   display: none;
 }
+
+.wallet-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.wallet-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(5px);
+  background: rgba(17, 24, 39, 0.95); /* Gray-900 */
+  color: white;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 99999;
+
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+/* Показываем tooltip при наведении */
+.wallet-wrapper:hover .wallet-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Маленькая стрелочка */
+.wallet-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(17, 24, 39, 0.95) transparent transparent transparent;
+}
