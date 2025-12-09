@@ -79,8 +79,10 @@ if (typeof window !== 'undefined') {
 }
 
 export const replaceButtons = () => {
+  console.log('Replacing buttons...');
+  console.log('%cWIDGET REPLACE BUTTONS STARTED', 'color: #ff00ff; font-size: 16px; font-weight: bold;');
   // Wallet buttons
-  document.querySelectorAll('.wallet-adapter-button').forEach((btn: HTMLElement, i) => {
+  document.querySelectorAll('.wallet-widget-class').forEach((btn: HTMLElement, i) => {
     const container = document.createElement('div');
     container.style.display = 'inline-block';
     btn.replaceWith(container);
@@ -117,4 +119,12 @@ if (typeof window !== 'undefined') {
     StakePopup,
     WalletContextProvider
   };
+}
+if (typeof window !== 'undefined' && document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.WidgetBundle?.replaceButtons();
+  });
+} else {
+  // DOM вже готовий (наприклад, скрипт підключений з defer)
+  window.WidgetBundle?.replaceButtons();
 }
