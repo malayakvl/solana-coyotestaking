@@ -98,7 +98,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   // Обработчик отправки стейка
   const handleConfirm = async () => {
     const num = parseFloat(amount);
-
+    const STAKE_ALT = new PublicKey('3fYbfjNYGg8Lbh839kwQSGmpBZK2VF29VLCaMdBUJ76h'); // ✅ теперь внутри функции
     // Валидация
     if (isNaN(num) || num < MIN_STAKE) {
       setMessage(`❌ Минимум ${MIN_STAKE} SOL`);
@@ -116,53 +116,72 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     try {
       setMessage('🔄 Подготовка транзакции...');
 
-      // Rent-exempt — динамический, не hardcode!
       const stakeAccount = Keypair.generate();
+      const payerPublicKey = new PublicKey(effectivePublicKey);
+      const stakeAlt = new PublicKey('3fYbfjNYGg8Lbh839kwQSGmpBZK2VF29VLCaMdBUJ76h'); // ✅ теперь внутри функции
+
+
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+      const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
 
-      const lamports = num * LAMPORTS_PER_SOL + rentExempt;
-
-      // 1. Создание аккаунта для стейка
+      // 1. Создаём инструкции
       const createIx = StakeProgram.createAccount({
-        fromPubkey: new PublicKey(effectivePublicKey),
+        fromPubkey: payerPublicKey,
         stakePubkey: stakeAccount.publicKey,
         authorized: {
-          staker: new PublicKey(effectivePublicKey),
-          withdrawer: new PublicKey(effectivePublicKey)
+          staker: payerPublicKey,
+          withdrawer: payerPublicKey
         },
         lamports
       });
 
-      // 2. Делегирование на валидатора
       const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
-        authorizedPubkey: new PublicKey(effectivePublicKey),
+        authorizedPubkey: payerPublicKey,
         votePubkey: VOTE_ACCOUNT
       });
 
-      const tx = new Transaction().add(createIx, delegateIx);
+      // 2. Получаем ALT объект через RPC
+      const altAccountResp = await connection.getAddressLookupTable(stakeAlt);
+      console.log('STAKE ALT', stakeAlt);
+      const lookupTableAccount = altAccountResp.value;
+      if (!lookupTableAccount) throw new Error('ALT не найден');
 
+      // 3. Создаём VersionedTransaction
+      const blockhash = (await connection.getLatestBlockhash()).blockhash;
+      const messageV0 = new TransactionMessage({
+        payerKey: payerPublicKey,
+        recentBlockhash: blockhash,
+        instructions: [createIx, delegateIx],
+      }).compileToV0Message([lookupTableAccount]);
+
+      const tx = new VersionedTransaction(messageV0);
+
+      // 4. Подтверждение от пользователя
       if (!window.confirm(`Вы хотите застейкать ${num} SOL на валидатор?`)) {
         setMessage('❌ Пользователь отменил стейк');
         return;
       }
 
-      setMessage('⏳ Отправка транзакции...');
+      // 5. Подписание кошельком (Phantom Lighthouse)
+      setMessage('⏳ Подпись кошельком...');
+      const signedTx = await window.globalWalletSignTransaction(tx);
 
-      // For now, we'll show a message that the transaction is prepared
-      // In a real implementation, we would need to handle signing differently
-      // since we don't have direct access to the wallet's signTransaction function
-      // in this isolated context
-      setMessage(`✅ Transaction prepared. In a full implementation, this would be sent to your wallet for signing.`);
+      // 6. Подписываем локальный stakeAccount
+      tx.partialSign(stakeAccount);
 
-      // Закрываем попап спустя 2 сек
-      setTimeout(onClose, 2000);
+      // 7. Отправка транзакции
+      setMessage('⏳ Отправка транзакции в сеть...');
+      const signature = await window.globalWalletSendTransaction(signedTx, connection);
+
+      setMessage(`✅ Стейк успешно отправлен! Signature: ${signature}`);
+      onClose();
 
     } catch (err: unknown) {
       console.error(err);
       setMessage(err instanceof Error ? '❌ Ошибка: ' + err.message : '❌ Неизвестная ошибка');
     }
-  };
+  };  
 
   if (!isOpen) return null;
 

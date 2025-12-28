@@ -8,8 +8,32 @@ import {
   PublicKey,
   Transaction,
   Keypair,
-  StakeProgram
+  StakeProgram,
+  SendOptions,
 } from '@solana/web3.js';
+
+declare global {
+  interface Window {
+    globalWalletState: {
+      connected: boolean;
+      publicKey: string | null;
+      walletName: string | null;
+    };
+    globalWalletEventListeners: Array<(state: Window['globalWalletState']) => void>;
+    updateGlobalWalletState: (newState: Partial<Window['globalWalletState']>) => void;
+    subscribeToGlobalWalletState: (callback: (state: Window['globalWalletState']) => void) => () => void;
+    globalWalletSendTransaction?: (transaction: Transaction, connection: Connection, options?: SendOptions) => Promise<string>;
+    globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
+    globalWalletSignAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>;
+    WidgetBundle?: {
+      replaceButtons: () => void;
+      ConnectButton: typeof ConnectButton;
+      StakeButton: typeof StakeButton;
+      StakePopup: typeof StakePopup;
+    };
+    showSuccessPopup?: (message: string) => void;
+  }
+}
 
 // Extend Connection interface to include private properties we need to access
 interface ExtendedConnection extends Connection {
@@ -546,11 +570,10 @@ View on Solana Explorer: solana.fm/tx/${fakeSignature}`);
       tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
-      tx.partialSign(stakeAccount);
 
       setMessage('Sign in wallet...');
       const signedTx = await window.globalWalletSignTransaction(tx);
+      tx.partialSign(stakeAccount);
 
       setMessage('Simulating...');
       const sim = await connection.simulateTransaction(signedTx);
