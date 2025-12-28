@@ -138,15 +138,22 @@ footer .wallet-widget-class {
 }
 
 .stake-sol-btn {
+  text-transform: uppercase;
   border: none;
   border-radius: 5em;
-  background: #ff554f !important;
-  text-transform: uppercase;
-  font-size: 22px;
+  padding: 25px 55px;
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff !important;
-  padding: 20px 55px;
+  color: #fff !important;
+  background: #ff554f !important;
+  position: relative;
+  cursor: pointer;
+  font-family: "Open Sans";
 }
+.stake-sol-btn:hover {
+  background: #ff8480 !important;
+}
+
 
 /* Stake Popup Styles */
 .stake-popup-overlay {
@@ -289,3 +296,59 @@ footer .wallet-widget-class {
 footer .uk-container{
   text-align: center !important;
 }
+
+button.wallet-adapter-button span.text-connected {
+  padding-left: 5px;
+}
+
+.success-popup-container .success-popup-signature-container div, .success-popup-container .success-popup-button-container div {
+  line-height: normal;
+}
+
+.success-popup-container .success-popup-button-container button {
+  font-weight: 700;
+  font-family: "Open Sans";
+  font-size: 20px;
+  margin: 20px auto;
+  padding: 20px 50px;
+}
+
+.success-popup-close {
+  position: absolute;
+  top: -106px;
+  right: -17px;
+  width: 20px;
+  height: 20px;
+  background: #5b0b0b;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 0px 8px 15px 8px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  text-transform: inherit;
+}
+.black-btn-block .stake-sol-btn {
+  border: solid 4px #ffd4d3;
+  border-radius: 5em;
+  background: none;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd4d3 !important;
+  padding: 10px 55px;
+  margin-top: 25px !important;
+  font-family: "Open Sans"
+}
+.black-btn-block .stake-sol-btn:hover {
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.stake-btn-container {
+  display: table;
+  margin: 0 auto;
+}
+

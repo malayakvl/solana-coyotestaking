@@ -200,7 +200,7 @@ const ConnectButton = () => {
         <div className="flex items-center gap-3">
           {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
           <div>
-            <span className="text-connected">• Connected</span>
+            <span className="text-connected">Connected</span>
             {/* <span className="text-connected-key">{gPubkey.slice(0, 2)}...{gPubkey.slice(-2)}</span> */}
           </div>
         </div>

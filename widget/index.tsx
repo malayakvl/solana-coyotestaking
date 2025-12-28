@@ -85,6 +85,7 @@ export const replaceButtons = () => {
   document.querySelectorAll('.wallet-widget-class').forEach((btn: HTMLElement, i) => {
     const container = document.createElement('div');
     container.style.display = 'inline-block';
+    container.className = 'wallet-container';
     btn.replaceWith(container);
 
     // Each button gets its own context provider, but they'll use global state
@@ -98,7 +99,8 @@ export const replaceButtons = () => {
   // Stake buttons
   document.querySelectorAll('.stake-button').forEach((btn: HTMLElement, i) => {
     const container = document.createElement('div');
-    container.style.display = 'inline-block';
+    // container.style.display = 'inline-block';
+    container.className = 'stake-btn-container';
     btn.replaceWith(container);
 
     // Each button gets its own context provider, but they'll use global state

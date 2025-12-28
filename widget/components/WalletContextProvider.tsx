@@ -14,7 +14,8 @@ interface Props {
   children: ReactNode;
 }
 
-const RPC_ENDPOINT = 'http://103.167.235.81/api/rpc-proxy';
+// const RPC_ENDPOINT = 'http://103.167.235.81/api/rpc-proxy';
+const RPC_ENDPOINT = 'https://solspy.org/api/rpc-proxy';
 
 export const WalletContextProvider: FC<Props> = ({ children }) => {
   const wallets = useMemo(

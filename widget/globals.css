@@ -118,13 +118,14 @@ footer .wallet-widget-class {
   text-transform: uppercase;
   border: none;
   border-radius: 5em;
-  padding: 20px 55px;
-  font-size: 22px;
+  padding: 25px 55px;
+  font-size: 20px;
   font-weight: 700;
   color: #fff !important;
   background: #ff554f !important;
   position: relative;
   cursor: pointer;
+  font-family: "Open Sans";
 }
 
 .stake-sol-btn:hover {
@@ -516,6 +517,7 @@ footer .uk-container{
   margin-bottom: 15px;
   text-align: center;
   padding: 0px 30px;
+  line-height: normal;
 }
 
 .success-popup-signature-container {
@@ -525,6 +527,7 @@ footer .uk-container{
   margin-top: 95px;
   margin-bottom: 25px;
   text-align: center;
+  line-height: normal !important;
 }
 
 .success-popup-close {
@@ -537,4 +540,106 @@ footer .uk-container{
   cursor: pointer;
   width: 20px;
   height: 20px;
+}
+
+.stake-popup-content .col-param {
+  font-size: 36px;
+  font-family: "Open Sans";
+  margin: 0 !important;
+}
+
+.stake-popup-content .col-param span {
+  margin-top: -15px !important;
+}
+
+.red-content-popup {
+  border-radius: 0 0 10px 10px;
+}
+
+.stake-input {
+  border-radius: 5px;
+  font-size: 44px;
+  padding: 5px 0 !important;
+  font-family: "Open Sans";
+}
+
+.i-sol { 
+  width: 32px;
+  height: 32px;
+}
+
+.stake-submit-btn {
+  font-weight: 700;
+  font-family: "Open Sans";
+  font-size: 20px;
+}
+
+.stake-popup-content .flex button {
+  position: absolute;
+  top: -90px;
+  right: -20px;
+  background: #5b0b0b;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 5px 14px 8px 14px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  text-transform: inherit;
+}
+
+.black-btn-block .stake-sol-btn {
+  border: solid 4px #ffd4d3;
+  border-radius: 5em;
+  background: none;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd4d3 !important;
+  padding: 10px 55px;
+  margin-top: 25px !important;
+  font-family: "Open Sans"
+}
+.black-btn-block .stake-sol-btn:hover {
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+.stake-btn-container {
+  display: table;
+  margin: 0 auto;
+}
+footer .wallet-container {
+  display: none !important;
+}
+
+.success-popup-container .success-popup-signature-container div, .success-popup-container .success-popup-button-container div {
+  line-height: normal;
+}
+
+.success-popup-close-button {
+  font-weight: 700;
+  font-family: "Open Sans";
+  font-size: 20px;
+  margin: 20px auto;
+  padding: 20px 50px;
+}
+
+.success-popup-close {
+  position: absolute;
+  top: -106px;
+  right: -17px;
+  width: 20px;
+  height: 20px;
+  background: #5b0b0b;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 0px 8px 15px 8px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  text-transform: inherit;
 }

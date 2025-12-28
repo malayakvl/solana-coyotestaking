@@ -227,16 +227,25 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
   // RPC
   // const connection = useMemo(
-  //   () => new Connection('https://judy-accepted-longer-sales.trycloudflare.com'),
+  //   () => new Connection('https://rpc.d-care.online/api/rpc-proxy'),
+  //   []
+  // );
+  // const connection = useMemo(
+  //   () => new Connection('https://vladika.love/rpc.php'),
+  //   []
+  // );
+  // console.log('connection:', 'https://vladika.love/rpc.php');
+  // const connection = useMemo(
+  //   () => new Connection('https://103.167.235.81.sslip.io/api/rpc-proxy'),
   //   []
   // );
   const connection = useMemo(
-    () => new Connection('http://103.167.235.81/api/rpc-proxy'),
+    () => new Connection('https://solspy.org/api/rpc-proxy'),
     []
   );
   // const connection = useMemo(
-  //   () => new Connection('https://hearings-aerial-sublime-connectors.trycloudflare.com'),
-  //     []
+  //   () => new Connection('https://nameless-dream-ffe6.malaya-kvl.workers.dev/'),
+  //   []
   // );
 
   // ЦЕЙ useEffect має бути ПІСЛЯ всіх інших і замість старого
