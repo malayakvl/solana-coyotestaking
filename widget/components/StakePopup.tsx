@@ -450,11 +450,19 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
       signedTx.partialSign(stakeAccount);
 
+      const raw = signedTx.serialize();
+      const signature = await connection.sendRawTransaction(raw, {
+        skipPreflight: false,
+        preflightCommitment: 'processed',
+        maxRetries: 3,
+      });
+      // const signature = await connection.sendRawTransaction(raw);
+
       setMessage('Sending transaction...');
-      const signature = await window.globalWalletSendTransaction!(signedTx, connection);
+      // const signature = await window.globalWalletSendTransaction!(signedTx, connection);
 
       setMessage('✅ Transaction sent');
-      document.activeElement?.blur(); // снимаем фокус с кнопки, чтобы не влетать в dApp
+      // document.activeElement?.blur(); // снимаем фокус с кнопки, чтобы не влетать в dApp
 
       if (window.showSuccessPopup) {
         window.showSuccessPopup(`Transaction Successful!\nSignature: ${signature}\nhttps://solana.fm/tx/${signature}`);
