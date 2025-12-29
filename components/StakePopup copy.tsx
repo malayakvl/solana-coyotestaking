@@ -388,87 +388,106 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     // sendLogMessage('[TEST] This is a test log message');
   };
 
-  const validateAmount = (value: string): boolean => {
-    const num = parseFloat(value);
-    if (isNaN(num)) {
-      setAmountError('Enter valid number');
-      return false;
-    }
-    if (num < MIN_STAKE) {
-      setAmountError(`Minimum ${MIN_STAKE} SOL`);
-      return false;
-    }
-    if (availableBalance !== null && num > availableBalance) {
-      setAmountError(`Exceeds balance (${availableBalance.toFixed(3)} SOL)`);
-      return false;
-    }
-    setAmountError(null);
-    return true;
-  };
-
-
   // HANDLE STAKE
   const handleConfirm = async () => {
-    if (isSigningRef.current) return; // предотвращаем повторные клики
+    // Block UI during submission
     setIsSubmitting(true);
-    isSigningRef.current = true;
     setMessage('');
     setAmountError(null);
+    isSigningRef.current = true;
 
     const num = parseFloat(amount);
-    if (!validateAmount(amount)) {
+    if (isNaN(num) || num < MIN_STAKE) {
+      setAmountError(`Minimum ${MIN_STAKE} SOL`);
       setIsSubmitting(false);
-      isSigningRef.current = false;
+      return;
+    }
+    if (!effectiveConnected || !effectivePublicKey) {
+      setAmountError('Connect wallet');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
+      setAmountError('Wallet not ready');
+      setIsSubmitting(false);
       return;
     }
 
     try {
+      setMessage('Prepare...');
+
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
       const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
       const stakeAccount = Keypair.generate();
-      const payer = new PublicKey(effectivePublicKey);
 
       const createIx = StakeProgram.createAccount({
-        fromPubkey: payer,
+        fromPubkey: new PublicKey(effectivePublicKey),
         stakePubkey: stakeAccount.publicKey,
-        authorized: { staker: payer, withdrawer: payer },
-        lamports
+        authorized: {
+          staker: new PublicKey(effectivePublicKey),
+          withdrawer: new PublicKey(effectivePublicKey),
+        },
+        lamports,
       });
 
       const delegateIx = StakeProgram.delegate({
         stakePubkey: stakeAccount.publicKey,
-        authorizedPubkey: payer,
-        votePubkey: VOTE_ACCOUNT
+        authorizedPubkey: new PublicKey(effectivePublicKey),
+        votePubkey: VOTE_ACCOUNT,
       });
 
       const tx = new Transaction().add(createIx, delegateIx);
-      tx.feePayer = payer;
+      tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-      setMessage('Waiting for wallet signature...');
-      const signedTx = await window.globalWalletSignTransaction!(tx);
 
+      setMessage('Sign in wallet...');
+      const signedTx = await window.globalWalletSignTransaction(tx);
+
+      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
       signedTx.partialSign(stakeAccount);
 
-      setMessage('Sending transaction...');
-      const signature = await window.globalWalletSendTransaction!(signedTx, connection);
+      // setMessage('Simulating...');
+      // const sim = await connection.simulateTransaction(signedTx);
+      // if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
 
-      setMessage('✅ Transaction sent');
-      document.activeElement?.blur(); // снимаем фокус с кнопки, чтобы не влетать в dApp
+      setMessage('Sending to network...');
+      const signature = await window.globalWalletSendTransaction(signedTx, connection);
 
-      if (window.showSuccessPopup) {
-        window.showSuccessPopup(`Transaction Successful!\nSignature: ${signature}\nhttps://solana.fm/tx/${signature}`);
+      // Close current popup
+      setIsSubmitting(false);
+      // onClose();
+      
+      // Show success message in a new popup immediately
+      if (typeof window !== 'undefined' && window.showSuccessPopup) {
+        window.showSuccessPopup(`Transaction Successful!
+
+Signature: ${signature}
+
+View on Solana Explorer: solana.fm/tx/${signature}`);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      if (!err.message.includes('User rejected')) setAmountError(err.message || 'Error');
-    } finally {
-      setIsSubmitting(false);
+      
+      // Check if user cancelled the transaction
+      if ((err as Error)?.message?.includes('User rejected the request') || 
+          (err as Error)?.message?.includes('Transaction cancelled') ||
+          (err as Error)?.message?.includes('rejected') ||
+          (err as { code?: number })?.code === 4001) {  // Common error code for user rejection
+        // Clear all messages and unblock UI when user cancels
+        setMessage('');
+        setAmountError(null);
+      } else {
+        // Show error message for other errors
+        setAmountError(err instanceof Error ? err.message : 'Error');
+      }
       isSigningRef.current = false;
+      
+      // Always unblock UI on error
+      setIsSubmitting(false);
     }
   };
-
 
   // Clear messages when popup opens
   if (!isOpen) return null;
