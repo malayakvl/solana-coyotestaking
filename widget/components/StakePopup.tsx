@@ -155,8 +155,21 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           signatureText.style.wordBreak = 'break-all';
           signatureText.style.display = 'none';
           
-          signatureContainer.appendChild(signatureTitle);
-          signatureContainer.appendChild(signatureText);
+          // Add transaction link
+          const signatureLink = document.createElement('a');
+          // signatureLink.href = `https://solanabeach.io/address/${signatureMatch[1]}/transactions`;
+          signatureLink.href = `https://solanabeach.io/address/9dy9PWY9UhBZopERAYhx3hZeDig8L7ava73UU1FmwnAc/transactions`;
+          signatureLink.textContent = 'View transaction on SolanaBeach';
+          signatureLink.target = '_blank';
+          signatureLink.style.display = 'block';
+          signatureLink.style.marginTop = '8px';
+          signatureLink.style.color = '#1a0dab';
+          signatureLink.style.textDecoration = 'underline';
+          signatureLink.style.fontSize = '14px';
+          
+          signatureContainer.appendChild(signatureTitle || '');
+          signatureContainer.appendChild(signatureText || '');
+          signatureContainer.appendChild(signatureLink || '');
         }
         
         // Create close button
@@ -176,10 +189,23 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         
         // Create text above the button
         const buttonText = document.createElement('div');
-        buttonText.textContent = "You can stake tokens in your wallet's `Staking` tab. Feeling fancy already? You should - your SOL in the right hands";
+        buttonText.innerHTML = "<span class='success-popup-button-text-content'>You can stake tokens in your wallet's `Staking` tab. Feeling fancy already? You should - your SOL in the right hands</span>";
         buttonText.className = 'success-popup-button-text';
         
+        // Create transaction link
+        const transactionLink = document.createElement('a');
+        transactionLink.href = `https://solanabeach.io/address/9dy9PWY9UhBZopERAYhx3hZeDig8L7ava73UU1FmwnAc/transactions`;
+        transactionLink.textContent = 'View transaction on SolanaBeach';
+        transactionLink.target = '_blank';
+        transactionLink.style.display = 'block';
+        transactionLink.style.marginTop = '10px';
+        transactionLink.style.color = '#fff';
+        transactionLink.style.textDecoration = 'underline';
+        transactionLink.style.fontSize = '16px';
+        transactionLink.className = 'transaction-link';
+        
         buttonContainer.appendChild(buttonText);
+        buttonContainer.appendChild(transactionLink);
         buttonContainer.appendChild(closeButton);
         
         // Assemble popup
@@ -380,7 +406,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
   
 
-  const [logMessages, setLogMessages] = useState<string[]>([]);
+  // const [logMessages, setLogMessages] = useState<string[]>([]);
 
   // Test function to verify logging
   const testLogging = () => {
@@ -441,6 +467,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         votePubkey: VOTE_ACCOUNT
       });
 
+      // =========== Create a transaction and add the instructions to it
       const tx = new Transaction().add(createIx, delegateIx);
       tx.feePayer = payer;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
@@ -456,19 +483,20 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         preflightCommitment: 'processed',
         maxRetries: 3,
       });
-      // const signature = await connection.sendRawTransaction(raw);
+      // ============= end send transaction
 
       setMessage('Sending transaction...');
       // const signature = await window.globalWalletSendTransaction!(signedTx, connection);
 
       setMessage('✅ Transaction sent');
-      // document.activeElement?.blur(); // снимаем фокус с кнопки, чтобы не влетать в dApp
 
       if (window.showSuccessPopup) {
-        window.showSuccessPopup(`Transaction Successful!\nSignature: ${signature}\nhttps://solana.fm/tx/${signature}`);
+        onClose(); // закрываем основной popup
+        // window.showSuccessPopup(`Transaction Successful!\nSignature: ${signature}\nhttps://solanabeach.io/address/${signature}/transactions`);
+        window.showSuccessPopup(`Transaction Successful!`);
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       if (!err.message.includes('User rejected')) setAmountError(err.message || 'Error');
     } finally {
@@ -481,7 +509,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   // Clear messages when popup opens
   if (!isOpen) return null;
 
-  console.log('StakePopup відкрито, запитую баланс...');
+  // console.log('StakePopup відкрито, запитую баланс...');
 
   return (
     <div

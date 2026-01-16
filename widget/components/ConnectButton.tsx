@@ -187,9 +187,12 @@ const ConnectButton = () => {
   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
   const icon = gWalletName ? WALLET_ICONS[gWalletName] || '/wallets/phantom.svg' : null;
 
-  // 1. Connected
+  // Render the button based on state
+  let buttonContent;
+  
   if (gConnected && gPubkey) {
-    return (
+    // Connected state
+    buttonContent = (
       <WalletMultiButton
         className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg"
         onClick={() => {
@@ -206,11 +209,9 @@ const ConnectButton = () => {
         </div>
       </WalletMultiButton>
     );
-  }
-
-  // 2. Wallet selected
-  if (gWalletName) {
-    return (
+  } else if (gWalletName) {
+    // Wallet selected but not connected
+    buttonContent = (
       <WalletMultiButton 
         className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20"
       >
@@ -220,19 +221,24 @@ const ConnectButton = () => {
         </div>
       </WalletMultiButton>
     );
-  }
-
-  // 3. Nothing selected
-  return (
-    <div className="wallet-wrapper" ref={wrapperRef}>
+  } else {
+    // Nothing selected
+    buttonContent = (
       <WalletMultiButton 
-        className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg"
+        className="wallet-btn"
       >
         <div className="flex items-center gap-3 btn-s-wallet">
           <i className="pi-wallet text-xl"></i>
           <span className="font-bold">Wallet</span>
         </div>
       </WalletMultiButton>
+    );
+  }
+
+  // Always render the wrapper with tooltip
+  return (
+    <div className="wallet-wrapper" ref={wrapperRef}>
+      {buttonContent}
       <div className="wallet-tooltip phantom-style" ref={tooltipRef}>
         <span style={{ display: "block", paddingBottom: "8px" }}>To Stake SOL from your wallet:</span>
         <span>1. Connect your wallet</span><br />

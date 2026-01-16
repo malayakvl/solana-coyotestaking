@@ -63,7 +63,7 @@ cd widget
 php -S 127.0.0.1:8000
 ```
 
-Then visit http://127.0.0.1:8001/test.html to test the widget.
+Then visit http://127.0.0.1:8000/test.html to test the widget.
 
 ```bash
 Start log server
@@ -79,3 +79,7 @@ The widget uses the same styling as the main Next.js application, including:
 - Consistent color scheme and typography
 
 All styling can be customized by modifying the CSS in `standalone-widget/solana-widget.ts`.
+
+After build widgt replace url for buttons in bundle.iife.css, change image path
+
+i-wallet-phantom{background-image:url("https://vladika.love/wp-content/themes/yootheme/js/widget/images/phantom-icon-RO4V5MWU.png");width:24px;height:24px;display:inline-block;background-size:contain;position:absolute;top:12px;left:15px}.i-wallet-solflare{background-image:url("https://vladika.love/wp-content/themes/yootheme/js/widget/images/solflare-KF3RE5T6.png");width:24px;height:24px;display:inline-block;background-size:contain;background-repeat:no-repeat;position:absolute;top:12px;left:15px}.i-wallet-coinbase{background-image:url("https://vladika.love/wp-content/themes/yootheme/js/widget/images/coinbase-Q33HEI2J.png");width:24px;height:24px;display:inline-block;background-size:contain;background-repeat:no-repeat;position:absolute;top:12px;left:15px}

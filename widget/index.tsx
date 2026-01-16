@@ -78,7 +78,17 @@ if (typeof window !== 'undefined') {
   };
 }
 
+// Track if buttons have already been replaced
+let buttonsReplaced = false;
+
 export const replaceButtons = () => {
+  // Prevent multiple executions
+  if (buttonsReplaced) {
+    console.log('Buttons already replaced, skipping...');
+    return;
+  }
+  
+  buttonsReplaced = true;
   console.log('Replacing buttons...');
   console.log('%cWIDGET REPLACE BUTTONS STARTED', 'color: #ff00ff; font-size: 16px; font-weight: bold;');
   // Wallet buttons
@@ -96,8 +106,39 @@ export const replaceButtons = () => {
     );
   });
 
-  // Stake buttons
-  document.querySelectorAll('.stake-button').forEach((btn: HTMLElement, i) => {
+  // find heart on faq'
+  const heartBlockDiv = document.getElementById('faq_heart_img');
+  console.log('heartBlockDiv', heartBlockDiv);
+
+  // Add stake button to heart block (only if not already exists)
+  if (heartBlockDiv && !heartBlockDiv.querySelector('[data-heart-stake]')) {
+    const stakeButtonContainer = document.createElement('div');
+    stakeButtonContainer.className = 'stake-btn-container';
+    
+    // Insert the stake button container into the heart block
+    heartBlockDiv.appendChild(stakeButtonContainer);
+    
+    // Mark container to avoid general processing and duplicates
+    stakeButtonContainer.setAttribute('data-heart-stake', 'true');
+    
+    // Render the StakeButton component
+    ReactDOM.createRoot(stakeButtonContainer).render(
+      <WalletContextProvider>
+        <StakeButton className="heart-stake-btn" onClick={() => console.log('Heart stake clicked')} />
+      </WalletContextProvider>
+    );
+    
+    console.log('Heart stake button created');
+  } else if (heartBlockDiv) {
+    console.log('Heart stake button already exists, skipping creation');
+  }
+
+  
+  // Stake buttons - only process buttons that are not already converted
+  document.querySelectorAll('.stake-button:not([data-processed])').forEach((btn: HTMLElement, i) => {
+    // Mark as processed to avoid duplicates
+    btn.setAttribute('data-processed', 'true');
+    
     const container = document.createElement('div');
     // container.style.display = 'inline-block';
     container.className = 'stake-btn-container';
@@ -110,6 +151,7 @@ export const replaceButtons = () => {
       </WalletContextProvider>
     );
   });
+
 };
 
 // Make sure WidgetBundle is attached to window
