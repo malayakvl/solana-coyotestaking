@@ -40,11 +40,11 @@ export const StakeButton = () => {
   // Determine which state to use
   const effectiveConnected = globalState?.connected ?? false;
 
-  console.log('StakeButton: Render with state', {
-    localConnected: connected,
-    globalConnected: globalState?.connected,
-    effectiveConnected,
-  });
+  // console.log('StakeButton: Render with state', {
+  //   localConnected: connected,
+  //   globalConnected: globalState?.connected,
+  //   effectiveConnected,
+  // });
 
   const handleStake = () => {
     if (!effectiveConnected) {

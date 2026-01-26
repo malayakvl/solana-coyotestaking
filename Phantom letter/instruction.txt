@@ -1,0 +1,69 @@
+Hello Phantom Support Team,
+
+We are experiencing persistent security warnings in Phantom Wallet when interacting with our dApp, despite having a fully valid and correctly configured HTTPS setup.
+
+**Domain:** [https://solspy.org](https://solspy.org)
+**Use case:** Connecting to Phantom Wallet from a production website and performing staking transactions.
+
+### What we have already verified on our side
+
+1. **Valid SSL certificate**
+
+   * Certificate issued by a trusted CA
+   * Correct full chain (server cert + CA bundle)
+   * No browser SSL warnings
+   * `openssl s_client` verification returns `Verify return code: 0 (ok)`
+
+2. **Correct DNS configuration**
+
+   * A record points to the correct public IP
+   * `dig A solspy.org` resolves correctly
+   * No mixed-content or insecure subresources
+
+3. **Apache configuration**
+
+   * HTTPS enforced (HTTP → HTTPS redirect)
+   * TLS 1.3 enabled
+   * HSTS enabled
+   * Single authoritative VirtualHost for :443
+   * No IP-based ServerName usage (domain-only)
+
+4. **Frontend**
+
+   * No cached JS (bundle loaded with cache-busting timestamp)
+   * All wallet interactions are done over HTTPS
+   * No calls to insecure endpoints
+
+Despite all of the above, Phantom shows the warning:
+
+> *"For your safety, Phantom has blocked this request"*
+
+Notably:
+
+* The same staking operation **works correctly**
+* The warning appears inconsistently (e.g. after a successful interaction)
+
+### Important context
+
+* The dApp frontend may be embedded or called from another HTTPS domain
+* The RPC endpoint and site domain are both HTTPS and valid
+* This appears to be related to Phantom’s internal security / trust heuristics rather than an actual TLS or DNS issue
+
+### Our questions
+
+1. What exact conditions cause Phantom to block a request **even when SSL, DNS, and HTTPS are valid**?
+2. Does Phantom require:
+
+   * Explicit domain allowlisting?
+   * Same-origin restrictions between site and RPC?
+   * Additional headers (CSP, Permissions-Policy, etc.)?
+3. Is there a way to verify or request trust status for a production domain?
+
+We are confident that the infrastructure and security setup on our side is correct and would appreciate guidance on what Phantom expects or enforces internally so we can align with it.
+
+Thank you in advance for your help.
+
+Best regards,
+[Your Name / Team]
+[Optional: project or company name]
+[Optional: contact email]

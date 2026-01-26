@@ -25,6 +25,16 @@
   color: #000 !important;
 }
 
+.mobile-wallet-block .wallet-adapter-button {
+  width: 80px;
+  min-width: 80px !important;
+  margin-top: 30px;
+  margin-left: 20px;
+}
+
+
+
+
 .wallet-adapter-button:not([disabled]):hover {
   background-color: #ff554f !important;
 }
@@ -118,13 +128,14 @@ footer .wallet-widget-class {
   text-transform: uppercase;
   border: none;
   border-radius: 5em;
-  padding: 20px 55px;
-  font-size: 22px;
+  padding: 25px 55px;
+  font-size: 20px;
   font-weight: 700;
   color: #fff !important;
   background: #ff554f !important;
   position: relative;
   cursor: pointer;
+  font-family: "Open Sans";
 }
 
 .stake-sol-btn:hover {
@@ -361,7 +372,7 @@ footer .wallet-widget-class {
   border-radius: 8px;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 999999;
+  z-index: 10;
 
   opacity: 0;
   transform: translateY(5px) scale(0.9);
@@ -442,4 +453,228 @@ footer .uk-container{
 }
 #page\#3 {
     text-align: center;
+}
+
+/* Success popup icon styles */
+.success-popup-icon {
+  /* background-image: url("../public/popup/popup2-top.png"); */
+  background-image: url("../public/popup/popup-top.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 517px;
+  height: 315px;
+  margin: 0 auto 15px auto;
+  top: -183px;
+  left: 0px;
+  position: absolute;
+}
+.success-popup-button-text-content {
+  display: block;
+  margin-top: 102px;
+}
+
+/* Success popup close button styles */
+.success-popup-close-button {
+  background: #5b0b0b;
+  color: #fff;
+  border: none;
+  border-radius: 5em;
+  padding: 14px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  /* width: 100%; */
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+.transaction-link {
+  display: block;
+  margin-top: 10px;
+  color: #fff;
+  text-decoration: underline;
+  font-size: 16px;
+}
+.faq-heart-img {
+  position: relative;
+}
+#faq_heart_img .stake-sol-btn {
+  background: transparent !important;
+  color: #7a0f0c !important;
+  border: solid 3px #7a0f0c;
+  position: absolute;
+  top: 220px;
+  left: 80px;
+  width: 215px;
+  padding: 10px 0px !important;
+}
+
+/* .success-popup-close-button:hover {
+  background: #ff554e;
+  color: #fff;
+  transform: scale(1.02);
+} */
+
+/* Success popup explorer link styles */
+.success-popup-explorer-link {
+  color: #ff8480;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  border: 2px solid #ff8480;
+  border-radius: 5em;
+  padding: 10px 20px;
+  display: inline-block;
+}
+
+.success-popup-explorer-link:hover {
+  background: #ff8480;
+  color: #fff;
+}
+
+/* Success popup link container styles */
+.success-popup-link-container {
+  margin-bottom: 25px;
+}
+
+/* Success popup button container styles */
+.success-popup-button-container {
+  background: #ff554f;
+  padding: 20px;
+  border-radius: 0 0 16px 16px;
+  margin: 0 -30px -30px -30px;
+}
+
+/* Success popup button text styles */
+.success-popup-button-text {
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 15px;
+  text-align: center;
+  padding: 0px 30px;
+  line-height: normal;
+}
+
+.success-popup-signature-container {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 95px;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: normal !important;
+}
+
+.success-popup-close {
+  position: absolute;
+  top: -80px;
+  right: 10px;
+  background: none;
+  border: medium;
+  font-size: 20px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.stake-popup-content .col-param {
+  font-size: 36px;
+  font-family: "Open Sans";
+  margin: 0 !important;
+}
+
+.stake-popup-content .col-param span {
+  margin-top: -15px !important;
+}
+
+.red-content-popup {
+  border-radius: 0 0 10px 10px;
+}
+
+.stake-input {
+  border-radius: 5px;
+  font-size: 44px;
+  padding: 5px 0 !important;
+  font-family: "Open Sans";
+}
+
+.i-sol { 
+  width: 32px;
+  height: 32px;
+}
+
+.stake-submit-btn {
+  font-weight: 700;
+  font-family: "Open Sans";
+  font-size: 20px;
+}
+
+.stake-popup-content .flex button {
+  position: absolute;
+  top: -90px;
+  right: -20px;
+  background: #5b0b0b;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 5px 14px 8px 14px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  text-transform: inherit;
+}
+
+.black-btn-block .stake-sol-btn {
+  border: solid 4px #ffd4d3;
+  border-radius: 5em;
+  background: none;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffd4d3 !important;
+  padding: 10px 55px;
+  margin-top: 25px !important;
+  font-family: "Open Sans"
+}
+.black-btn-block .stake-sol-btn:hover {
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+.stake-btn-container {
+  display: table;
+  margin: 0 auto;
+}
+footer .wallet-container {
+  display: none !important;
+}
+
+.success-popup-container .success-popup-signature-container div, .success-popup-container .success-popup-button-container div {
+  line-height: normal;
+}
+
+.success-popup-close-button {
+  font-weight: 700;
+  font-family: "Open Sans";
+  font-size: 20px;
+  margin: 20px auto;
+  padding: 20px 50px;
+}
+
+.success-popup-close {
+  position: absolute;
+  top: -106px;
+  right: -17px;
+  width: 20px;
+  height: 20px;
+  background: #5b0b0b;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 0px 8px 15px 8px;
+  font-family: "Open Sans";
+  font-weight: 600;
+  text-transform: inherit;
 }

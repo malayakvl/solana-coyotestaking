@@ -11,6 +11,17 @@ import {
   StakeProgram
 } from '@solana/web3.js';
 
+// Extend the Window interface to include custom properties
+declare global {
+  interface Window {
+    showSuccessPopup?: (message: string) => void;
+    subscribeToGlobalWalletState?: (callback: (state: any) => void) => (() => void) | null;
+    globalWalletState?: any;
+    globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
+    globalWalletSendTransaction?: (transaction: Transaction, connection: Connection) => Promise<string>;
+  }
+}
+
 const VOTE_ACCOUNT = new PublicKey('53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR');
 const MIN_STAKE = 0.01;
 
@@ -24,12 +35,12 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false); // Add this state for blocking UI during submission
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State for showing success popup
-  const [transactionSignature, setTransactionSignature] = useState(''); // State for transaction signature
+  const isMounted = React.useRef(true);
 
   const [jitoValue, setJitoValue] = useState<number | null>(null);
   const [uptime, setUptime] = useState<number | null>(null);
   const [skipRate, setSkipRate] = useState<number | null>(null);
+  const isSigningRef = React.useRef(false);
 
   const [amountError, setAmountError] = useState<string | null>(null);
 
@@ -40,7 +51,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [globalWalletState, setGlobalWalletState] = useState<{
     connected: boolean;
     publicKey: string | null;
-    walletName: string | null;tx
+    walletName: string | null;
   } | null>(null);
 
   const wallet = useWallet();
@@ -61,6 +72,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
     return () => unsubscribe && unsubscribe();
   }, []);
+
+ 
   
   // Add showSuccessPopup function to window object for WordPress integration
   useEffect(() => {
@@ -68,62 +81,115 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       window.showSuccessPopup = (message: string) => {
         // Create container div
         const container = document.createElement('div');
+        container.id = 'success-popup-container';
         container.style.position = 'fixed';
         container.style.inset = '0';
-        container.style.background = 'rgba(0,0,0,0.5)';
+        container.style.background = 'rgba(0,0,0,0.6)';
         container.style.display = 'flex';
         container.style.alignItems = 'center';
         container.style.justifyContent = 'center';
         container.style.zIndex = '1000';
-        container.style.fontFamily = 'Arial, sans-serif';
+        container.style.fontFamily = 'Open Sans, sans-serif';
         
         // Create popup content
         const popup = document.createElement('div');
-        popup.style.background = '#1a1a1a';
-        popup.style.borderRadius = '12px';
+        popup.style.background = '#fff';
+        popup.style.borderRadius = '16px';
         popup.style.padding = '30px';
         popup.style.width = '90%';
-        popup.style.maxWidth = '400px';
+        popup.style.maxWidth = '457px';
         popup.style.textAlign = 'center';
-        popup.style.border = '2px solid #ff8480';
+        // popup.style.border = '3px solid #ff8480';
         popup.style.position = 'relative';
+        // popup.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
         
         // Create title
         const title = document.createElement('h2');
-        title.textContent = '✅ Transaction Successful!';
+        title.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
         title.style.color = '#ff8480';
         title.style.marginBottom = '20px';
-        title.style.fontSize = '24px';
+        title.style.fontSize = '28px';
+        title.style.fontWeight = 'bold';
+        
+        // Create success icon with background image
+        const icon = document.createElement('div');
+        icon.className = 'success-popup-icon';
+
+        const closeIcon = document.createElement('div');
+        closeIcon.className = 'success-popup-close';
+        closeIcon.innerHTML = '&times;';
+        
+        // Add click handler to close the popup
+        closeIcon.onclick = () => {
+          document.body.removeChild(container);
+        };
         
         // Create message container
         const messageContainer = document.createElement('div');
         messageContainer.style.color = '#fff';
-        messageContainer.style.marginBottom = '20px';
+        messageContainer.style.marginBottom = '25px';
         messageContainer.style.fontSize = '16px';
+        messageContainer.style.lineHeight = '1.5';
         messageContainer.style.whiteSpace = 'pre-line';
-        messageContainer.style.wordBreak = 'break-all';
+        messageContainer.style.wordBreak = 'break-word';
         messageContainer.textContent = message;
+        
+        // Create signature container with better styling
+        const signatureContainer = document.createElement('div');
+        signatureContainer.className = 'success-popup-signature-container';
+        
+        // Extract signature from message
+        const signatureMatch = message.match(/Signature: ([A-Za-z0-9]+)/);
+        if (signatureMatch && signatureMatch[1]) {
+          const signatureTitle = document.createElement('div');
+          signatureTitle.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
+          signatureTitle.style.color = '#000';
+          signatureTitle.style.fontSize = '16px';
+          signatureTitle.style.marginBottom = '8px';
+          
+          const signatureText = document.createElement('div');
+          signatureText.textContent = signatureMatch[1];
+          signatureText.style.color = '#ff8480';
+          signatureText.style.fontFamily = 'monospace';
+          signatureText.style.fontSize = '13px';
+          signatureText.style.wordBreak = 'break-all';
+          signatureText.style.display = 'none';
+          
+          signatureContainer.appendChild(signatureTitle);
+          signatureContainer.appendChild(signatureText);
+        }
         
         // Create close button
         const closeButton = document.createElement('button');
         closeButton.textContent = 'Close';
-        closeButton.style.background = '#ff8480';
-        closeButton.style.color = '#fff';
-        closeButton.style.border = 'none';
-        closeButton.style.borderRadius = '5em';
-        closeButton.style.padding = '12px 30px';
-        closeButton.style.fontSize = '16px';
-        closeButton.style.fontWeight = 'bold';
-        closeButton.style.cursor = 'pointer';
-        closeButton.style.width = '100%';
+        closeButton.className = 'success-popup-close-button';
+        
+        // Hover effects are now handled by CSS classes
+        
         closeButton.onclick = () => {
           document.body.removeChild(container);
         };
         
+        // Create a div with red background to contain the close button
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'success-popup-button-container';
+        
+        // Create text above the button
+        const buttonText = document.createElement('div');
+        buttonText.textContent = "You can stake tokens in your wallet's `Staking` tab. Feeling fancy already? You should - your SOL in the right hands";
+        buttonText.className = 'success-popup-button-text';
+        
+        buttonContainer.appendChild(buttonText);
+        buttonContainer.appendChild(closeButton);
+        
         // Assemble popup
-        popup.appendChild(title);
-        popup.appendChild(messageContainer);
-        popup.appendChild(closeButton);
+        popup.appendChild(icon);
+        popup.appendChild(closeIcon);
+        // popup.appendChild(title);
+        if (signatureMatch && signatureMatch[1]) {
+          popup.appendChild(signatureContainer);
+        }
+        popup.appendChild(buttonContainer);
         container.appendChild(popup);
         
         // Add to DOM
@@ -136,6 +202,12 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       if (typeof window !== 'undefined' && window.showSuccessPopup) {
         delete window.showSuccessPopup;
       }
+      
+      // Remove any existing popup containers
+      const existingContainer = document.getElementById('success-popup-container');
+      if (existingContainer) {
+        document.body.removeChild(existingContainer);
+      }
     };
   }, []);
 
@@ -144,85 +216,106 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
   // RPC
   // const connection = useMemo(
-  //   () => new Connection('http://103.167.235.81/api/rpc-proxy'),
+  //   () => new Connection('https://rpc.d-care.online/api/rpc-proxy'),
+  //   []
+  // );
+  // const connection = useMemo(
+  //   () => new Connection('https://vladika.love/rpc.php'),
+  //   []
+  // );
+  // console.log('connection:', 'https://vladika.love/rpc.php');
+  // const connection = useMemo(
+  //   () => new Connection('https://103.167.235.81.sslip.io/api/rpc-proxy'),
   //   []
   // );
   const connection = useMemo(
-    () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
-      []
+    () => new Connection('https://solspy.org/api/rpc-proxy'),
+    []
   );
+  // const connection = useMemo(
+  //   () => new Connection('https://nameless-dream-ffe6.malaya-kvl.workers.dev/'),
+  //   []
+  // );
+
+  // ЦЕЙ useEffect має бути ПІСЛЯ всіх інших і замість старого
+  useEffect(() => {
+    console.log('useEffect БАЛАНСУ ЗАПУЩЕНО');
+    console.log('isOpen:', isOpen, 'connected:', effectiveConnected, 'pubkey:', effectivePublicKey);
+
+    if (!isOpen || !effectiveConnected || !effectivePublicKey) {
+      console.log('Вих conditions не пройдено — виходимо');
+      // setAvailableBalance(null);
+      return;
+    }
+
+    const pubkey = new PublicKey(effectivePublicKey);
+    const controller = new AbortController();
+
+    console.log('ЗАПИТ БАЛАНСУ →', connection.rpcEndpoint);
+
+    const timeout = setTimeout(() => {
+      console.error('ТАЙМАУТ 15 секунд — валідатор не відповів!');
+      controller.abort();
+      setAvailableBalance(null);
+    }, 15000);
+
+    // Since getBalance doesn't support signal, we'll use a Promise.race approach
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 15000);
+    });
+
+    Promise.race([
+      connection.getBalance(pubkey),
+      timeoutPromise
+    ])
+      .then(lamports => {
+        if (controller.signal.aborted) return; // Don't update state if aborted
+        clearTimeout(timeout);
+        const sol = lamports / LAMPORTS_PER_SOL;
+        console.log('БАЛАНС ОТРИМАНО:', sol.toFixed(6), 'SOL');
+        setAvailableBalance(sol);
+      })
+      .catch(err => {
+        if (!isMounted.current) return;
+        setAvailableBalance(null);
+        if (err.message === 'Request timeout' || controller.signal.aborted) {
+          clearTimeout(timeout);
+          if (err.message === 'Request timeout') {
+            console.error('Запит скасовано через таймаут');
+          }
+          setAvailableBalance(null);
+        } else {
+          clearTimeout(timeout);
+          console.error('getBalance помилка:', err.message || err);
+          setAvailableBalance(null);
+        }
+      });
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [isOpen, effectiveConnected, effectivePublicKey, connection]);
 
   // Get the effective wallet for transactions
   const effectiveWallet = useMemo(() => {
-    // Проверяем глобальный кошелек первым (приоритет выше)
+    // Prefer global wallet state if available
     if (globalWalletState?.connected && globalWalletState?.publicKey) {
       return {
         publicKey: new PublicKey(globalWalletState.publicKey),
-        connected: true,
-        signTransaction: window.globalWalletSignTransaction || null,
-        sendTransaction: window.globalWalletSendTransaction || null,
-        signAllTransactions: window.globalWalletSignAllTransactions || null,
+        connected: globalWalletState.connected
       };
     }
-
-    // Фоллбек на локальный кошелек
+    // Fallback to local wallet
     if (wallet.connected && wallet.publicKey) {
       return {
         publicKey: wallet.publicKey,
-        connected: true,
-        signTransaction: wallet.signTransaction || null,
-        sendTransaction: wallet.sendTransaction || null,
-        signAllTransactions: wallet.signAllTransactions || null,
+        connected: wallet.connected
       };
     }
-
-    // Если ничего не найдено
     return null;
   }, [globalWalletState, wallet]);
 
-  // const effectiveWallet = useMemo(() => {
-  //   // Prefer global wallet state if available
-  //   if (globalWalletState?.connected && globalWalletState?.publicKey) {
-  //     return {
-  //       publicKey: new PublicKey(globalWalletState.publicKey),
-  //       connected: globalWalletState.connected
-  //     };
-  //   }
-  //   // Fallback to local wallet
-  //   if (wallet.connected && wallet.publicKey) {
-  //     return {
-  //       publicKey: wallet.publicKey,
-  //       connected: wallet.connected
-  //     };
-  //   }
-  //   return null;
-  // }, [globalWalletState, wallet]);
-
-  // BALANCE
-  useEffect(() => {
-    if (!isOpen || !effectiveConnected || !effectivePublicKey) return;
-
-    let active = true;
-
-    const pubkey = new PublicKey(effectivePublicKey);
-
-    const load = async () => {
-      try {
-        const lamports = await connection.getBalance(pubkey);
-        if (active) setAvailableBalance(lamports / LAMPORTS_PER_SOL);
-      } catch (e) {
-        if (active) setAvailableBalance(null);
-      }
-    };
-
-    load();
-    const timer = setInterval(load, 15000);
-
-    return () => {
-      active = false;
-      clearInterval(timer);
-    };
-  }, [isOpen, effectiveConnected, effectivePublicKey, connection]);
 
   // JITO
   useEffect(() => {
@@ -240,11 +333,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           setJitoValue(score);
         }
       } catch {
+        if (!isMounted.current) return;
+        setAvailableBalance(null);
         if (!cancelled) setJitoValue(null);
       }
     };
 
     load();
+    isMounted.current = isOpen;
     return () => (cancelled = true);
   }, [isOpen]);
 
@@ -252,6 +348,11 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
+    // if (isOpen) {
+    //   setAvailableBalance(null);
+    //   setMessage('');
+    //   setAmountError(null);
+    // }
 
     const load = async () => {
       try {
@@ -264,6 +365,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           setUptime(data.uptime);
         }
       } catch {
+        if (!isMounted.current) return;
+        setAvailableBalance(null);
         if (!cancelled) {
           setSkipRate(null);
           setUptime(null);
@@ -275,73 +378,15 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     return () => (cancelled = true);
   }, [isOpen]);
 
-  const [logMessages, setLogMessages] = useState<string[]>([]);
+  
 
-  // Function to send log messages to the server and auto-save on key events
-  const sendLogMessage = async (message: string, autoSave: boolean = false) => {
-    const timestamp = new Date().toISOString();
-    const walletInfo = effectiveWallet 
-      ? { 
-          publicKey: effectiveWallet.publicKey.toBase58(), 
-          connected: effectiveWallet.connected 
-        } 
-      : null;
-    const logEntry = `[${timestamp}] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`;
-    
-    // Also log to console for immediate visibility
-    console.log(`[SENDING LOG] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`);
-    
-    // Update local log state for UI purposes
-    setLogMessages(prev => {
-      const newLogs = [...prev, logEntry];
-      return newLogs;
-    });
-    
-    // Send log to server
-    try {
-      console.log(`[NETWORK] Sending log to http://localhost:8081/`);
-      const response = await fetch('http://localhost:8081/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          walletInfo,
-          filename: 'stake-transactions.log' // Use a single log file for all transactions
-        })
-      });
-      
-      console.log(`[NETWORK] Response status: ${response.status}`);
-      console.log(`[NETWORK] Response headers:`, [...response.headers.entries()]);
-      
-      // Try to read the response body
-      const responseBody = await response.text();
-      console.log(`[NETWORK] Response body:`, responseBody);
-      
-      if (!response.ok) {
-        console.error('Failed to send log to server:', response.statusText);
-      } else {
-        console.log('[NETWORK] Log sent successfully');
-      }
-    } catch (error) {
-      console.error('[NETWORK ERROR] Failed to send log to server:', error);
-      // Log more details about the error
-      if (error instanceof TypeError) {
-        console.error('[NETWORK ERROR] This might be a CORS or network connectivity issue');
-      }
-    }
-  };
+  const [logMessages, setLogMessages] = useState<string[]>([]);
 
   // Test function to verify logging
   const testLogging = () => {
     console.log('[TEST] Testing logging functionality');
-    sendLogMessage('[TEST] This is a test log message');
+    // sendLogMessage('[TEST] This is a test log message');
   };
-
-  
-
-  
 
   // HANDLE STAKE
   const handleConfirm = async () => {
@@ -349,79 +394,27 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     setIsSubmitting(true);
     setMessage('');
     setAmountError(null);
+    isSigningRef.current = true;
 
-    console.log('💡 Effective Wallet:', effectiveWallet);
-    console.log('signTransaction:', effectiveWallet?.signTransaction);
-    console.log('sendTransaction:', effectiveWallet?.sendTransaction);
-    console.log('signAllTransactions:', effectiveWallet?.signAllTransactions);
-
-
-    // Определяем методы: либо из локального хука wallet, либо из глобального окна
-    const finalSignTransaction = wallet.signTransaction || window.globalWalletSignTransaction;
-    const finalSendTransaction = wallet.sendTransaction || window.globalWalletSendTransaction;
-    console.log('Using signTransaction:', finalSignTransaction);
-    console.log('Using sendTransaction:', finalSendTransaction);
     const num = parseFloat(amount);
-    
     if (isNaN(num) || num < MIN_STAKE) {
-      setAmountError(`Минимум ${MIN_STAKE} SOL`);
+      setAmountError(`Minimum ${MIN_STAKE} SOL`);
       setIsSubmitting(false);
       return;
     }
     if (!effectiveConnected || !effectivePublicKey) {
-      setAmountError('Подключи кошёк');
+      setAmountError('Connect wallet');
       setIsSubmitting(false);
       return;
     }
-    // if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
-    //   setAmountError('Кошелёк не готов');
-    //   setIsSubmitting(false);
-    //   return;
-    // }
-    // Проверяем наличие методов
-    // if (!finalSendTransaction) {
-    //   setAmountError('Кошелёк не готов (методы не найдены)');
-    //   setIsSubmitting(false);
-    //   return;
-    // }
-
-    // 🔍 Ищем методы кошелька (приоритет: hook -> window -> provider)
-    const provider = (window as any).phantom?.solana || (window as any).solana;
-    
-    const finalSign = effectiveWallet?.signTransaction || 
-                      wallet.signTransaction?.bind(wallet) || 
-                      window.globalWalletSignTransaction || 
-                      (provider?.signTransaction ? provider.signTransaction.bind(provider) : null);
-
-    const finalSend = effectiveWallet?.sendTransaction || 
-                      wallet.sendTransaction?.bind(wallet) || 
-                      window.globalWalletSendTransaction || 
-                      (provider?.signAndSendTransaction ? provider.signAndSendTransaction.bind(provider) : null);
-
-    console.log("🔍 Wallet Methods Discovery:", { 
-      hasSign: !!finalSign, 
-      hasSend: !!finalSend,
-      effectiveWalletSign: !!effectiveWallet?.signTransaction,
-      walletHookSign: !!wallet.signTransaction,
-      windowSign: !!window.globalWalletSignTransaction,
-      providerSign: !!provider?.signTransaction
-    });
-    
-    
-    if (!effectiveConnected || !effectivePublicKey) {
-      setAmountError('Подключи кошелёк');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!finalSign || !finalSend) {
-      setAmountError('Кошелёк не готов (методы не найдены). Попробуй переподключить.');
+    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
+      setAmountError('Wallet not ready');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      setMessage('Подготовка...');
+      setMessage('Prepare...');
 
       const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
       const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
@@ -447,61 +440,59 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-      // 1️⃣ ПЕРШИМ ПІДПИСУЄ PHANTOM
-      const signedTx = await finalSign(tx);
 
-      // 2️⃣ ПОТІМ ПІДПИСУЄ stakeAccount
+      setMessage('Sign in wallet...');
+      const signedTx = await window.globalWalletSignTransaction(tx);
+
+      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
       signedTx.partialSign(stakeAccount);
 
-
-      // setMessage('Подпиши в кошельке...');
-      console.log('Using signTransaction:', finalSign);
-      console.log('Using sendTransaction:', finalSend);
-      
-      // if (!finalSign) {
-      //   setAmountError('Кошелек не готов для подписи транзакции');
-      //   setIsSubmitting(false);
-      //   return;
-      // }
-
-      
-
-      // setMessage('Симуляция...');
+      // setMessage('Simulating...');
       // const sim = await connection.simulateTransaction(signedTx);
       // if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
 
-      setMessage('Отправляем в сеть...');
+      setMessage('Sending to network...');
       const signature = await window.globalWalletSendTransaction(signedTx, connection);
+
+      // Close current popup
+      setIsSubmitting(false);
+      // onClose();
       
+      // Show success message in a new popup immediately
+      if (typeof window !== 'undefined' && window.showSuccessPopup) {
+        window.showSuccessPopup(`Transaction Successful!
 
-      console.log('VLADIKA STAKED:', signature);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        onClose();
-      }, 15000);
+Signature: ${signature}
 
-    } catch (err) {
+View on Solana Explorer: solana.fm/tx/${signature}`);
+      }
+
+    } catch (err: unknown) {
       console.error(err);
       
       // Check if user cancelled the transaction
-      if (err?.message?.includes('User rejected the request') || 
-          err?.message?.includes('Transaction cancelled') ||
-          err?.message?.includes('rejected') ||
-          err?.code === 4001) {  // Common error code for user rejection
+      if ((err as Error)?.message?.includes('User rejected the request') || 
+          (err as Error)?.message?.includes('Transaction cancelled') ||
+          (err as Error)?.message?.includes('rejected') ||
+          (err as { code?: number })?.code === 4001) {  // Common error code for user rejection
         // Clear all messages and unblock UI when user cancels
         setMessage('');
         setAmountError(null);
       } else {
         // Show error message for other errors
-        setAmountError(err && err.message ? err.message : 'Ошибка');
+        setAmountError(err instanceof Error ? err.message : 'Error');
       }
+      isSigningRef.current = false;
       
       // Always unblock UI on error
       setIsSubmitting(false);
     }
   };
 
+  // Clear messages when popup opens
   if (!isOpen) return null;
+
+  console.log('StakePopup відкрито, запитую баланс...');
 
   return (
     <div
@@ -516,7 +507,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         zIndex: 1000
       }}
     >
-      <div className="stake-popup-content">
+      <div className="stake-popup-content" >
         <div className="stake-popup-header"></div>
 
         <div className="stake-popup-tips">
@@ -542,7 +533,26 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
             cursor: 'pointer'
           }}
         >
-          ×
+          x
+        </button>
+        
+        {/* Success popup close button */}
+        <button
+          onClick={onClose}
+          className="success-popup-close-button"
+          style={{
+            position: 'absolute',
+            top: '-60px',
+            right: '40px',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            cursor: 'pointer',
+            padding: '5px 10px',
+            borderRadius: '4px'
+          }}
+        >
+          Close
         </button>
 
         <div className="red-content-popup">
