@@ -49,7 +49,6 @@ if (typeof window !== 'undefined') {
   window.updateGlobalWalletState = (newState) => {
     if (typeof window === 'undefined' || !window.globalWalletState) return;
     
-    console.log('Global state updated:', newState);
     window.globalWalletState = { ...window.globalWalletState, ...newState };
     
     // Notify all listeners
@@ -84,13 +83,12 @@ let buttonsReplaced = false;
 export const replaceButtons = () => {
   // Prevent multiple executions
   if (buttonsReplaced) {
-    console.log('Buttons already replaced, skipping...');
     return;
   }
   
   buttonsReplaced = true;
-  console.log('Replacing buttons...');
-  console.log('%cWIDGET REPLACE BUTTONS STARTED', 'color: #ff00ff; font-size: 16px; font-weight: bold;');
+  // console.log('Replacing buttons...');
+  // console.log('%cWIDGET REPLACE BUTTONS STARTED', 'color: #ff00ff; font-size: 16px; font-weight: bold;');
   // Wallet buttons
   document.querySelectorAll('.wallet-widget-class').forEach((btn: HTMLElement, i) => {
     const container = document.createElement('div');
@@ -108,7 +106,6 @@ export const replaceButtons = () => {
 
   // find heart on faq'
   const heartBlockDiv = document.getElementById('faq_heart_img');
-  console.log('heartBlockDiv', heartBlockDiv);
 
   // Add stake button to heart block (only if not already exists)
   if (heartBlockDiv && !heartBlockDiv.querySelector('[data-heart-stake]')) {
@@ -128,7 +125,6 @@ export const replaceButtons = () => {
       </WalletContextProvider>
     );
     
-    console.log('Heart stake button created');
   } else if (heartBlockDiv) {
     console.log('Heart stake button already exists, skipping creation');
   }

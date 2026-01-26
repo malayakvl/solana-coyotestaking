@@ -25,6 +25,16 @@
   color: #000 !important;
 }
 
+.mobile-wallet-block .wallet-adapter-button {
+  width: 80px;
+  min-width: 80px !important;
+  margin-top: 30px;
+  margin-left: 20px;
+}
+
+
+
+
 .wallet-adapter-button:not([disabled]):hover {
   background-color: #ff554f !important;
 }

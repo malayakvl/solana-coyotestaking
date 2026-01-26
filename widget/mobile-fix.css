@@ -1,0 +1,15 @@
+.mobile-wallet-block .wallet-adapter-button {
+    width: 80px;
+    min-width: 80px !important;
+    margin-top: 30px;
+    margin-left: 20px;
+}
+.mobile-wallet-block .text-connected {
+    display: none !important;
+}
+.mobile-wallet-block .text-connect {
+   display: none !important;
+}
+.mobile-wallet-block .font-bold {
+    display: none !important;
+}
