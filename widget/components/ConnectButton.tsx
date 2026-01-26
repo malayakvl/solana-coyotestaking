@@ -82,9 +82,25 @@ export const ConnectButton = () => {
     });
 
     // Методы кошелька для staking
-    window.globalWalletSendTransaction = wallet.sendTransaction?.bind(wallet);
-    window.globalWalletSignTransaction = wallet.signTransaction?.bind(wallet);
-    window.globalWalletSignAllTransactions = wallet.signAllTransactions?.bind(wallet);
+    // Сохраняем методы только если они реально существуют
+    if (wallet.sendTransaction) {
+      window.globalWalletSendTransaction = wallet.sendTransaction.bind(wallet);
+    } else {
+      window.globalWalletSendTransaction = undefined;
+    }
+
+    if (wallet.signTransaction) {
+      window.globalWalletSignTransaction = wallet.signTransaction.bind(wallet);
+    } else {
+      window.globalWalletSignTransaction = undefined;
+    }
+
+    if (wallet.signAllTransactions) {
+      window.globalWalletSignAllTransactions = wallet.signAllTransactions.bind(wallet);
+    } else {
+      window.globalWalletSignAllTransactions = undefined;
+    }
+
   }, [wallet, connected, publicKey]);
 
    const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;

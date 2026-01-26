@@ -340,11 +340,136 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   };
 
   
+const handleConfirm = async () => {
+  setIsSubmitting(true);
+  setMessage('');
+  setAmountError(null);
+
+  const num = parseFloat(amount);
+
+  if (isNaN(num) || num < MIN_STAKE) {
+    setAmountError(`Минимум ${MIN_STAKE} SOL`);
+    setIsSubmitting(false);
+    return;
+  }
+
+  if (!effectiveConnected || !effectivePublicKey) {
+    setAmountError('Подключи кошелёк');
+    setIsSubmitting(false);
+    return;
+  }
+
+  // Провайдер (Phantom / Glow)
+  const provider = (window as any).phantom?.solana || (window as any).solana;
+
+  // 🔍 ВИБИРАЄМО РІВНО ОДИН КОШЕЛЁК
+  let walletForTx: any = null;
+
+  if (effectiveWallet?.connected && effectiveWallet?.publicKey) {
+    walletForTx = effectiveWallet;
+  } else if (wallet.connected && wallet.publicKey) {
+    walletForTx = wallet;
+  } else if (provider?.publicKey) {
+    walletForTx = provider;
+  }
+
+  if (!walletForTx) {
+    setAmountError('Кошелёк не найден');
+    setIsSubmitting(false);
+    return;
+  }
+
+  // 🔐 БЕРЕМО МЕТОДИ ТІЛЬКИ З ЦЬОГО ОБʼЄКТА
+  const finalSign =
+    walletForTx.signTransaction?.bind(walletForTx) || null;
+
+  const finalSend =
+    walletForTx.sendTransaction?.bind(walletForTx)
+    || walletForTx.signAndSendTransaction?.bind(walletForTx)
+    || null;
+
+  console.log('🔥 WALLET SELECTED:', walletForTx);
+  console.log('🔥 finalSign:', finalSign);
+  console.log('🔥 finalSend:', finalSend);
+
+  if (!finalSign || !finalSend) {
+    setAmountError('Кошелёк не готов (нет методов подписи)');
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    setMessage('Подготовка транзакции...');
+
+    const rentExempt = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+    const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
+    const stakeAccount = Keypair.generate();
+
+    const createIx = StakeProgram.createAccount({
+      fromPubkey: new PublicKey(effectivePublicKey),
+      stakePubkey: stakeAccount.publicKey,
+      authorized: {
+        staker: new PublicKey(effectivePublicKey),
+        withdrawer: new PublicKey(effectivePublicKey),
+      },
+      lamports,
+    });
+
+    const delegateIx = StakeProgram.delegate({
+      stakePubkey: stakeAccount.publicKey,
+      authorizedPubkey: new PublicKey(effectivePublicKey),
+      votePubkey: VOTE_ACCOUNT,
+    });
+
+    const tx = new Transaction().add(createIx, delegateIx);
+    tx.feePayer = new PublicKey(effectivePublicKey);
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+    // 💣 КРИТИЧНО
+    tx.partialSign(stakeAccount);
+
+    setMessage('Подпиши транзакцию в кошельке...');
+
+    // ❗ ТІЛЬКИ ТУТ ВИКЛИК КОШЕЛЬКА
+    const signedTx = await finalSign(tx);
+
+    setMessage('Отправка в сеть...');
+
+    const signature = await finalSend(signedTx, connection);
+
+    console.log('✅ STAKE SUCCESS:', signature);
+
+    setMessage(`✅ Успешно!\n${signature}`);
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+    }, 15000);
+
+  } catch (err: any) {
+    console.error('❌ TX ERROR:', err);
+
+    if (
+      err?.message?.includes('User rejected') ||
+      err?.message?.includes('cancelled') ||
+      err?.code === 4001
+    ) {
+      // користувач відмінив
+      setMessage('');
+      setAmountError(null);
+    } else {
+      setAmountError(err?.message || 'Ошибка транзакции');
+    }
+
+    setIsSubmitting(false);
+  }
+};
+
 
   
 
   // HANDLE STAKE
-  const handleConfirm = async () => {
+  const handleConfirmOld = async () => {
     // Block UI during submission
     setIsSubmitting(true);
     setMessage('');
@@ -447,24 +572,20 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-      // 1️⃣ ПЕРШИМ ПІДПИСУЄ PHANTOM
-      const signedTx = await finalSign(tx);
-
-      // 2️⃣ ПОТІМ ПІДПИСУЄ stakeAccount
-      signedTx.partialSign(stakeAccount);
-
+      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
+      tx.partialSign(stakeAccount);
 
       // setMessage('Подпиши в кошельке...');
       console.log('Using signTransaction:', finalSign);
       console.log('Using sendTransaction:', finalSend);
       
-      // if (!finalSign) {
-      //   setAmountError('Кошелек не готов для подписи транзакции');
-      //   setIsSubmitting(false);
-      //   return;
-      // }
+      if (!finalSign) {
+        setAmountError('Кошелек не готов для подписи транзакции');
+        setIsSubmitting(false);
+        return;
+      }
 
-      
+      const signedTx = await finalSign(tx);
 
       // setMessage('Симуляция...');
       // const sim = await connection.simulateTransaction(signedTx);
