@@ -1,79 +1,102 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { StakePopup } from './StakePopup';
 
 export const StakeButton = () => {
-  const { connected } = useWallet();
-  const [globalState, setGlobalState] = useState<{
-    connected: boolean;
-    publicKey: string | null;
-    walletName: string | null;
-  } | null>(null);
+  const wallet = useWallet(); // ← ВАЖНО: берём ВЕСЬ wallet объект
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [globalWalletState, setGlobalWalletState] = useState<any>(null);
+  const [effectiveWalletState, setEffectiveWalletState] = useState<any>(null);
 
-  // Subscribe to global wallet state changes
+  // 🔹 Подписка на глобальный кошелек (mobile / WebView)
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.subscribeToGlobalWalletState) {
-      return;
-    }
+    if (!window.subscribeToGlobalWalletState) return;
 
-    const unsubscribe = window.subscribeToGlobalWalletState((newGlobalState) => {
-      console.log('StakeButton: Received global state update', newGlobalState);
-      setGlobalState(newGlobalState);
+    const unsubscribe = window.subscribeToGlobalWalletState((newState) => {
+      setGlobalWalletState(newState);
     });
 
-    setTimeout(() => {
-      if (window.globalWalletState) {
-        setGlobalState(window.globalWalletState);
-      }
-    }, 0);
+    if (window.globalWalletState) {
+      setGlobalWalletState(window.globalWalletState);
+    }
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe && unsubscribe();
   }, []);
 
-  // Determine which state to use
-  const effectiveConnected = globalState?.connected ?? false;
+  const effectiveWallet =
+  // 🟢 DESKTOP PHANTOM (через wallet-adapter, БЕЗ signTransaction)
+  wallet.sendTransaction && globalWalletState?.connected
+    ? {
+        connected: true,
+        publicKey: new PublicKey(globalWalletState.publicKey), // 🔥 ВАЖНО
+        sendTransaction: wallet.sendTransaction,              // 🔥 ЕДИНСТВЕННО НУЖНО
+      }
 
-  // console.log('StakeButton: Render with state', {
-  //   localConnected: connected,
-  //   globalConnected: globalState?.connected,
-  //   effectiveConnected,
-  // });
+  // 🟡 MOBILE / WEBVIEW
+  : globalWalletState?.connected &&
+    window.globalWalletSendTransaction
+    ? {
+        connected: true,
+        publicKey: new PublicKey(globalWalletState.publicKey),
+        sendTransaction: window.globalWalletSendTransaction,
+        signTransaction: window.globalWalletSignTransaction,
+      }
+
+  : null;
+
+  useEffect(() => {
+  if (globalWalletState?.connected) {
+    setEffectiveWalletState({
+      connected: true,
+      publicKey: new PublicKey(globalWalletState.publicKey),
+      sendTransaction: wallet.sendTransaction || window.globalWalletSendTransaction,
+      signTransaction: wallet.signTransaction || window.globalWalletSignTransaction,
+    });
+  } else {
+    setEffectiveWalletState(null);
+  }
+}, [wallet, globalWalletState]);
+
+  console.log('🧪 StakeButton DEBUG');
+  console.log('wallet.connected:', wallet.connected);
+  console.log('wallet.publicKey:', wallet.publicKey?.toBase58?.());
+  console.log('wallet.sendTransaction:', typeof wallet.sendTransaction);
+  console.log('globalWalletState:', globalWalletState);
+  console.log('effectiveWallet:', effectiveWallet);
 
   const handleStake = () => {
-    if (!effectiveConnected) {
+    if (!effectiveWalletState || !effectiveWalletState.connected) {
       setErrorMessage('Please connect your wallet first!');
-      // Clear the error message after 3 seconds
       setTimeout(() => setErrorMessage(null), 3000);
       return;
     }
+
     setIsPopupOpen(true);
   };
 
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-  };
+  const handleClosePopup = () => setIsPopupOpen(false);
 
   return (
     <>
-      <button 
-        onClick={handleStake} 
-        className="stake-sol-btn"
-      >
+      <button onClick={handleStake} className="stake-sol-btn">
         Stake SOL
       </button>
-      {errorMessage && (
-        <div className="stake-btn-error">
-          {errorMessage}
-        </div>
+
+      {errorMessage && <div className="stake-btn-error">{errorMessage}</div>}
+
+      {/* 🔥 Рендерим popup ТОЛЬКО если effectiveWallet есть */}
+      {effectiveWallet && (
+        <StakePopup
+          isOpen={isPopupOpen}
+          onClose={handleClosePopup}
+          wallet={effectiveWalletState}
+          devModeEnabled={true}
+        />
       )}
-      <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} devModeEnabled={true} />
     </>
   );
 };

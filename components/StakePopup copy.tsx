@@ -407,11 +407,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       setIsSubmitting(false);
       return;
     }
-    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
-      setAmountError('Wallet not ready');
-      setIsSubmitting(false);
-      return;
-    }
+   
 
     try {
       setMessage('Prepare...');
@@ -440,19 +436,45 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
+      // 🔥 ОБЯЗАТЕЛЬНО СНАЧАЛА partialSign
+      tx.partialSign(stakeAccount);
 
-      setMessage('Sign in wallet...');
-      const signedTx = await window.globalWalletSignTransaction(tx);
+      let signature;
+console.log('🧪 WALLET STATE DEBUG');
+console.log('wallet.connected:', wallet.connected);
+console.log('wallet.publicKey:', wallet.publicKey?.toBase58());
+console.log('wallet.wallet:', wallet.wallet);
+console.log('wallet.sendTransaction:', typeof wallet.sendTransaction);
+console.log('has global sign:', typeof window.globalWalletSignTransaction);
 
-      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
-      signedTx.partialSign(stakeAccount);
 
-      // setMessage('Simulating...');
-      // const sim = await connection.simulateTransaction(signedTx);
-      // if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
+// 🔵 DESKTOP WALLET-ADAPTER — ПЕРВЫМ !!!
+if (wallet.connected && wallet.publicKey && typeof wallet.sendTransaction === 'function') {
+  console.log('✅ Using WALLET-ADAPTER DESKTOP flow');
 
-      setMessage('Sending to network...');
-      const signature = await window.globalWalletSendTransaction(signedTx, connection);
+  setMessage('Sign in wallet...');
+  signature = await wallet.sendTransaction(tx, connection);
+}
+
+// 🟢 MOBILE / GLOBAL WALLET — ТОЛЬКО ЕСЛИ DESKTOP НЕТ
+else if (
+  typeof window.globalWalletSignTransaction === 'function' &&
+  typeof window.globalWalletSendTransaction === 'function'
+) {
+  console.log('✅ Using GLOBAL wallet flow');
+
+  setMessage('Sign in wallet...');
+  const signedTx = await window.globalWalletSignTransaction(tx);
+
+  setMessage('Sending to network...');
+  signature = await window.globalWalletSendTransaction(signedTx, connection);
+}
+
+// ❌ НЕТ КОШЕЛЬКА
+else {
+  console.error('❌ No active wallet found');
+  throw new Error('Please connect your wallet using WalletMultiButton');
+}
 
       // Close current popup
       setIsSubmitting(false);
@@ -488,6 +510,7 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
       setIsSubmitting(false);
     }
   };
+  // END HANDLE STAKE
 
   // Clear messages when popup opens
   if (!isOpen) return null;
