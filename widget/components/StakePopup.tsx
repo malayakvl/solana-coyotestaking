@@ -11,6 +11,8 @@ import {
   StakeProgram
 } from '@solana/web3.js';
 
+import { GlobalWalletState } from '../types';
+
 const VOTE_ACCOUNT = new PublicKey('53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR');
 const MIN_STAKE = 0.01;
 
@@ -37,11 +39,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   const [devMode, setDevMode] = useState(false);
 
   // GLOBAL WALLET
-  const [globalWalletState, setGlobalWalletState] = useState<{
-    connected: boolean;
-    publicKey: string | null;
-    walletName: string | null;tx
-  } | null>(null);
+  const [globalWalletState, setGlobalWalletState] = useState<GlobalWalletState | null>(null);
 
   const wallet = useWallet();
 
@@ -61,7 +59,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
 
     return () => unsubscribe && unsubscribe();
   }, []);
-  
+
   // Add showSuccessPopup function to window object for WordPress integration
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -76,7 +74,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         container.style.justifyContent = 'center';
         container.style.zIndex = '1000';
         container.style.fontFamily = 'Arial, sans-serif';
-        
+
         // Create popup content
         const popup = document.createElement('div');
         popup.style.background = '#1a1a1a';
@@ -87,14 +85,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         popup.style.textAlign = 'center';
         popup.style.border = '2px solid #ff8480';
         popup.style.position = 'relative';
-        
+
         // Create title
         const title = document.createElement('h2');
         title.textContent = '✅ Transaction Successful!';
         title.style.color = '#ff8480';
         title.style.marginBottom = '20px';
         title.style.fontSize = '24px';
-        
+
         // Create message container
         const messageContainer = document.createElement('div');
         messageContainer.style.color = '#fff';
@@ -103,7 +101,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         messageContainer.style.whiteSpace = 'pre-line';
         messageContainer.style.wordBreak = 'break-all';
         messageContainer.textContent = message;
-        
+
         // Create close button
         const closeButton = document.createElement('button');
         closeButton.textContent = 'Close';
@@ -119,18 +117,18 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         closeButton.onclick = () => {
           document.body.removeChild(container);
         };
-        
+
         // Assemble popup
         popup.appendChild(title);
         popup.appendChild(messageContainer);
         popup.appendChild(closeButton);
         container.appendChild(popup);
-        
+
         // Add to DOM
         document.body.appendChild(container);
       };
     }
-    
+
     // Cleanup function
     return () => {
       if (typeof window !== 'undefined' && window.showSuccessPopup) {
@@ -149,7 +147,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   // );
   const connection = useMemo(
     () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
-      []
+    []
   );
 
   // Get the effective wallet for transactions
@@ -245,7 +243,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     };
 
     load();
-    return () => (cancelled = true);
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   // Stakewiz
@@ -272,7 +270,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     };
 
     load();
-    return () => (cancelled = true);
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const [logMessages, setLogMessages] = useState<string[]>([]);
@@ -280,23 +278,23 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
   // Function to send log messages to the server and auto-save on key events
   const sendLogMessage = async (message: string, autoSave: boolean = false) => {
     const timestamp = new Date().toISOString();
-    const walletInfo = effectiveWallet 
-      ? { 
-          publicKey: effectiveWallet.publicKey.toBase58(), 
-          connected: effectiveWallet.connected 
-        } 
+    const walletInfo = effectiveWallet
+      ? {
+        publicKey: effectiveWallet.publicKey.toBase58(),
+        connected: effectiveWallet.connected
+      }
       : null;
     const logEntry = `[${timestamp}] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`;
-    
+
     // Also log to console for immediate visibility
     console.log(`[SENDING LOG] [${walletInfo ? `wallet(${walletInfo.publicKey}, ${walletInfo.connected ? 'connected' : 'disconnected'})` : 'no_wallet'}] ${message}`);
-    
+
     // Update local log state for UI purposes
     setLogMessages(prev => {
       const newLogs = [...prev, logEntry];
       return newLogs;
     });
-    
+
     // Send log to server
     try {
       console.log(`[NETWORK] Sending log to http://localhost:8081/`);
@@ -311,14 +309,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           filename: 'stake-transactions.log' // Use a single log file for all transactions
         })
       });
-      
+
       console.log(`[NETWORK] Response status: ${response.status}`);
       console.log(`[NETWORK] Response headers:`, [...response.headers.entries()]);
-      
+
       // Try to read the response body
       const responseBody = await response.text();
       console.log(`[NETWORK] Response body:`, responseBody);
-      
+
       if (!response.ok) {
         console.error('Failed to send log to server:', response.statusText);
       } else {
@@ -339,9 +337,9 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     sendLogMessage('[TEST] This is a test log message');
   };
 
-  
 
-  
+
+
 
   // HANDLE STAKE
   const handleConfirm = async () => {
@@ -362,7 +360,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     console.log('Using signTransaction:', finalSignTransaction);
     console.log('Using sendTransaction:', finalSendTransaction);
     const num = parseFloat(amount);
-    
+
     if (isNaN(num) || num < MIN_STAKE) {
       setAmountError(`Минимум ${MIN_STAKE} SOL`);
       setIsSubmitting(false);
@@ -385,29 +383,29 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     //   return;
     // }
 
-    // 🔍 Ищем методы кошелька (приоритет: hook -> window -> provider)
+    // 🔍 Ищем методы кошелька (приоритет: effectiveWallet -> hook -> window -> provider)
     const provider = (window as any).phantom?.solana || (window as any).solana;
-    
-    const finalSign = effectiveWallet?.signTransaction || 
-                      wallet.signTransaction?.bind(wallet) || 
-                      window.globalWalletSignTransaction || 
-                      (provider?.signTransaction ? provider.signTransaction.bind(provider) : null);
 
-    const finalSend = effectiveWallet?.sendTransaction || 
-                      wallet.sendTransaction?.bind(wallet) || 
-                      window.globalWalletSendTransaction || 
-                      (provider?.signAndSendTransaction ? provider.signAndSendTransaction.bind(provider) : null);
+    const finalSign = effectiveWallet?.signTransaction ||
+      wallet.signTransaction ||
+      window.globalWalletSignTransaction ||
+      (provider?.signTransaction ? provider.signTransaction.bind(provider) : null);
 
-    console.log("🔍 Wallet Methods Discovery:", { 
-      hasSign: !!finalSign, 
+    const finalSend = effectiveWallet?.sendTransaction ||
+      wallet.sendTransaction ||
+      window.globalWalletSendTransaction ||
+      (provider?.signAndSendTransaction ? provider.signAndSendTransaction.bind(provider) : null);
+
+    console.log("🔍 Wallet Methods Discovery:", {
+      hasSign: !!finalSign,
       hasSend: !!finalSend,
       effectiveWalletSign: !!effectiveWallet?.signTransaction,
       walletHookSign: !!wallet.signTransaction,
       windowSign: !!window.globalWalletSignTransaction,
       providerSign: !!provider?.signTransaction
     });
-    
-    
+
+
     if (!effectiveConnected || !effectivePublicKey) {
       setAmountError('Подключи кошелёк');
       setIsSubmitting(false);
@@ -457,22 +455,32 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       // setMessage('Подпиши в кошельке...');
       console.log('Using signTransaction:', finalSign);
       console.log('Using sendTransaction:', finalSend);
-      
+
       // if (!finalSign) {
       //   setAmountError('Кошелек не готов для подписи транзакции');
       //   setIsSubmitting(false);
       //   return;
       // }
 
-      
+
 
       // setMessage('Симуляция...');
       // const sim = await connection.simulateTransaction(signedTx);
       // if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
 
       setMessage('Отправляем в сеть...');
-      const signature = await window.globalWalletSendTransaction(signedTx, connection);
-      
+
+      let signature: string;
+      try {
+        // Сначала пробуем стандартный метод (tx, connection)
+        signature = await (finalSend as any)(signedTx, connection);
+      } catch (sendErr) {
+        console.warn('Standard send failed, trying provider method:', sendErr);
+        // Если не вышло, пробуем как метод провайдера (tx)
+        const res = await (finalSend as any)(signedTx);
+        signature = typeof res === 'string' ? res : res.signature;
+      }
+
 
       console.log('VLADIKA STAKED:', signature);
       setTimeout(() => {
@@ -480,14 +488,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 15000);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      
+
       // Check if user cancelled the transaction
-      if (err?.message?.includes('User rejected the request') || 
-          err?.message?.includes('Transaction cancelled') ||
-          err?.message?.includes('rejected') ||
-          err?.code === 4001) {  // Common error code for user rejection
+      if (err?.message?.includes('User rejected the request') ||
+        err?.message?.includes('Transaction cancelled') ||
+        err?.message?.includes('rejected') ||
+        err?.code === 4001) {  // Common error code for user rejection
         // Clear all messages and unblock UI when user cancels
         setMessage('');
         setAmountError(null);
@@ -495,7 +503,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         // Show error message for other errors
         setAmountError(err && err.message ? err.message : 'Ошибка');
       }
-      
+
       // Always unblock UI on error
       setIsSubmitting(false);
     }
@@ -584,7 +592,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
                 checked={devMode}
                 onChange={() => setDevMode(!devMode)}
                 id="devModeToggle"
-                style={{ 
+                style={{
                   marginRight: '8px',
                   width: '16px',
                   height: '16px',
@@ -592,9 +600,9 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
                   accentColor: '#ff554f'
                 }}
               />
-              <label 
-                htmlFor="devModeToggle" 
-                style={{ 
+              <label
+                htmlFor="devModeToggle"
+                style={{
                   color: '#fff',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -612,8 +620,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
                 {availableBalance !== null
                   ? availableBalance.toFixed(3)
                   : effectiveConnected
-                  ? 'Loading...'
-                  : 'Connect wallet'}
+                    ? 'Loading...'
+                    : 'Connect wallet'}
               </span>
             </p>
 
@@ -653,8 +661,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="stake-button-container">
-              <button 
-                onClick={handleConfirm} 
+              <button
+                onClick={handleConfirm}
                 className="stake-submit-btn"
                 disabled={isSubmitting}
                 style={{
@@ -694,8 +702,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
               textAlign: 'left'
             }}
           >
-            <div 
-              style={{ 
+            <div
+              style={{
                 whiteSpace: 'pre-line',
                 wordBreak: 'break-all',
                 overflowWrap: 'break-word',

@@ -3,7 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { StakePopup } from './StakePopup';
 
-export const StakeButton = () => {
+interface StakeButtonProps {
+  className?: string;
+  onClick?: () => void;
+}
+
+export const StakeButton: React.FC<StakeButtonProps> = ({ className, onClick }) => {
   const { connected } = useWallet();
   const [globalState, setGlobalState] = useState<{
     connected: boolean;
@@ -62,8 +67,8 @@ export const StakeButton = () => {
 
   return (
     <>
-      <button 
-        onClick={handleStake} 
+      <button
+        onClick={handleStake}
         className="stake-sol-btn"
       >
         Stake SOL
@@ -73,7 +78,7 @@ export const StakeButton = () => {
           {errorMessage}
         </div>
       )}
-      <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} devModeEnabled={true} />
+      <StakePopup isOpen={isPopupOpen} onClose={handleClosePopup} />
     </>
   );
 };
