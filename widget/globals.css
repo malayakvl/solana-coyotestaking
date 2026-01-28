@@ -455,6 +455,36 @@ footer .uk-container{
     text-align: center;
 }
 
+.success-popup-container {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.success-popup-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  width: 90%;
+  max-width: 457px;
+  text-align: center;
+  position: relative;
+}
+
+.success-popup-message {
+  color: #000;
+  margin: 20px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
 /* Success popup icon styles */
 .success-popup-icon {
   /* background-image: url("../public/popup/popup2-top.png"); */
