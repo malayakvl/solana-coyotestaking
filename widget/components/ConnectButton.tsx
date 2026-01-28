@@ -16,25 +16,10 @@ const WALLET_ICONS: Record<string, string> = {
   Ledger: '/wallets/ledger.svg',
 };
 
-interface GlobalWalletState {
-  connected: boolean;
-  publicKey: string | null;
-  walletName: string | null;
-}
-
-declare global {
-  interface Window {
-    globalWalletState?: GlobalWalletState;
-    updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
-    subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
-    globalWalletSendTransaction?: (tx: Transaction, conn: any, opts?: any) => Promise<string>;
-    globalWalletSignTransaction?: (tx: Transaction) => Promise<Transaction>;
-    globalWalletSignAllTransactions?: (txs: Transaction[]) => Promise<Transaction[]>;
-  }
-}
+import { GlobalWalletState } from '../types';
 
 export const ConnectButton = () => {
-  const { wallet, connected, publicKey, disconnect } = useWallet();
+  const { wallet, connected, publicKey, disconnect, sendTransaction, signTransaction, signAllTransactions } = useWallet();
   const [globalState, setGlobalState] = useState<GlobalWalletState>({
     connected: false,
     publicKey: null,
@@ -83,54 +68,54 @@ export const ConnectButton = () => {
 
     // Методы кошелька для staking
     // Сохраняем методы только если они реально существуют
-    if (wallet.sendTransaction) {
-      window.globalWalletSendTransaction = wallet.sendTransaction.bind(wallet);
+    if (sendTransaction) {
+      window.globalWalletSendTransaction = sendTransaction;
     } else {
       window.globalWalletSendTransaction = undefined;
     }
 
-    if (wallet.signTransaction) {
-      window.globalWalletSignTransaction = wallet.signTransaction.bind(wallet);
+    if (signTransaction) {
+      window.globalWalletSignTransaction = signTransaction;
     } else {
       window.globalWalletSignTransaction = undefined;
     }
 
-    if (wallet.signAllTransactions) {
-      window.globalWalletSignAllTransactions = wallet.signAllTransactions.bind(wallet);
+    if (signAllTransactions) {
+      window.globalWalletSignAllTransactions = signAllTransactions;
     } else {
       window.globalWalletSignAllTransactions = undefined;
     }
 
   }, [wallet, connected, publicKey]);
 
-   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
+  const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
   const icon = gWalletName ? WALLET_ICONS[gWalletName] || '/wallets/phantom.svg' : null;
 
   // 🔹 Android deeplink ONLY after wallet selection (NOT on initial render)
   useEffect(() => {
     // Не запускаем при первой загрузке - только после выбора кошелька
     if (!wallet) return;
-    
+
     // Проверяем, что это новый выбор кошелька (а не уже подключенный)
     const isAlreadyConnected = connected && publicKey;
     if (isAlreadyConnected) return;
-    
+
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isInWalletBrowser = /Phantom|Solflare|Backpack/i.test(navigator.userAgent);
-    
+
     if (!isAndroid || isInWalletBrowser) return;
     if (hasRedirectedRef.current) return;
-    
+
     // Только если пользователь **выбрал** кошелек (но еще не подключился)
     const walletName = wallet.adapter.name;
-    
+
     // Проверяем, что это первый раз когда этот кошелек выбран
     // (а не просто ререндер с тем же кошельком)
     if (!walletName) return;
-    
+
     const currentUrl = encodeURIComponent(window.location.href);
     let deepLink = '';
-    
+
     if (walletName === 'Phantom') {
       deepLink = `https://phantom.app/ul/browse/${currentUrl}`;
     } else if (walletName === 'Solflare') {
@@ -138,17 +123,17 @@ export const ConnectButton = () => {
     } else {
       return;
     }
-    
+
     console.log('🔥 Android wallet SELECTED, redirect to:', walletName);
     // alert(`Opening ${walletName} app...`);  // Убираем alert чтобы избежать подтверждения
-    
+
     hasRedirectedRef.current = true;
-    
+
     // Небольшая задержка чтобы пользователь понял что происходит
     setTimeout(() => {
       window.location.href = deepLink;
     }, 300);
-    
+
     // Сбрасываем флаг через 15 секунд
     setTimeout(() => {
       hasRedirectedRef.current = false;
@@ -202,7 +187,7 @@ export const ConnectButton = () => {
         <span style={{ display: "block", paddingBottom: "8px" }}>To Stake SOL from your wallet:</span>
         <span>1. Connect your wallet</span><br />
         <span>2. Click Stake SOL Button</span><br />
-        <span>3. Enter amount of SOL you want to stake</span><br />  
+        <span>3. Enter amount of SOL you want to stake</span><br />
         <span>Done! You have staked your SOL to Vladika</span>
       </div>
     </div>

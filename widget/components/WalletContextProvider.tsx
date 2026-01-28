@@ -20,14 +20,14 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
         () => [
             new PhantomWalletAdapter(),
             new SolflareWalletAdapter(),
-            new BackpackWalletAdapter(), // ✅ Всегда в списке
+            new BackpackWalletAdapter(),
         ],
         []
     );
 
     return (
         <ConnectionProvider endpoint={RPC_ENDPOINT}>
-            <WalletProvider wallets={wallets} autoConnect={true}>
+            <WalletProvider wallets={wallets} autoConnect={false}>
                 <WalletModalProvider>
                     {children}
                 </WalletModalProvider>
