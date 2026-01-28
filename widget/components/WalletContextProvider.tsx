@@ -20,21 +20,15 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
         () => [
             new PhantomWalletAdapter(),
             new SolflareWalletAdapter(),
-            new BackpackWalletAdapter(),
+            new BackpackWalletAdapter(), // ✅ Всегда в списке
         ],
         []
     );
 
     return (
         <ConnectionProvider endpoint={RPC_ENDPOINT}>
-            <WalletProvider wallets={wallets} autoConnect={false}>
-                {/* ВОТ КЛЮЧЕВОЕ МЕСТО 🔥 */}
-                <WalletModalProvider
-                    wallets={wallets}   // ⬅️ ОБЯЗАТЕЛЬНО
-                    labels={{
-                        'wallet-adapter-modal-more-options-button': 'Pick your Solana wallet to stake',
-                    }}
-                >
+            <WalletProvider wallets={wallets} autoConnect={true}>
+                <WalletModalProvider>
                     {children}
                 </WalletModalProvider>
             </WalletProvider>
