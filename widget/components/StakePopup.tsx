@@ -59,9 +59,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
     () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
     []
   );
-
   // const connection = useMemo(
-  //   () => new Connection('https://solspy.org/api/rpc-proxy'),
+  //   () => new Connection('https://solspy.org/api/rpc-proxy', { wsEndpoint: '', commitment: 'confirmed' }),
   //   []
   // );
 
