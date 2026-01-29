@@ -53,16 +53,17 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
   const [jitoValue, setJitoValue] = useState<number | null>(null);
   const [uptime, setUptime] = useState<number | null>(null);
   const [skipRate, setSkipRate] = useState<number | null>(null);
+  const isSubmittingRef = useRef(false);
 
   // ✅ Инициализация Connection без WebSocket
+  // const connection = useMemo(
+  //   () => new Connection('https://solspy.org/api/rpc-proxy'),
+  //   []
+  // );
   const connection = useMemo(
     () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
     []
   );
-  // const connection = useMemo(
-  //   () => new Connection('https://solspy.org/api/rpc-proxy', { wsEndpoint: '', commitment: 'confirmed' }),
-  //   []
-  // );
 
   const cachedBlockhash = useRef<{ blockhash: string; lastValidBlockHeight: number } | null>(null);
   const cachedRentExempt = useRef<number | null>(null);
@@ -89,11 +90,11 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       setAvailableBalance(null);
       return;
     }
-    const controller = new AbortController();
-    connection.getBalance(publicKeyToUse, { signal: controller.signal })
+    // Removed AbortController as 'signal' option is not supported by getBalance with commitment string
+    connection.getBalance(publicKeyToUse, 'confirmed')
       .then(lamports => setAvailableBalance(lamports / LAMPORTS_PER_SOL))
       .catch(() => setAvailableBalance(null));
-    return () => controller.abort();
+    // No cleanup needed for AbortController if it's not used
   }, [isOpen, isConnected, publicKeyToUse, connection]);
 
   useEffect(() => {
@@ -113,7 +114,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       }).catch(() => { });
   }, [isOpen]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (isSubmittingRef.current) return;
     if (!publicKeyToUse) { setAmountError('Wallet not connected'); return; }
     if (!cachedBlockhash.current || !cachedRentExempt.current) { setAmountError('Loading details...'); return; }
 
@@ -122,8 +124,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
     if (availableBalance && num > availableBalance) { setAmountError(`Insufficient balance`); return; }
 
     try {
-      const blockhashInfo = cachedBlockhash.current;
-      const rentExempt = cachedRentExempt.current;
+      isSubmittingRef.current = true;
+      setIsSubmitting(true);
+      setMessage('Fetching fresh network data...');
+
+      // Запрашиваем самый свежий blockhash прямо перед транзакцией
+      const blockhashInfo = await connection.getLatestBlockhash('confirmed');
+      const rentExempt = cachedRentExempt.current || await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+
       const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
       const stakeAccount = Keypair.generate();
 
@@ -160,7 +168,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
         .then(async (signature: string) => {
           setMessage('Confirming on-chain...');
           let confirmed = false;
-          for (let i = 0; i < 30; i++) {
+          for (let i = 0; i < 40; i++) {
             const { value: statuses } = await connection.getSignatureStatuses([signature]);
             const status = statuses[0];
             if (status?.err) throw new Error('Transaction failed on-chain');
@@ -174,14 +182,16 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
           return signature;
         })
         .then((signature: string) => {
+          setIsSubmitting(false);
+          isSubmittingRef.current = false;
           if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
-            (window as any).showSuccessPopup(`Success! Signature: ${signature}`);
+            (window as any).showSuccessPopup(`Transaction Successful!\n\nSignature: ${signature}\n\nView on Solana Explorer: solana.fm/tx/${signature}`);
           }
-          setTimeout(() => { setIsSubmitting(false); onClose(); }, 1000);
         })
         .catch((err: any) => {
           console.error('TX Error:', err);
           setIsSubmitting(false);
+          isSubmittingRef.current = false;
           if (err.code === 4001 || err.message?.includes('rejected')) {
             setAmountError('Transaction cancelled');
           } else if (err.code === -32603) {
@@ -190,6 +200,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
             setAmountError(err.message || 'Transaction failed');
           }
         });
+
     } catch (err: any) {
       setIsSubmitting(false);
       setAmountError(err.message);
@@ -200,27 +211,153 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
 
   if (!isOpen) return null;
 
-  // Render Success Popup inside effect
+  // Add showSuccessPopup function to window object for WordPress integration
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).showSuccessPopup = (msg: string) => {
+      window.showSuccessPopup = (message: string) => {
+        // Закрываем основное окно стейкинга
+        onClose();
+
+        // Create container div
         const container = document.createElement('div');
         container.id = 'success-popup-container';
-        container.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1100;font-family:sans-serif;';
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.background = 'rgba(0,0,0,0.6)';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.zIndex = '1000';
+        container.style.fontFamily = 'Open Sans, sans-serif';
+
+        // Create popup content
         const popup = document.createElement('div');
-        popup.style.cssText = 'background:#fff;border-radius:16px;padding:30px;width:90%;max-width:450px;text-align:center;position:relative;';
-        popup.innerHTML = `
-            <h3 style="margin-top:0">Delegation Successful!</h3>
-            <p style="font-size:14px;color:#666;word-break:break-all">${msg}</p>
-            <button onclick="document.body.removeChild(document.getElementById('success-popup-container'))" style="margin-top:20px;padding:12px 24px;background:#ff8480;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">Close</button>
-          `;
+        popup.style.background = '#fff';
+        popup.style.borderRadius = '16px';
+        popup.style.padding = '30px';
+        popup.style.width = '90%';
+        popup.style.maxWidth = '457px';
+        popup.style.textAlign = 'center';
+        // popup.style.border = '3px solid #ff8480';
+        popup.style.position = 'relative';
+        popup.style.marginTop = '120px';
+        // popup.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+
+        // Create title
+        const title = document.createElement('h2');
+        title.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
+        title.style.color = '#ff8480';
+        title.style.marginBottom = '20px';
+        title.style.fontSize = '28px';
+        title.style.fontWeight = 'bold';
+
+        // Create success icon with background image
+        const icon = document.createElement('div');
+        icon.className = 'success-popup-icon';
+
+        const closeIcon = document.createElement('div');
+        closeIcon.className = 'success-popup-close';
+        closeIcon.innerHTML = '&times;';
+
+        // Add click handler to close the popup
+        closeIcon.onclick = () => {
+          document.body.removeChild(container);
+        };
+
+        // Create message container
+        const messageContainer = document.createElement('div');
+        messageContainer.style.color = '#fff';
+        messageContainer.style.marginBottom = '25px';
+        messageContainer.style.fontSize = '16px';
+        messageContainer.style.lineHeight = '1.5';
+        messageContainer.style.whiteSpace = 'pre-line';
+        messageContainer.style.wordBreak = 'break-word';
+        messageContainer.textContent = message;
+
+        // Create signature container with better styling
+        const signatureContainer = document.createElement('div');
+        signatureContainer.className = 'success-popup-signature-container';
+
+        // Extract signature from message
+        const signatureMatch = message.match(/Signature: ([A-Za-z0-9]+)/);
+        if (signatureMatch && signatureMatch[1]) {
+          const signatureTitle = document.createElement('div');
+          signatureTitle.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
+          signatureTitle.style.color = '#000';
+          signatureTitle.style.fontSize = '16px';
+          signatureTitle.style.marginBottom = '8px';
+
+          const signatureText = document.createElement('div');
+          signatureText.textContent = signatureMatch[1];
+          signatureText.style.color = '#ff8480';
+          signatureText.style.fontFamily = 'monospace';
+          signatureText.style.fontSize = '13px';
+          signatureText.style.wordBreak = 'break-all';
+          signatureText.style.display = 'none';
+
+          signatureContainer.appendChild(signatureTitle);
+          signatureContainer.appendChild(signatureText);
+        }
+
+        // Create a div with red background to contain the close button
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'success-popup-button-container';
+
+        // Create text above the button
+        const buttonText = document.createElement('div');
+        buttonText.textContent = "You can stake tokens in your wallet's `Staking` tab. Feeling fancy already? You should - your SOL in the right hands";
+        buttonText.className = 'success-popup-button-text';
+
+        buttonContainer.appendChild(buttonText);
+
+        // Create explorer link
+        const linkMatch = message.match(/(solana\.fm\/tx\/[A-Za-z0-9]+)/);
+        if (linkMatch && linkMatch[1]) {
+          const linkContainer = document.createElement('div');
+          linkContainer.className = 'success-popup-link-container';
+
+          const link = document.createElement('a');
+          link.href = `https://${linkMatch[1]}`;
+          link.textContent = 'View transaction on Solana Explorer';
+          link.target = '_blank';
+          link.className = 'success-popup-explorer-link-new';
+
+          buttonContainer.appendChild(linkContainer);
+          linkContainer.appendChild(link);
+        }
+
+        // Create close button
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.className = 'success-popup-close-button';
+        closeButton.onclick = () => {
+          document.body.removeChild(container);
+        };
+
+        buttonContainer.appendChild(closeButton);
+
+        // Assemble popup
+        popup.appendChild(icon);
+        popup.appendChild(closeIcon);
+        // popup.appendChild(title);
+        if (signatureMatch && signatureMatch[1]) {
+          popup.appendChild(signatureContainer);
+        }
+        popup.appendChild(buttonContainer);
         container.appendChild(popup);
+
+        // Add to DOM
         document.body.appendChild(container);
       };
     }
+
+    // Cleanup function
     return () => {
-      const el = document.getElementById('success-popup-container');
-      if (el) document.body.removeChild(el);
+      if (typeof window !== 'undefined' && window.showSuccessPopup) {
+        delete window.showSuccessPopup;
+      }
+      // ❌ Мы УДАЛИЛИ отсюда removeChild(existingContainer), 
+      // чтобы попап успеха не исчезал при закрытии основного окна стейкинга.
     };
   }, []);
 
@@ -229,8 +366,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       <div className="stake-popup-content">
         <div className="stake-popup-header"></div>
         <div className="stake-popup-tips">
-          This is your staking jackpot 0% comission + MEV rewards.
-          Stake smart, earn more. Your SOL deserves this kind of luck!
+          Your trusted validator. Stake smart, earn more.
+          <br />0% commission + 100 % MEV rewards. Keep every lamport!
         </div>
 
         <div className="flex">
@@ -239,7 +376,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
           <div className="col-param">{jitoValue ?? '?'}<br /><span>Jito Score</span></div>
         </div>
 
-        <button onClick={onClose} style={{ position: 'absolute', top: '-60px', right: '10px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#fff' }}>x</button>
+        <button onClick={onClose} className="success-popup-confirm-close">x</button>
 
         <div className="red-content-popup">
           <div className="red-content">
