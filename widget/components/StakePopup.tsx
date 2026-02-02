@@ -61,7 +61,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
   //   []
   // );
   const connection = useMemo(
-    () => new Connection('https://vladika.love/wp-content/themes/yootheme/proxy.php'),
+    () => new Connection('https://mainnet.helius-rpc.com/?api-key=749e48d5-4f8a-4736-931a-d588a9f99cab', 'confirmed'),
     []
   );
 
@@ -114,7 +114,144 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       }).catch(() => { });
   }, [isOpen]);
 
+
+
   const handleConfirm = async () => {
+    if (isSubmittingRef.current) return;
+    if (!publicKeyToUse) {
+      setAmountError('Wallet not connected');
+      return;
+    }
+    if (!cachedBlockhash.current || !cachedRentExempt.current) {
+      setAmountError('Loading details...');
+      return;
+    }
+
+    const num = parseFloat(amount);
+    if (isNaN(num) || num < MIN_STAKE) {
+      setAmountError(`Minimum ${MIN_STAKE} SOL`);
+      return;
+    }
+    if (availableBalance && num > availableBalance) {
+      setAmountError('Insufficient balance');
+      return;
+    }
+
+    try {
+      isSubmittingRef.current = true;
+      setIsSubmitting(true);
+      setMessage('Fetching fresh network data...');
+
+      // Get fresh blockhash right before signing
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+
+      const rentExempt =
+        cachedRentExempt.current ||
+        (await connection.getMinimumBalanceForRentExemption(StakeProgram.space));
+
+      const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
+
+      const stakeAccount = Keypair.generate();
+
+      const tx = new Transaction().add(
+        StakeProgram.createAccount({
+          fromPubkey: publicKeyToUse,
+          stakePubkey: stakeAccount.publicKey,
+          authorized: {
+            staker: publicKeyToUse,
+            withdrawer: publicKeyToUse,
+          },
+          lamports,
+        }),
+        StakeProgram.delegate({
+          stakePubkey: stakeAccount.publicKey,
+          authorizedPubkey: publicKeyToUse,
+          votePubkey: VOTE_ACCOUNT,
+        })
+      );
+
+      tx.feePayer = publicKeyToUse;
+      tx.recentBlockhash = blockhash;
+
+      // ────────────────────────────────────────────────
+      //  Important: sign with wallet FIRST
+      // ────────────────────────────────────────────────
+
+      setMessage('Waiting for wallet signature...');
+
+      const provider = (window as any).solana || (window as any).phantom?.solana;
+      if (!provider?.signTransaction) {
+        throw new Error('Wallet does not support signTransaction');
+      }
+
+      // Let Phantom sign first (this is what removes the warning)
+      const signedTx = await provider.signTransaction(tx);
+
+      // Then apply the stakeAccount signature
+      signedTx.partialSign(stakeAccount);
+
+      // Now send the fully signed transaction ourselves
+      setMessage('Sending transaction...');
+
+      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,           // recommended: let RPC simulate first
+        preflightCommitment: 'confirmed',
+        maxRetries: 3,
+      });
+
+      setMessage('Confirming on-chain...');
+
+      // Wait for confirmation
+      let confirmed = false;
+      for (let i = 0; i < 40; i++) {
+        const { value: statuses } = await connection.getSignatureStatuses([signature]);
+        const status = statuses[0];
+
+        if (status?.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+        }
+
+        if (
+          status?.confirmationStatus === 'confirmed' ||
+          status?.confirmationStatus === 'finalized'
+        ) {
+          confirmed = true;
+          break;
+        }
+
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+
+      if (!confirmed) {
+        throw new Error('Confirmation timeout');
+      }
+
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+
+      if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
+        (window as any).showSuccessPopup(
+          `Transaction Successful!\n\nSignature: ${signature}\n\nView on Solana Explorer: https://solana.fm/tx/${signature}`
+        );
+      }
+
+    } catch (err: any) {
+      console.error('TX Error:', err);
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+
+      if (err.code === 4001 || err.message?.includes('rejected')) {
+        setAmountError('Transaction cancelled');
+      } else if (err.code === -32603) {
+        setAmountError('Internal wallet error (-32603). Check balance or try again.');
+      } else {
+        setAmountError(err.message || 'Transaction failed');
+      }
+    }
+  };
+
+
+  const handleConfirm1 = async () => {
     if (isSubmittingRef.current) return;
     if (!publicKeyToUse) { setAmountError('Wallet not connected'); return; }
     if (!cachedBlockhash.current || !cachedRentExempt.current) { setAmountError('Loading details...'); return; }
