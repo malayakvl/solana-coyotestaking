@@ -12,15 +12,7 @@ import {
 } from '@solana/web3.js';
 
 // Extend the Window interface to include custom properties
-declare global {
-  interface Window {
-    showSuccessPopup?: (message: string) => void;
-    subscribeToGlobalWalletState?: (callback: (state: any) => void) => (() => void) | null;
-    globalWalletState?: any;
-    globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
-    globalWalletSendTransaction?: (transaction: Transaction, connection: Connection) => Promise<string>;
-  }
-}
+
 
 const VOTE_ACCOUNT = new PublicKey('53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR');
 const MIN_STAKE = 0.01;
@@ -73,8 +65,8 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     return () => unsubscribe && unsubscribe();
   }, []);
 
- 
-  
+
+
   // Add showSuccessPopup function to window object for WordPress integration
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -90,7 +82,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         container.style.justifyContent = 'center';
         container.style.zIndex = '1000';
         container.style.fontFamily = 'Open Sans, sans-serif';
-        
+
         // Create popup content
         const popup = document.createElement('div');
         popup.style.background = '#fff';
@@ -102,7 +94,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         // popup.style.border = '3px solid #ff8480';
         popup.style.position = 'relative';
         // popup.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
-        
+
         // Create title
         const title = document.createElement('h2');
         title.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
@@ -110,7 +102,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         title.style.marginBottom = '20px';
         title.style.fontSize = '28px';
         title.style.fontWeight = 'bold';
-        
+
         // Create success icon with background image
         const icon = document.createElement('div');
         icon.className = 'success-popup-icon';
@@ -118,12 +110,12 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         const closeIcon = document.createElement('div');
         closeIcon.className = 'success-popup-close';
         closeIcon.innerHTML = '&times;';
-        
+
         // Add click handler to close the popup
         closeIcon.onclick = () => {
           document.body.removeChild(container);
         };
-        
+
         // Create message container
         const messageContainer = document.createElement('div');
         messageContainer.style.color = '#fff';
@@ -133,11 +125,11 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         messageContainer.style.whiteSpace = 'pre-line';
         messageContainer.style.wordBreak = 'break-word';
         messageContainer.textContent = message;
-        
+
         // Create signature container with better styling
         const signatureContainer = document.createElement('div');
         signatureContainer.className = 'success-popup-signature-container';
-        
+
         // Extract signature from message
         const signatureMatch = message.match(/Signature: ([A-Za-z0-9]+)/);
         if (signatureMatch && signatureMatch[1]) {
@@ -146,7 +138,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           signatureTitle.style.color = '#000';
           signatureTitle.style.fontSize = '16px';
           signatureTitle.style.marginBottom = '8px';
-          
+
           const signatureText = document.createElement('div');
           signatureText.textContent = signatureMatch[1];
           signatureText.style.color = '#ff8480';
@@ -154,34 +146,34 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
           signatureText.style.fontSize = '13px';
           signatureText.style.wordBreak = 'break-all';
           signatureText.style.display = 'none';
-          
+
           signatureContainer.appendChild(signatureTitle);
           signatureContainer.appendChild(signatureText);
         }
-        
+
         // Create close button
         const closeButton = document.createElement('button');
         closeButton.textContent = 'Close';
         closeButton.className = 'success-popup-close-button';
-        
+
         // Hover effects are now handled by CSS classes
-        
+
         closeButton.onclick = () => {
           document.body.removeChild(container);
         };
-        
+
         // Create a div with red background to contain the close button
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'success-popup-button-container';
-        
+
         // Create text above the button
         const buttonText = document.createElement('div');
         buttonText.textContent = "You can stake tokens in your wallet's `Staking` tab. Feeling fancy already? You should - your SOL in the right hands";
         buttonText.className = 'success-popup-button-text';
-        
+
         buttonContainer.appendChild(buttonText);
         buttonContainer.appendChild(closeButton);
-        
+
         // Assemble popup
         popup.appendChild(icon);
         popup.appendChild(closeIcon);
@@ -191,18 +183,18 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
         }
         popup.appendChild(buttonContainer);
         container.appendChild(popup);
-        
+
         // Add to DOM
         document.body.appendChild(container);
       };
     }
-    
+
     // Cleanup function
     return () => {
       if (typeof window !== 'undefined' && window.showSuccessPopup) {
         delete window.showSuccessPopup;
       }
-      
+
       // Remove any existing popup containers
       const existingContainer = document.getElementById('success-popup-container');
       if (existingContainer) {
@@ -378,7 +370,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
     return () => (cancelled = true);
   }, [isOpen]);
 
-  
+
 
   const [logMessages, setLogMessages] = useState<string[]>([]);
 
@@ -407,11 +399,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       setIsSubmitting(false);
       return;
     }
-    if (!window.globalWalletSignTransaction || !window.globalWalletSendTransaction) {
-      setAmountError('Wallet not ready');
-      setIsSubmitting(false);
-      return;
-    }
+   
 
     try {
       setMessage('Prepare...');
@@ -440,24 +428,50 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose }) => {
       tx.feePayer = new PublicKey(effectivePublicKey);
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
+      // 🔥 ОБЯЗАТЕЛЬНО СНАЧАЛА partialSign
+      tx.partialSign(stakeAccount);
 
-      setMessage('Sign in wallet...');
-      const signedTx = await window.globalWalletSignTransaction(tx);
+      let signature;
+console.log('🧪 WALLET STATE DEBUG');
+console.log('wallet.connected:', wallet.connected);
+console.log('wallet.publicKey:', wallet.publicKey?.toBase58());
+console.log('wallet.wallet:', wallet.wallet);
+console.log('wallet.sendTransaction:', typeof wallet.sendTransaction);
+console.log('has global sign:', typeof window.globalWalletSignTransaction);
 
-      // ←←← ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ
-      signedTx.partialSign(stakeAccount);
 
-      // setMessage('Simulating...');
-      // const sim = await connection.simulateTransaction(signedTx);
-      // if (sim.value.err) throw new Error(JSON.stringify(sim.value.err));
+// 🔵 DESKTOP WALLET-ADAPTER — ПЕРВЫМ !!!
+if (wallet.connected && wallet.publicKey && typeof wallet.sendTransaction === 'function') {
+  console.log('✅ Using WALLET-ADAPTER DESKTOP flow');
 
-      setMessage('Sending to network...');
-      const signature = await window.globalWalletSendTransaction(signedTx, connection);
+  setMessage('Sign in wallet...');
+  signature = await wallet.sendTransaction(tx, connection);
+}
+
+// 🟢 MOBILE / GLOBAL WALLET — ТОЛЬКО ЕСЛИ DESKTOP НЕТ
+else if (
+  typeof window.globalWalletSignTransaction === 'function' &&
+  typeof window.globalWalletSendTransaction === 'function'
+) {
+  console.log('✅ Using GLOBAL wallet flow');
+
+  setMessage('Sign in wallet...');
+  const signedTx = await window.globalWalletSignTransaction(tx);
+
+  setMessage('Sending to network...');
+  signature = await window.globalWalletSendTransaction(signedTx, connection);
+}
+
+// ❌ НЕТ КОШЕЛЬКА
+else {
+  console.error('❌ No active wallet found');
+  throw new Error('Please connect your wallet using WalletMultiButton');
+}
 
       // Close current popup
       setIsSubmitting(false);
       // onClose();
-      
+
       // Show success message in a new popup immediately
       if (typeof window !== 'undefined' && window.showSuccessPopup) {
         window.showSuccessPopup(`Transaction Successful!
@@ -469,12 +483,12 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
 
     } catch (err: unknown) {
       console.error(err);
-      
+
       // Check if user cancelled the transaction
-      if ((err as Error)?.message?.includes('User rejected the request') || 
-          (err as Error)?.message?.includes('Transaction cancelled') ||
-          (err as Error)?.message?.includes('rejected') ||
-          (err as { code?: number })?.code === 4001) {  // Common error code for user rejection
+      if ((err as Error)?.message?.includes('User rejected the request') ||
+        (err as Error)?.message?.includes('Transaction cancelled') ||
+        (err as Error)?.message?.includes('rejected') ||
+        (err as { code?: number })?.code === 4001) {  // Common error code for user rejection
         // Clear all messages and unblock UI when user cancels
         setMessage('');
         setAmountError(null);
@@ -483,11 +497,12 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
         setAmountError(err instanceof Error ? err.message : 'Error');
       }
       isSigningRef.current = false;
-      
+
       // Always unblock UI on error
       setIsSubmitting(false);
     }
   };
+  // END HANDLE STAKE
 
   // Clear messages when popup opens
   if (!isOpen) return null;
@@ -535,7 +550,7 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
         >
           x
         </button>
-        
+
         {/* Success popup close button */}
         <button
           onClick={onClose}
@@ -594,7 +609,7 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
                 checked={devMode}
                 onChange={() => setDevMode(!devMode)}
                 id="devModeToggle"
-                style={{ 
+                style={{
                   marginRight: '8px',
                   width: '16px',
                   height: '16px',
@@ -602,9 +617,9 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
                   accentColor: '#ff554f'
                 }}
               />
-              <label 
-                htmlFor="devModeToggle" 
-                style={{ 
+              <label
+                htmlFor="devModeToggle"
+                style={{
                   color: '#fff',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -622,8 +637,8 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
                 {availableBalance !== null
                   ? availableBalance.toFixed(3)
                   : effectiveConnected
-                  ? 'Loading...'
-                  : 'Connect wallet'}
+                    ? 'Loading...'
+                    : 'Connect wallet'}
               </span>
             </p>
 
@@ -663,8 +678,8 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
             </div>
 
             <div className="stake-button-container">
-              <button 
-                onClick={handleConfirm} 
+              <button
+                onClick={handleConfirm}
                 className="stake-submit-btn"
                 disabled={isSubmitting}
                 style={{
@@ -704,8 +719,8 @@ View on Solana Explorer: solana.fm/tx/${signature}`);
               textAlign: 'left'
             }}
           >
-            <div 
-              style={{ 
+            <div
+              style={{
                 whiteSpace: 'pre-line',
                 wordBreak: 'break-all',
                 overflowWrap: 'break-word',

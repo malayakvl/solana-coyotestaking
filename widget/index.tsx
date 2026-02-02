@@ -4,30 +4,9 @@ import { WalletContextProvider } from './components/WalletContextProvider';
 import { ConnectButton } from './components/ConnectButton';
 import { StakeButton } from './components/StakeButton';
 import { StakePopup } from './components/StakePopup';
-import { Transaction } from '@solana/web3.js';
+import { Transaction, Connection, SendOptions } from '@solana/web3.js';
+import { GlobalWalletState, GlobalWalletEventListener } from './types';
 import './globals.css';
-
-declare global {
-  interface Window {
-    globalWalletState: {
-      connected: boolean;
-      publicKey: string | null;
-      walletName: string | null;
-    };
-    globalWalletEventListeners: Array<(state: Window['globalWalletState']) => void>;
-    updateGlobalWalletState: (newState: Partial<Window['globalWalletState']>) => void;
-    subscribeToGlobalWalletState: (callback: (state: Window['globalWalletState']) => void) => () => void;
-    globalWalletSendTransaction?: (transaction: Transaction, connection: Connection, options?: SendOptions) => Promise<string>;
-    globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
-    globalWalletSignAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>;
-    WidgetBundle?: {
-      replaceButtons: () => void;
-      ConnectButton: typeof ConnectButton;
-      StakeButton: typeof StakeButton;
-      StakePopup: typeof StakePopup;
-    };
-  }
-}
 
 // Initialize global state
 if (typeof window !== 'undefined') {
@@ -46,15 +25,15 @@ if (typeof window !== 'undefined') {
   }
 
   // Global function to update wallet state
-  window.updateGlobalWalletState = (newState) => {
+  window.updateGlobalWalletState = (newState: Partial<GlobalWalletState>) => {
     if (typeof window === 'undefined' || !window.globalWalletState) return;
-    
+
     window.globalWalletState = { ...window.globalWalletState, ...newState };
-    
+
     // Notify all listeners
-    window.globalWalletEventListeners.forEach(listener => {
+    window.globalWalletEventListeners?.forEach(listener => {
       try {
-        listener(window.globalWalletState);
+        if (window.globalWalletState) listener(window.globalWalletState);
       } catch (error) {
         console.error('Error notifying listener:', error);
       }
@@ -62,16 +41,20 @@ if (typeof window !== 'undefined') {
   };
 
   // Global function to subscribe to wallet state changes
-  window.subscribeToGlobalWalletState = (callback) => {
-    if (typeof window === 'undefined') return () => {};
-    
+  window.subscribeToGlobalWalletState = (callback: GlobalWalletEventListener) => {
+    if (typeof window === 'undefined') return () => { };
+
+    if (!window.globalWalletEventListeners) {
+      window.globalWalletEventListeners = [];
+    }
+
     window.globalWalletEventListeners.push(callback);
-    
+
     // Return unsubscribe function
     return () => {
-      const index = window.globalWalletEventListeners.indexOf(callback);
+      const index = window.globalWalletEventListeners?.indexOf(callback) ?? -1;
       if (index > -1) {
-        window.globalWalletEventListeners.splice(index, 1);
+        window.globalWalletEventListeners?.splice(index, 1);
       }
     };
   };
@@ -85,12 +68,12 @@ export const replaceButtons = () => {
   if (buttonsReplaced) {
     return;
   }
-  
+
   buttonsReplaced = true;
   // console.log('Replacing buttons...');
   // console.log('%cWIDGET REPLACE BUTTONS STARTED', 'color: #ff00ff; font-size: 16px; font-weight: bold;');
   // Wallet buttons
-  document.querySelectorAll('.wallet-widget-class').forEach((btn: HTMLElement, i) => {
+  (document.querySelectorAll('.wallet-widget-class') as NodeListOf<HTMLElement>).forEach((btn: HTMLElement, i) => {
     const container = document.createElement('div');
     container.style.display = 'inline-block';
     container.className = 'wallet-container';
@@ -111,30 +94,30 @@ export const replaceButtons = () => {
   if (heartBlockDiv && !heartBlockDiv.querySelector('[data-heart-stake]')) {
     const stakeButtonContainer = document.createElement('div');
     stakeButtonContainer.className = 'stake-btn-container';
-    
+
     // Insert the stake button container into the heart block
     heartBlockDiv.appendChild(stakeButtonContainer);
-    
+
     // Mark container to avoid general processing and duplicates
     stakeButtonContainer.setAttribute('data-heart-stake', 'true');
-    
+
     // Render the StakeButton component
     ReactDOM.createRoot(stakeButtonContainer).render(
       <WalletContextProvider>
         <StakeButton className="heart-stake-btn" onClick={() => console.log('Heart stake clicked')} />
       </WalletContextProvider>
     );
-    
+
   } else if (heartBlockDiv) {
     console.log('Heart stake button already exists, skipping creation');
   }
 
-  
+
   // Stake buttons - only process buttons that are not already converted
-  document.querySelectorAll('.stake-button:not([data-processed])').forEach((btn: HTMLElement, i) => {
+  (document.querySelectorAll('.stake-button:not([data-processed])') as NodeListOf<HTMLElement>).forEach((btn: HTMLElement, i) => {
     // Mark as processed to avoid duplicates
     btn.setAttribute('data-processed', 'true');
-    
+
     const container = document.createElement('div');
     // container.style.display = 'inline-block';
     container.className = 'stake-btn-container';
@@ -143,7 +126,7 @@ export const replaceButtons = () => {
     // Each button gets its own context provider, but they'll use global state
     ReactDOM.createRoot(container).render(
       <WalletContextProvider>
-        <StakeButton onClick={() => console.log('Stake clicked')} />
+        <StakeButton />
       </WalletContextProvider>
     );
   });

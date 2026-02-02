@@ -27,16 +27,7 @@ type SendTransactionFn = (transaction: Transaction, connection: Connection, opti
 type SignTransactionFn = (transaction: Transaction) => Promise<Transaction>;
 type SignAllTransactionsFn = (transactions: Transaction[]) => Promise<Transaction[]>;
 
-declare global {
-  interface Window {
-    globalWalletState?: GlobalWalletState;
-    updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
-    subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
-    globalWalletSendTransaction?: SendTransactionFn;
-    globalWalletSignTransaction?: SignTransactionFn;
-    globalWalletSignAllTransactions?: SignAllTransactionsFn;
-  }
-}
+
 
 
 const ConnectButton = () => {
@@ -46,7 +37,7 @@ const ConnectButton = () => {
     publicKey: null,
     walletName: null,
   });
-  
+
   const hasSentInitialState = useRef(false);
   const previousWalletName = useRef<string | null>(null);
   const previousConnectedState = useRef<boolean>(false);
@@ -124,7 +115,7 @@ const ConnectButton = () => {
     const currentConnected = connected && !!publicKey;
     const previousConnected = previousConnectedState.current;
     const connectedChanged = currentConnected !== previousConnected;
-    
+
     // Track previous states
     previousConnectedState.current = currentConnected;
     if (name) previousWalletName.current = name;
@@ -136,7 +127,7 @@ const ConnectButton = () => {
         publicKey: publicKey.toBase58(),
         walletName: name
       });
-      
+
       // Expose wallet signing functions globally when connected
       if (typeof window !== 'undefined' && wallet?.adapter) {
         // Check each function before exposing
@@ -146,14 +137,14 @@ const ConnectButton = () => {
           console.warn('Wallet does not have sendTransaction function');
           delete window.globalWalletSendTransaction;
         }
-        
+
         if (wallet.adapter.signTransaction) {
           window.globalWalletSignTransaction = wallet.adapter.signTransaction.bind(wallet.adapter) as SignTransactionFn;
         } else {
           console.warn('Wallet does not have signTransaction function');
           delete window.globalWalletSignTransaction;
         }
-        
+
         if (wallet.adapter.signAllTransactions) {
           window.globalWalletSignAllTransactions = wallet.adapter.signAllTransactions.bind(wallet.adapter) as SignAllTransactionsFn;
         } else {
@@ -161,26 +152,26 @@ const ConnectButton = () => {
           delete window.globalWalletSignAllTransactions;
         }
       }
-      
+
       window.updateGlobalWalletState?.({
         connected: true,
         publicKey: publicKey.toBase58(),
         walletName: name,
       });
-      
+
       hasSentInitialState.current = true;
-    } 
+    }
     // Handle disconnection - reset to initial state completely
     else if (connectedChanged && !currentConnected) {
       console.log('ConnectButton: Wallet disconnected, resetting to initial state');
-      
+
       // Remove global wallet signing functions when disconnected
       if (typeof window !== 'undefined') {
         delete window.globalWalletSendTransaction;
         delete window.globalWalletSignTransaction;
         delete window.globalWalletSignAllTransactions;
       }
-      
+
       window.updateGlobalWalletState?.({
         connected: false,
         publicKey: null,
@@ -230,7 +221,7 @@ const ConnectButton = () => {
 
   // Render the button based on state
   let buttonContent;
-  
+
   if (gConnected && gPubkey) {
     // Connected state
     buttonContent = (
@@ -253,7 +244,7 @@ const ConnectButton = () => {
   } else if (gWalletName) {
     // Wallet selected but not connected
     buttonContent = (
-      <WalletMultiButton 
+      <WalletMultiButton
         className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20"
       >
         <div className="flex items-center gap-3">
@@ -265,7 +256,7 @@ const ConnectButton = () => {
   } else {
     // Nothing selected
     buttonContent = (
-      <WalletMultiButton 
+      <WalletMultiButton
         className="wallet-btn"
       >
         <div className="flex items-center gap-3 btn-s-wallet">
@@ -284,7 +275,7 @@ const ConnectButton = () => {
         <span style={{ display: "block", paddingBottom: "8px" }}>To Stake SOL from your wallet:</span>
         <span>1. Connect your wallet</span><br />
         <span>2. Click Stake SOL Button</span><br />
-        <span>3. Enter amount of SOL you want to stake</span><br />  
+        <span>3. Enter amount of SOL you want to stake</span><br />
         <span>Done! You have staked your SOL to Vladika</span>
       </div>
     </div>
