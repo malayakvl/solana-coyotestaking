@@ -2,21 +2,54 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+
 import { StakePopup } from './StakePopup';
 
-export const StakeButton = () => {
+interface StakeButtonProps {
+  className?: string;
+  onClick?: () => void;
+}
+
+export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
   const walletContext = useWallet(); // ✅ Получаем ПОЛНЫЙ объект кошелька
+  const walletData = useWallet();
+  const { connected, publicKey, connecting, disconnecting, wallet } = useWallet();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [globalState, setGlobalState] = useState<GlobalWalletState>({
+    connected: false,
+    publicKey: null,
+    walletName: null,
+  });
+
+  // Подписываемся на глобальное состояние
+  useEffect(() => {
+    if (window.subscribeToGlobalWalletState) {
+      const unsubscribe = window.subscribeToGlobalWalletState(setGlobalState);
+      // сразу берём текущее значение
+      setGlobalState(window.globalWalletState || { connected: false, publicKey: null, walletName: null });
+      return unsubscribe;
+    }
+  }, []);
 
   // 🔍 Проверяем подключение НАПРЯМУЮ через window
   const checkWalletDirectly = (): boolean => {
     if (typeof window !== 'undefined' && window.solana?.isConnected) return true;
     if (typeof window !== 'undefined' && window.phantom?.solana?.isConnected) return true;
+
     return false;
   };
 
   const handleStake = () => {
+    if (onClick) onClick();
+
+    // Самая надёжная проверка — глобальное состояние
+    if (globalState.connected && globalState.publicKey) {
+      console.log('Открываем попап по глобальному состоянию:', globalState.walletName);
+      setIsPopupOpen(true);
+      return;
+    }
+
     // ✅ Сначала проверяем через wallet-adapter
     if (walletContext.connected && walletContext.publicKey) {
       setIsPopupOpen(true);
@@ -40,7 +73,7 @@ export const StakeButton = () => {
 
   return (
     <>
-      <button onClick={handleStake} className="stake-sol-btn">
+      <button onClick={handleStake} className={className || "stake-sol-btn"}>
         Stake SOL
       </button>
 
@@ -65,6 +98,8 @@ export const StakeButton = () => {
           isOpen={isPopupOpen}
           onClose={handleClosePopup}
           wallet={walletContext} // ✅ Передаём ПОЛНЫЙ объект кошелька
+          globalPublicKey={globalState.publicKey}          // ← добавляем
+          globalWalletName={globalState.walletName}        // на всякий случай
           devModeEnabled={true}
         />
       )}

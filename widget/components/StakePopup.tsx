@@ -24,15 +24,34 @@ interface StakePopupProps {
     signTransaction?: (tx: Transaction) => Promise<Transaction>;
   };
   devModeEnabled?: boolean;
+  globalPublicKey?: any;
+  globalWalletName?: string | null;
 }
 
-export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet: propWallet }) => {
+export const StakePopup: React.FC<StakePopupProps> = ({
+  isOpen,
+  onClose,
+  wallet: propWallet,
+  globalPublicKey,
+  globalWalletName
+}) => {
   const walletContext = useWallet();
   const effectiveWallet = propWallet || walletContext;
+
 
   const getPublicKey = (): PublicKey | null => {
     if (effectiveWallet?.publicKey) return effectiveWallet.publicKey;
     if (walletContext.publicKey) return walletContext.publicKey;
+
+    // Fallback to global state if provided
+    if (globalPublicKey) {
+      try {
+        return new PublicKey(globalPublicKey.toString());
+      } catch (e) {
+        console.warn('Invalid globalPublicKey passed to StakePopup:', e);
+      }
+    }
+
     if (typeof window !== 'undefined' && (window as any).solana?.publicKey) {
       try {
         return new PublicKey((window as any).solana.publicKey.toString());
@@ -43,6 +62,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
 
   const publicKeyToUse = getPublicKey();
   const isConnected = !!publicKeyToUse;
+
 
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
@@ -56,10 +76,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
   const isSubmittingRef = useRef(false);
 
   // ✅ Инициализация Connection без WebSocket
-  // const connection = useMemo(
-  //   () => new Connection('https://solspy.org/api/rpc-proxy'),
-  //   []
-  // );
   const connection = useMemo(
     () => new Connection('https://mainnet.helius-rpc.com/?api-key=749e48d5-4f8a-4736-931a-d588a9f99cab', 'confirmed'),
     []
@@ -97,6 +113,34 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
     // No cleanup needed for AbortController if it's not used
   }, [isOpen, isConnected, publicKeyToUse, connection]);
 
+
+  useEffect(() => {
+    if (!isOpen) {
+      console.log('Попап закрыт → сбрасываем баланс');
+      setAvailableBalance(null);
+      return;
+    }
+
+    if (!publicKeyToUse) {
+      setAvailableBalance(null);
+      return;
+    }
+
+
+    connection
+      .getBalance(publicKeyToUse, 'confirmed')
+      .then(lamports => {
+        const bal = lamports / LAMPORTS_PER_SOL;
+        setAvailableBalance(bal);
+      })
+      .catch(err => {
+        console.error('Ошибка получения баланса:', err);
+        setAvailableBalance(null);
+      });
+
+  }, [isOpen, publicKeyToUse, connection]);   // ← только эти три зависимости
+
+
   useEffect(() => {
     if (!isOpen) return;
     fetch("https://kobe.mainnet.jito.network/api/v1/steward_events?limit=1&event_type=ScoreComponentsV2&vote_account=53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR")
@@ -116,8 +160,10 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
 
 
 
+
   const handleConfirm = async () => {
     if (isSubmittingRef.current) return;
+
     if (!publicKeyToUse) {
       setAmountError('Wallet not connected');
       return;
@@ -126,13 +172,19 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       setAmountError('Loading details...');
       return;
     }
-
     const num = parseFloat(amount);
+
+    if (globalWalletName === 'Solflare' && availableBalance !== null && num >= availableBalance - 0.000000001) {
+      setAmountError(`Not enough SOL`);
+      return;
+    }
+
     if (isNaN(num) || num < MIN_STAKE) {
       setAmountError(`Minimum ${MIN_STAKE} SOL`);
       return;
     }
-    if (availableBalance && num > availableBalance) {
+    console.log(availableBalance, 'availableBalance', num, 'num')
+    if (availableBalance !== null && num > availableBalance) {
       setAmountError('Insufficient balance');
       return;
     }
@@ -178,8 +230,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
       // ────────────────────────────────────────────────
 
       setMessage('Waiting for wallet signature...');
+      let providerNew = null;
+      if (globalWalletName === 'Solflare') {
+        providerNew = (window as any).solflare;
+      } else if (globalWalletName === 'Phantom') {
+        providerNew = (window as any).phantom?.solana;
+      }
 
-      const provider = (window as any).solana || (window as any).phantom?.solana;
+      const provider = providerNew || (window as any).solana || (window as any).phantom?.solana;
       if (!provider?.signTransaction) {
         throw new Error('Wallet does not support signTransaction');
       }

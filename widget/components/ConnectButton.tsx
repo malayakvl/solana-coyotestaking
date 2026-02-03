@@ -16,22 +16,7 @@ const WALLET_ICONS: Record<string, string> = {
   Ledger: '/wallets/ledger.svg',
 };
 
-interface GlobalWalletState {
-  connected: boolean;
-  publicKey: string | null;
-  walletName: string | null;
-}
 
-declare global {
-  interface Window {
-    globalWalletState?: GlobalWalletState;
-    updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
-    subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
-    globalWalletSendTransaction?: (tx: Transaction, conn: any, opts?: any) => Promise<string>;
-    globalWalletSignTransaction?: (tx: Transaction) => Promise<Transaction>;
-    globalWalletSignAllTransactions?: (txs: Transaction[]) => Promise<Transaction[]>;
-  }
-}
 
 export const ConnectButton = () => {
   const { wallet, connected, publicKey, disconnect } = useWallet();
@@ -68,69 +53,82 @@ export const ConnectButton = () => {
     return unsub;
   }, []);
 
-  // 🔹 Update global state and store wallet methods
+  // 🔹 Обновление глобального состояния (работает и для Phantom, и для Solflare)
   useEffect(() => {
-    if (!wallet) return;
+    const updateFromAdapter = () => {
+      if (wallet && connected && publicKey) {
+        const name = wallet.adapter.name || 'Phantom'; // fallback
+        const pubkey = publicKey.toBase58();
 
-    const name = wallet.adapter.name || null;
-    const pubkey = publicKey?.toBase58() || null;
+        window.updateGlobalWalletState?.({
+          connected: true,
+          publicKey: pubkey,
+          walletName: name,
+        });
+        return;
+      }
+    };
 
-    window.updateGlobalWalletState?.({
-      connected,
-      publicKey: pubkey,
-      walletName: name,
-    });
+    // 1. Обычное обновление через адаптер (Phantom работает)
+    updateFromAdapter();
 
-    // Методы кошелька для staking
-    // Сохраняем методы только если они реально существуют
-    if (wallet.sendTransaction) {
-      window.globalWalletSendTransaction = wallet.sendTransaction.bind(wallet);
-    } else {
-      window.globalWalletSendTransaction = undefined;
-    }
+    // 2. Принудительная проверка Solflare напрямую (это спасает)
+    const checkSolflareDirectly = async () => {
+      if (typeof window.solflare === 'undefined') return;
 
-    if (wallet.signTransaction) {
-      window.globalWalletSignTransaction = wallet.signTransaction.bind(wallet);
-    } else {
-      window.globalWalletSignTransaction = undefined;
-    }
+      try {
+        if (window.solflare.isConnected && window.solflare.publicKey) {
+          const pubkey = window.solflare.publicKey.toString();
 
-    if (wallet.signAllTransactions) {
-      window.globalWalletSignAllTransactions = wallet.signAllTransactions.bind(wallet);
-    } else {
-      window.globalWalletSignAllTransactions = undefined;
-    }
+          window.updateGlobalWalletState?.({
+            connected: true,
+            publicKey: pubkey,
+            walletName: 'Solflare',
+          });
 
+        }
+      } catch (e) {
+        console.warn('Solflare direct check error', e);
+      }
+    };
+
+    checkSolflareDirectly();
+
+    // Проверяем Solflare каждые 800мс первые 8 секунд (на случай задержки)
+    const interval = setInterval(checkSolflareDirectly, 800);
+    setTimeout(() => clearInterval(interval), 8000);
+
+    return () => clearInterval(interval);
   }, [wallet, connected, publicKey]);
 
-   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
+  const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
   const icon = gWalletName ? WALLET_ICONS[gWalletName] || '/wallets/phantom.svg' : null;
 
   // 🔹 Android deeplink ONLY after wallet selection (NOT on initial render)
   useEffect(() => {
     // Не запускаем при первой загрузке - только после выбора кошелька
     if (!wallet) return;
-    
+
     // Проверяем, что это новый выбор кошелька (а не уже подключенный)
     const isAlreadyConnected = connected && publicKey;
     if (isAlreadyConnected) return;
-    
+
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isInWalletBrowser = /Phantom|Solflare|Backpack/i.test(navigator.userAgent);
-    
+
     if (!isAndroid || isInWalletBrowser) return;
     if (hasRedirectedRef.current) return;
-    
+
     // Только если пользователь **выбрал** кошелек (но еще не подключился)
     const walletName = wallet.adapter.name;
-    
+
     // Проверяем, что это первый раз когда этот кошелек выбран
     // (а не просто ререндер с тем же кошельком)
     if (!walletName) return;
-    
+
     const currentUrl = encodeURIComponent(window.location.href);
     let deepLink = '';
-    
+
     if (walletName === 'Phantom') {
       deepLink = `https://phantom.app/ul/browse/${currentUrl}`;
     } else if (walletName === 'Solflare') {
@@ -138,17 +136,17 @@ export const ConnectButton = () => {
     } else {
       return;
     }
-    
+
     console.log('🔥 Android wallet SELECTED, redirect to:', walletName);
     // alert(`Opening ${walletName} app...`);  // Убираем alert чтобы избежать подтверждения
-    
+
     hasRedirectedRef.current = true;
-    
+
     // Небольшая задержка чтобы пользователь понял что происходит
     setTimeout(() => {
       window.location.href = deepLink;
     }, 300);
-    
+
     // Сбрасываем флаг через 15 секунд
     setTimeout(() => {
       hasRedirectedRef.current = false;
@@ -202,7 +200,7 @@ export const ConnectButton = () => {
         <span style={{ display: "block", paddingBottom: "8px" }}>To Stake SOL from your wallet:</span>
         <span>1. Connect your wallet</span><br />
         <span>2. Click Stake SOL Button</span><br />
-        <span>3. Enter amount of SOL you want to stake</span><br />  
+        <span>3. Enter amount of SOL you want to stake</span><br />
         <span>Done! You have staked your SOL to Vladika</span>
       </div>
     </div>
