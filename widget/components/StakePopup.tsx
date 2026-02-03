@@ -235,6 +235,22 @@ export const StakePopup: React.FC<StakePopupProps> = ({ isOpen, onClose, wallet:
         );
       }
 
+      // Отключаем кошелёк и перезагружаем страницу
+      setTimeout(async () => {
+        try {
+          if (window.solana?.isConnected) {
+            await window.solana.disconnect();
+          }
+          // или если используешь wallet-adapter:
+          // await wallet?.disconnect?.();
+
+          window.location.reload();
+        } catch (err) {
+          console.warn("Не удалось отключить кошелёк перед перезагрузкой", err);
+          window.location.reload(); // всё равно перезагружаем
+        }
+      }, 1200); // 1.2 секунды задержки, чтобы пользователь успел увидеть попап
+
     } catch (err: any) {
       console.error('TX Error:', err);
       setIsSubmitting(false);
