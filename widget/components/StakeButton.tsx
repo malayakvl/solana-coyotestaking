@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-
 import { StakePopup } from './StakePopup';
 
 interface StakeButtonProps {
@@ -11,9 +10,7 @@ interface StakeButtonProps {
 }
 
 export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
-  const walletContext = useWallet(); // ✅ Получаем ПОЛНЫЙ объект кошелька
-  const walletData = useWallet();
-  const { connected, publicKey, connecting, disconnecting, wallet } = useWallet();
+  const wallet = useWallet(); // adapter
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [globalState, setGlobalState] = useState<GlobalWalletState>({
@@ -22,54 +19,73 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
     walletName: null,
   });
 
-  // Подписываемся на глобальное состояние
+  // Подписка на глобальный state
   useEffect(() => {
     if (window.subscribeToGlobalWalletState) {
-      const unsubscribe = window.subscribeToGlobalWalletState(setGlobalState);
-      // сразу берём текущее значение
+      const unsub = window.subscribeToGlobalWalletState(setGlobalState);
       setGlobalState(window.globalWalletState || { connected: false, publicKey: null, walletName: null });
-      return unsubscribe;
+      return unsub;
     }
   }, []);
 
-  // 🔍 Проверяем подключение НАПРЯМУЮ через window
-  const checkWalletDirectly = (): boolean => {
-    if (typeof window !== 'undefined' && window.solana?.isConnected) return true;
-    if (typeof window !== 'undefined' && window.phantom?.solana?.isConnected) return true;
-
-    return false;
+  // Wait for Solflare to be ready
+  const waitForSolflare = async () => {
+    if (typeof window === 'undefined' || !window.solflare) return false;
+    try {
+      await window.solflare.connect(); // если уже подключен, вернется сразу
+      return window.solflare.isConnected && !!window.solflare.publicKey;
+    } catch (e) {
+      console.warn('Solflare connect failed', e);
+      return false;
+    }
   };
 
-  const handleStake = () => {
+  const handleStake = async () => {
     if (onClick) onClick();
 
-    // Самая надёжная проверка — глобальное состояние
+    // 1️⃣ Adapter напрямую
+    if (wallet.connected && wallet.publicKey) {
+      setIsPopupOpen(true);
+      return;
+    }
+
+    // 2️⃣ Глобальное состояние
     if (globalState.connected && globalState.publicKey) {
-      console.log('Открываем попап по глобальному состоянию:', globalState.walletName);
       setIsPopupOpen(true);
       return;
     }
 
-    // ✅ Сначала проверяем через wallet-adapter
-    if (walletContext.connected && walletContext.publicKey) {
-      setIsPopupOpen(true);
-      return;
+    // 3️⃣ Solflare special case через localStorage
+    const stored = localStorage.getItem('walletState');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.connected && parsed.walletName === 'Solflare') {
+        console.log('⚡ Solflare detected in localStorage, waiting for adapter...');
+        try {
+          // ждем пока adapter реально подключится
+          const solflareWallet = await window.solflare.connect();
+          if (window.solflare.isConnected && window.solflare.publicKey) {
+            // теперь передаем в popup корректные props
+            setGlobalState({
+              connected: true,
+              publicKey: window.solflare.publicKey.toString(),
+              walletName: 'Solflare',
+            });
+            setIsPopupOpen(true);
+            return;
+          }
+        } catch (e) {
+          console.warn('Solflare connect failed', e);
+        }
+      }
     }
 
-    // ✅ Затем проверяем НАПРЯМУЮ через window
-    if (checkWalletDirectly()) {
-      setIsPopupOpen(true);
-      return;
-    }
-
-    // ✅ Если не подключены - показываем ошибку
     setErrorMessage('Wallet not connected. Please connect your wallet first.');
     setTimeout(() => setErrorMessage(null), 5000);
   };
 
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-  };
+
+  const handleClosePopup = () => setIsPopupOpen(false);
 
   return (
     <>
@@ -97,9 +113,9 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
         <StakePopup
           isOpen={isPopupOpen}
           onClose={handleClosePopup}
-          wallet={walletContext} // ✅ Передаём ПОЛНЫЙ объект кошелька
-          globalPublicKey={globalState.publicKey}          // ← добавляем
-          globalWalletName={globalState.walletName}        // на всякий случай
+          wallet={wallet}
+          globalPublicKey={globalState.publicKey}
+          globalWalletName={globalState.walletName}
           devModeEnabled={true}
         />
       )}

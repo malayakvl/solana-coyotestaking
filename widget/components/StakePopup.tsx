@@ -37,7 +37,9 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 }) => {
   const walletContext = useWallet();
   const effectiveWallet = propWallet || walletContext;
-
+  console.log('StakePopup mounted with wallet:', effectiveWallet);
+  console.log('StakePopup mounted with globalPublicKey:', globalPublicKey);
+  console.log('StakePopup mounted with globalWalletName:', globalWalletName);
 
   const getPublicKey = (): PublicKey | null => {
     if (effectiveWallet?.publicKey) return effectiveWallet.publicKey;
@@ -324,99 +326,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({
     }
   };
 
-
-  const handleConfirm1 = async () => {
-    if (isSubmittingRef.current) return;
-    if (!publicKeyToUse) { setAmountError('Wallet not connected'); return; }
-    if (!cachedBlockhash.current || !cachedRentExempt.current) { setAmountError('Loading details...'); return; }
-
-    const num = parseFloat(amount);
-    if (isNaN(num) || num < MIN_STAKE) { setAmountError(`Minimum ${MIN_STAKE} SOL`); return; }
-    if (availableBalance && num > availableBalance) { setAmountError(`Insufficient balance`); return; }
-
-    try {
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
-      setMessage('Fetching fresh network data...');
-
-      // Запрашиваем самый свежий blockhash прямо перед транзакцией
-      const blockhashInfo = await connection.getLatestBlockhash('confirmed');
-      const rentExempt = cachedRentExempt.current || await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
-
-      const lamports = Math.floor(num * LAMPORTS_PER_SOL) + rentExempt;
-      const stakeAccount = Keypair.generate();
-
-      const tx = new Transaction().add(
-        StakeProgram.createAccount({
-          fromPubkey: publicKeyToUse,
-          stakePubkey: stakeAccount.publicKey,
-          authorized: { staker: publicKeyToUse, withdrawer: publicKeyToUse },
-          lamports,
-        }),
-        StakeProgram.delegate({
-          stakePubkey: stakeAccount.publicKey,
-          authorizedPubkey: publicKeyToUse,
-          votePubkey: VOTE_ACCOUNT,
-        })
-      );
-
-      tx.feePayer = publicKeyToUse;
-      tx.recentBlockhash = blockhashInfo.blockhash;
-      tx.partialSign(stakeAccount);
-
-      const provider = (window as any).solana || (window as any).phantom?.solana;
-      if (!provider?.signAndSendTransaction) throw new Error('No wallet provider available');
-
-      setIsSubmitting(true);
-      setMessage('Waiting for wallet signature...');
-
-      provider.signAndSendTransaction(tx)
-        .then((result: any) => {
-          const signature = typeof result === 'string' ? result : (result.signature || result);
-          console.log('✅ Signed:', signature);
-          return signature;
-        })
-        .then(async (signature: string) => {
-          setMessage('Confirming on-chain...');
-          let confirmed = false;
-          for (let i = 0; i < 40; i++) {
-            const { value: statuses } = await connection.getSignatureStatuses([signature]);
-            const status = statuses[0];
-            if (status?.err) throw new Error('Transaction failed on-chain');
-            if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') {
-              confirmed = true;
-              break;
-            }
-            await new Promise(r => setTimeout(r, 2000));
-          }
-          if (!confirmed) throw new Error('Confirmation timeout');
-          return signature;
-        })
-        .then((signature: string) => {
-          setIsSubmitting(false);
-          isSubmittingRef.current = false;
-          if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
-            (window as any).showSuccessPopup(`Transaction Successful!\n\nSignature: ${signature}\n\nView on Solana Explorer: solana.fm/tx/${signature}`);
-          }
-        })
-        .catch((err: any) => {
-          console.error('TX Error:', err);
-          setIsSubmitting(false);
-          isSubmittingRef.current = false;
-          if (err.code === 4001 || err.message?.includes('rejected')) {
-            setAmountError('Transaction cancelled');
-          } else if (err.code === -32603) {
-            setAmountError('Internal wallet error (-32603). Check balance or try again.');
-          } else {
-            setAmountError(err.message || 'Transaction failed');
-          }
-        });
-
-    } catch (err: any) {
-      setIsSubmitting(false);
-      setAmountError(err.message);
-    }
-  };
 
   useEffect(() => { if (isOpen) { setMessage(''); setAmountError(null); } }, [isOpen]);
 
