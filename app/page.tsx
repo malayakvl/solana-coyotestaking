@@ -1,6 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Keypair } from '@solana/web3.js';
+import bs58 from 'bs58';
+
+// Делается ОДИН раз при загрузке страницы
+const dappKeypair = Keypair.generate();
+const dapp_encryption_public_key = bs58.encode(dappKeypair.publicKey.toBytes());
 
 const WalletContextProvider = dynamic(
   () => import('../components/WalletContextProvider').then(mod => mod.WalletContextProvider),
