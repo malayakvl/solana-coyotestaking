@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { StakePopup } from './StakePopup';
+import { GlobalWalletState } from '../types';
 
 interface StakeButtonProps {
   className?: string;
@@ -18,6 +19,9 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
     publicKey: null,
     walletName: null,
   });
+  const hasWallet = wallet.connected && wallet.publicKey
+    || globalState.connected && globalState.publicKey;
+  console.log('hasWallet', hasWallet);
 
   // Подписка на глобальный state
   useEffect(() => {
@@ -43,6 +47,12 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
   const handleStake = async () => {
     if (onClick) onClick();
 
+    // Adapter напрямую (Phantom / Solflare)
+    const adapterConnected = wallet.connected && wallet.publicKey;
+
+    // Глобальное состояние (Backpack)
+    const backpackConnected = globalState.connected && globalState.publicKey;
+
     // 1️⃣ Adapter напрямую
     if (wallet.connected && wallet.publicKey) {
       setIsPopupOpen(true);
@@ -66,17 +76,44 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
           const solflareWallet = await window.solflare.connect();
           if (window.solflare.isConnected && window.solflare.publicKey) {
             // теперь передаем в popup корректные props
-            setGlobalState({
+            const newState = {
               connected: true,
               publicKey: window.solflare.publicKey.toString(),
               walletName: 'Solflare',
-            });
+            };
+            if (window.updateGlobalWalletState) {
+              window.updateGlobalWalletState(newState);
+            }
+            setGlobalState(newState);
             setIsPopupOpen(true);
             return;
           }
         } catch (e) {
           console.warn('Solflare connect failed', e);
         }
+      }
+    }
+    console.log('globalState.walletName', globalState.walletName)
+    if (globalState.walletName === 'Backpack' && !globalState.connected) {
+      console.log('⚡ Backpack detected in localStorage, waiting for adapter...');
+      try {
+        await window.backpack.connect();
+        if (window.backpack.connected && window.backpack.publicKey) {
+          // теперь передаем в popup корректные props
+          const newState = {
+            connected: true,
+            publicKey: window.backpack.publicKey.toString(),
+            walletName: 'Backpack',
+          };
+          if (window.updateGlobalWalletState) {
+            window.updateGlobalWalletState(newState);
+          }
+          setGlobalState(newState);
+          setIsPopupOpen(true);
+          return;
+        }
+      } catch (e) {
+        console.warn('Backpack connect failed', e);
       }
     }
 

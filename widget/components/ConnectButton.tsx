@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { GlobalWalletState } from '../types';
 
 const WALLET_ICONS: Record<string, string> = {
   Phantom: '/wallets/phantom.svg',
@@ -18,7 +19,7 @@ const WALLET_ICONS: Record<string, string> = {
 export const ConnectButton = () => {
   const { wallet, connected, publicKey, disconnect } = useWallet();
 
-  const [globalState, setGlobalState] = useState({
+  const [globalState, setGlobalState] = useState<GlobalWalletState>({
     connected: false,
     publicKey: null,
     walletName: null,
@@ -34,6 +35,11 @@ export const ConnectButton = () => {
       walletName: wallet?.adapter?.name ?? null,
     };
 
+    // Update window global state
+    if (window.updateGlobalWalletState) {
+      window.updateGlobalWalletState(state);
+    }
+
     window.walletState = state;
     localStorage.setItem('walletState', JSON.stringify(state));
     window.dispatchEvent(new Event('walletChanged'));
@@ -41,6 +47,7 @@ export const ConnectButton = () => {
     setGlobalState(state);
     localStorage.setItem('globalWalletState', JSON.stringify(state));
     console.log('Устанавливаем STATE', state);
+
   }, [connected, publicKey, wallet]);
 
   /* -----------------------
@@ -67,10 +74,14 @@ export const ConnectButton = () => {
         onClick={() => {
           disconnect();
           // Обновляем глобальное состояние при disconnect
-          window.walletState = { connected: false, publicKey: null, walletName: null };
-          localStorage.setItem('walletState', JSON.stringify(window.walletState));
+          const disconnectedState = { connected: false, publicKey: null, walletName: null };
+          if (window.updateGlobalWalletState) {
+            window.updateGlobalWalletState(disconnectedState);
+          }
+          window.walletState = disconnectedState;
+          localStorage.setItem('walletState', JSON.stringify(disconnectedState));
           window.dispatchEvent(new Event('walletChanged'));
-          setGlobalState(window.walletState);
+          setGlobalState(disconnectedState);
         }}
       >
         <div className="flex items-center gap-3">
