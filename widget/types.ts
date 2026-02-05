@@ -14,10 +14,15 @@ declare global {
         globalWalletEventListeners?: GlobalWalletEventListener[];
         updateGlobalWalletState?: (newState: Partial<GlobalWalletState>) => void;
         subscribeToGlobalWalletState?: (callback: GlobalWalletEventListener) => () => void;
-        globalWalletSendTransaction?: (transaction: Transaction, connection: Connection, options?: any) => Promise<string>;
+        globalWalletSendTransaction?: (tx: Transaction, conn: any, opts?: any) => Promise<string>;
         globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
         globalWalletSignAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>;
         showSuccessPopup?: (message: string) => void;
+        solana?: any;
+        phantom?: any;
+        solflare?: any;
+        backpack?: any;
+        walletState?: GlobalWalletState;
         WidgetBundle?: {
             replaceButtons: () => void;
             ConnectButton: any;
