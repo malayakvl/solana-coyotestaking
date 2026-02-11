@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { StakePopup } from './StakePopup';
 import { GlobalWalletState } from '../types';
-import { relative } from 'path';
 
 interface StakeButtonProps {
   className?: string;
@@ -94,28 +93,29 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
         }
       }
     }
-    // if (globalState.walletName === 'Backpack' && !globalState.connected) {
-    //   console.log('⚡ Backpack detected in localStorage, waiting for adapter...');
-    //   try {
-    //     await window.backpack.connect();
-    //     if (window.backpack.connected && window.backpack.publicKey) {
-    //       // теперь передаем в popup корректные props
-    //       const newState = {
-    //         connected: true,
-    //         publicKey: window.backpack.publicKey.toString(),
-    //         walletName: 'Backpack',
-    //       };
-    //       if (window.updateGlobalWalletState) {
-    //         window.updateGlobalWalletState(newState);
-    //       }
-    //       setGlobalState(newState);
-    //       setIsPopupOpen(true);
-    //       return;
-    //     }
-    //   } catch (e) {
-    //     console.warn('Backpack connect failed', e);
-    //   }
-    // }
+    console.log('globalState.walletName', globalState.walletName)
+    if (globalState.walletName === 'Backpack' && !globalState.connected) {
+      console.log('⚡ Backpack detected in localStorage, waiting for adapter...');
+      try {
+        await window.backpack.connect();
+        if (window.backpack.connected && window.backpack.publicKey) {
+          // теперь передаем в popup корректные props
+          const newState = {
+            connected: true,
+            publicKey: window.backpack.publicKey.toString(),
+            walletName: 'Backpack',
+          };
+          if (window.updateGlobalWalletState) {
+            window.updateGlobalWalletState(newState);
+          }
+          setGlobalState(newState);
+          setIsPopupOpen(true);
+          return;
+        }
+      } catch (e) {
+        console.warn('Backpack connect failed', e);
+      }
+    }
 
     setErrorMessage('Please connect your wallet first.');
     setTimeout(() => setErrorMessage(null), 5000);
