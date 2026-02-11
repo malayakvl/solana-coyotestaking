@@ -20,7 +20,7 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
         () => [
             new PhantomWalletAdapter(),
             new SolflareWalletAdapter(),
-            new BackpackWalletAdapter(),
+            // new BackpackWalletAdapter(),
         ],
         []
     );

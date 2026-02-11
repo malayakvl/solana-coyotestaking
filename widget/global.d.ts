@@ -1,23 +1,30 @@
-import { Transaction } from '@solana/web3.js';
+import { Transaction, Connection } from '@solana/web3.js';
+import { GlobalWalletState } from './types';
 
 declare global {
-    interface GlobalWalletState {
-        connected: boolean;
-        publicKey: string | null;
-        walletName: string | null;
-    }
+    type GlobalWalletEventListener = (state: GlobalWalletState) => void;
 
     interface Window {
+        walletState?: GlobalWalletState;
         globalWalletState?: GlobalWalletState;
         updateGlobalWalletState?: (state: Partial<GlobalWalletState>) => void;
         subscribeToGlobalWalletState?: (cb: (state: GlobalWalletState) => void) => () => void;
-        globalWalletSendTransaction?: (tx: Transaction, conn: any, opts?: any) => Promise<string>;
-        globalWalletSignTransaction?: (tx: Transaction) => Promise<Transaction>;
-        globalWalletSignAllTransactions?: (txs: Transaction[]) => Promise<Transaction[]>;
+        globalWalletSendTransaction?: (transaction: Transaction, connection: Connection, options?: any) => Promise<string>;
+        globalWalletSignTransaction?: (transaction: Transaction) => Promise<Transaction>;
+        globalWalletSignAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>;
         solflare?: any;
         phantom?: any;
         solana?: any;
+        backpack?: any;
+        globalWalletEventListeners?: GlobalWalletEventListener[];
         showSuccessPopup?: (message: string) => void;
+        WidgetBundle?: {
+            replaceButtons: () => void;
+            ConnectButton: any;
+            StakeButton: any;
+            StakePopup: any;
+            WalletContextProvider: any;
+        };
     }
 }
 

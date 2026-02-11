@@ -166,7 +166,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
     if (isSubmittingRef.current) return;
 
     if (!publicKeyToUse) {
-      setAmountError('Wallet not connected');
+      // setAmountError('Wallet not connected');
       return;
     }
     if (!cachedBlockhash.current || !cachedRentExempt.current) {

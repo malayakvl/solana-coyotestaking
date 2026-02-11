@@ -117,7 +117,7 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
       }
     }
 
-    setErrorMessage('Wallet not connected. Please connect your wallet first.');
+    setErrorMessage('Please connect your wallet first.');
     setTimeout(() => setErrorMessage(null), 5000);
   };
 
@@ -125,25 +125,32 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
   const handleClosePopup = () => setIsPopupOpen(false);
 
   return (
-    <>
+    <div style={{ position: 'relative' }}>
       <button onClick={handleStake} className={className || "stake-sol-btn"}>
         Stake SOL
       </button>
 
       {errorMessage && (
+
         <div className="stake-btn-error" style={{
-          marginTop: '10px',
-          padding: '12px',
+          padding: '0px',
           backgroundColor: '#fff8e6',
           color: '#e67e22',
           border: '1px solid #ffd54f',
           borderRadius: '8px',
-          fontSize: '14px',
+          fontSize: '13px',
           textAlign: 'center',
+          position: 'absolute',
+          top: '90px',
+          left: '0',
+          right: '0',
           fontWeight: 500,
+          zIndex: 10,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         }}>
           {errorMessage}
         </div>
+
       )}
 
       {isPopupOpen && (
@@ -156,6 +163,6 @@ export const StakeButton = ({ className, onClick }: StakeButtonProps) => {
           devModeEnabled={true}
         />
       )}
-    </>
+    </div>
   );
 };
