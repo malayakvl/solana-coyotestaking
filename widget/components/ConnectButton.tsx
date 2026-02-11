@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { GlobalWalletState } from '../types';
@@ -24,6 +24,9 @@ export const ConnectButton = () => {
     publicKey: null,
     walletName: null,
   });
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const hasRedirectedRef = useRef(false);
 
   /* -----------------------
      🌍 Global state sync (WP-safe)
@@ -49,6 +52,36 @@ export const ConnectButton = () => {
     console.log('Устанавливаем STATE', state);
 
   }, [connected, publicKey, wallet]);
+
+
+  // 🔹 Android deeplink ONLY once when wallet SELECTED
+  useEffect(() => {
+    if (!wallet?.adapter?.name) return;
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isInWalletBrowser = /Phantom|Solflare|Backpack/i.test(navigator.userAgent);
+
+    if (!isAndroid || isInWalletBrowser) return;
+
+    // 👉 ГЛАВНОЕ: только один раз за сессию
+    if (hasRedirectedRef.current) return;
+
+    const walletName = wallet.adapter.name;
+
+    let deepLink = '';
+    const currentUrl = encodeURIComponent(window.location.href);
+
+    if (walletName === 'Phantom') {
+      deepLink = `https://phantom.app/ul/browse/${currentUrl}`;
+    } else if (walletName === 'Solflare') {
+      deepLink = `https://solflare.com/ul/v1/browse/${currentUrl}`;
+    }
+
+    hasRedirectedRef.current = true;
+    window.location.href = deepLink;
+
+  }, [wallet?.adapter?.name]); // ← ТОЛЬКО имя!
+
 
   /* -----------------------
      🧹 Clean Solflare / query params
