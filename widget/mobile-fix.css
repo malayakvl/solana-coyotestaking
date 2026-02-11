@@ -1,15 +1,197 @@
 .mobile-wallet-block .wallet-adapter-button {
-    width: 80px;
-    min-width: 80px !important;
+    width: 100px;
+    min-width: 100px !important;
     margin-top: 30px;
-    margin-left: 20px;
+    margin-left: 15px;
 }
+
 .mobile-wallet-block .text-connected {
-    display: none !important;
+    font-size: 11px;
+    padding-left: 0px;
 }
+
 .mobile-wallet-block .text-connect {
-   display: none !important;
+    font-size: 12px;
+    padding-left: 13px;
 }
+
 .mobile-wallet-block .font-bold {
+    font-size: 13px;
+    padding-left: 21px;
+}
+
+.mobile-wallet-block .i-wallet-phantom {
+    left: 7px !important;
+}
+
+.mobile-wallet-block .i-wallet-phantom {
+    left: 7px !important;
+}
+
+.i-wallet-glow {
+    background-image: url("https://vladika.love/wp-content/themes/yootheme/js/widget/images/glow.webp");
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    background-size: contain;
+    position: absolute;
+    top: 12px;
+    left: 15px;
+}
+
+.i-wallet-backpack {
+    background-image: url("https://vladika.love/wp-content/themes/yootheme/js/widget/images/backpack.png");
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    background-size: contain;
+    position: absolute;
+    top: 12px;
+    left: 15px;
+}
+
+.mobile-wallet-block .i-wallet-phantom {
+    left: 8px !important;
+}
+
+.mobile-wallet-block .i-wallet-glow {
+    left: 8px !important;
+}
+
+.mobile-wallet-block .i-wallet-backpack {
+    left: 8px !important;
+}
+
+.mobile-wallet-block .pi-wallet {
+    left: 5px !important
+}
+
+/* Скрываем элемент с Mobile Wallet Adapter */
+.wallet-adapter-modal-list li button span {
+    display: inline-block;
+}
+
+/* скрываем конкретно Mobile Wallet Adapter по тексту */
+.wallet-adapter-modal-list li button span:contains("Mobile Wallet Adapter") {
     display: none !important;
+}
+
+/* прячем сам родительский li, чтобы кнопка исчезла полностью */
+.wallet-adapter-modal-list li button span:contains("Mobile Wallet Adapter") {
+    display: none !important;
+}
+
+.wallet-adapter-modal-list li button span:contains("Mobile Wallet Adapter") {
+    parent: li;
+    display: none !important;
+}
+
+
+
+/* Текст-подсказка внизу списка кошельков */
+.wallet-adapter-modal-list::after {
+    content: "New here?\AInstall Phantom, Solflare, or Backpack and come back.";
+    display: block;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    color: #9ca3af;
+    text-align: center;
+    line-height: 1.4;
+    white-space: pre-line;
+}
+
+
+
+/* Скрываем оригинальный текст */
+.wallet-adapter-modal-list-more span {
+    display: none;
+}
+
+/* Текст для закрытой кнопки (More options) */
+.wallet-adapter-modal-list-more::before {
+    content: "More options";
+    font-size: 14px;
+    font-weight: 500;
+    margin-right: 6px;
+}
+
+/* Текст для раскрытой кнопки (Less options) */
+.wallet-adapter-modal-list-more:has(.wallet-adapter-modal-list-more-icon-rotate)::before {
+    content: "Pick your Solana wallet to stake";
+}
+
+/* Скрываем ТОЛЬКО Mobile Wallet Adapter по иконке */
+.wallet-adapter-modal-list li:has(img[alt*="Mobile"]) {
+    display: none !important;
+}
+
+.success-popup-explorer-link {
+    color: #fff !important;
+    text-decoration: underline;
+    font-size: 16px !important;
+    display: inline-block;
+
+}
+
+.success-popup-explorer-link-new {
+    color: #fff;
+    text-decoration: underline;
+    font-size: 16px;
+    display: inline-block;
+}
+
+.success-popup-explorer-link-new:hover {
+    color: #fff;
+}
+
+.success-popup-close {
+    top: -92px !important;
+
+}
+
+.success-popup-confirm-close {
+    position: absolute;
+    top: -92px;
+    right: -12px;
+    width: 32px;
+    height: 31px;
+    background: #5b0b0b;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 50%;
+    padding: 2px 8px 15px;
+    font-family: Open Sans;
+    font-weight: 600;
+    text-transform: inherit;
+    z-index: 999;
+    font-size: 16px;
+}
+
+#faq_heart_img .stake-btn-container {
+    margin-top: -129px;
+    margin-left: 85px;
+}
+
+.heart-stake-btn {
+    text-transform: uppercase;
+    border: solid 4px #741212;
+    border-radius: 5em;
+    padding: 15px 37px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #741212 !important;
+    background: transparent;
+    position: relative;
+    cursor: pointer;
+    font-family: Open Sans;
+}
+
+@media (max-width: 768px) {
+    #faq_heart_img .stake-btn-container {
+        margin-top: -129px;
+        margin-left: 77px;
+    }
 }
