@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { GlobalWalletState } from '../types';
 
 const WALLET_ICONS: Record<string, string> = {
   Phantom: '/wallets/phantom.svg',
@@ -18,11 +19,14 @@ const WALLET_ICONS: Record<string, string> = {
 export const ConnectButton = () => {
   const { wallet, connected, publicKey, disconnect } = useWallet();
 
-  const [globalState, setGlobalState] = useState({
+  const [globalState, setGlobalState] = useState<GlobalWalletState>({
     connected: false,
     publicKey: null,
     walletName: null,
   });
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const hasRedirectedRef = useRef(false);
 
   /* -----------------------
      🌍 Global state sync (WP-safe)
@@ -34,6 +38,11 @@ export const ConnectButton = () => {
       walletName: wallet?.adapter?.name ?? null,
     };
 
+    // Update window global state
+    if (window.updateGlobalWalletState) {
+      window.updateGlobalWalletState(state);
+    }
+
     window.walletState = state;
     localStorage.setItem('walletState', JSON.stringify(state));
     window.dispatchEvent(new Event('walletChanged'));
@@ -41,7 +50,40 @@ export const ConnectButton = () => {
     setGlobalState(state);
     localStorage.setItem('globalWalletState', JSON.stringify(state));
     console.log('Устанавливаем STATE', state);
+
   }, [connected, publicKey, wallet]);
+
+
+  // 🔹 Android deeplink ONLY once when wallet SELECTED
+  useEffect(() => {
+    if (!wallet?.adapter?.name) return;
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isInWalletBrowser = /Phantom|Solflare|Backpack/i.test(navigator.userAgent);
+
+    // Работаем только на Android, не в кошельках
+    if (!isAndroid || isInWalletBrowser) return;
+
+    // 👉 ГЛАВНОЕ: только один раз за сессию
+    if (hasRedirectedRef.current) return;
+
+    const walletName = wallet.adapter.name;
+
+    let deepLink = '';
+    const currentUrl = encodeURIComponent(window.location.href);
+
+    if (walletName === 'Phantom') {
+      deepLink = `https://phantom.app/ul/browse/${currentUrl}`;
+    } else if (walletName === 'Solflare') {
+      deepLink = `https://solflare.com/ul/v1/browse/${currentUrl}`;
+    }
+
+    hasRedirectedRef.current = true;
+    window.location.href = deepLink;
+
+  }, [wallet?.adapter?.name]); // ← ТОЛЬКО имя!
+
 
   /* -----------------------
      🧹 Clean Solflare / query params
@@ -67,10 +109,14 @@ export const ConnectButton = () => {
         onClick={() => {
           disconnect();
           // Обновляем глобальное состояние при disconnect
-          window.walletState = { connected: false, publicKey: null, walletName: null };
-          localStorage.setItem('walletState', JSON.stringify(window.walletState));
+          const disconnectedState = { connected: false, publicKey: null, walletName: null };
+          if (window.updateGlobalWalletState) {
+            window.updateGlobalWalletState(disconnectedState);
+          }
+          window.walletState = disconnectedState;
+          localStorage.setItem('walletState', JSON.stringify(disconnectedState));
           window.dispatchEvent(new Event('walletChanged'));
-          setGlobalState(window.walletState);
+          setGlobalState(disconnectedState);
         }}
       >
         <div className="flex items-center gap-3">
