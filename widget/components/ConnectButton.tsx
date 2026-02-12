@@ -8,20 +8,34 @@ import { GlobalWalletState } from '../types';
 const WALLET_ICONS: Record<string, string> = {
   Phantom: '/wallets/phantom.svg',
   Solflare: '/wallets/solflare.png',
-  // ... остальные иконки
 };
 
 export const ConnectButton = () => {
-  const { wallet, connected, publicKey, disconnect } = useWallet();
+  const { wallet, connected, publicKey, disconnect, select } = useWallet();
   const [globalState, setGlobalState] = useState<GlobalWalletState>({
     connected: false,
     publicKey: null,
     walletName: null,
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [isInWalletBrowser, setIsInWalletBrowser] = useState(false);
   const hasRedirectedRef = useRef(false);
 
-  // 1. Синхронизация стейта
+  // 1. Определение окружения
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+
+    // Проверяем, запущены ли мы внутри встроенного браузера кошелька
+    const inWallet = /Phantom|Solflare|Backpack/i.test(ua);
+    const hasInjectedProvider = !!(window as any).solana || !!(window as any).solflare;
+
+    setIsMobile(mobile);
+    setIsInWalletBrowser(inWallet || hasInjectedProvider);
+  }, []);
+
+  // 2. Синхронизация стейта
   useEffect(() => {
     const state = {
       connected,
@@ -32,97 +46,96 @@ export const ConnectButton = () => {
     setGlobalState(state);
   }, [connected, publicKey, wallet]);
 
-  // 2. Логика редиректа (Android Fix)
+  // 3. Логика редиректа (Android)
   useEffect(() => {
-    if (!wallet?.adapter?.name || connected) return;
+    if (!wallet?.adapter?.name || connected || isInWalletBrowser) return;
 
-    const ua = navigator.userAgent;
-    const isAndroid = /Android/i.test(ua);
-    const isInWallet = /Phantom|Solflare|Backpack/i.test(ua);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (!isAndroid) return;
 
-    // Проверка наличия провайдера (если мы уже внутри кошелька)
-    const hasProvider = !!(window as any).solana || !!(window as any).solflare;
-
-    if (!isAndroid || isInWallet || hasProvider) return;
-
-    // Используем sessionStorage, чтобы флаг жил только в рамках текущей вкладки
     const redirectKey = `rd_${wallet.adapter.name}`;
     if (sessionStorage.getItem(redirectKey) || hasRedirectedRef.current) return;
 
     const walletName = wallet.adapter.name;
-    const currentUrl = window.location.href;
-    const encodedUrl = encodeURIComponent(currentUrl);
+    const encodedUrl = encodeURIComponent(window.location.href);
     let deepLink = '';
 
     if (walletName === 'Phantom') {
-      // Phantom отлично ест https universal links
       deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
-    }
-    else if (walletName === 'Solflare') {
-      // ИСПОЛЬЗУЕМ ПРЯМОЙ ПРОТОКОЛ для Solflare на Android
-      // Это предотвращает редирект в Google Play
+    } else if (walletName === 'Solflare') {
       deepLink = `solflare://ul/v1/browse/${encodedUrl}`;
     }
 
     if (deepLink) {
-      console.log('Deep linking to:', walletName);
       hasRedirectedRef.current = true;
       sessionStorage.setItem(redirectKey, 'true');
-
-      // Небольшая задержка, чтобы стейт адаптера успел записаться
-      setTimeout(() => {
-        window.location.href = deepLink;
-      }, 100);
+      setTimeout(() => { window.location.href = deepLink; }, 100);
     }
-  }, [wallet?.adapter?.name, connected]);
+  }, [wallet?.adapter?.name, connected, isInWalletBrowser]);
 
-  // 3. Очистка (разблокировка редиректа при смене кошелька)
-  useEffect(() => {
-    if (!wallet) {
-      sessionStorage.removeItem('rd_Phantom');
-      sessionStorage.removeItem('rd_Solflare');
-      hasRedirectedRef.current = false;
-    }
-  }, [wallet]);
+  // 4. Сброс выбора
+  const handleResetWallet = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    select(null as any);
+    sessionStorage.removeItem('rd_Phantom');
+    sessionStorage.removeItem('rd_Solflare');
+    hasRedirectedRef.current = false;
+  };
 
-  // --- RENDER (Твой оригинальный рендер) ---
   const { connected: gConnected, publicKey: gPubkey, walletName: gWalletName } = globalState;
   const icon = gWalletName ? WALLET_ICONS[gWalletName] : null;
 
+  // --- RENDER ---
+
+  // А) ПОДКЛЮЧЕН
   if (gConnected && gPubkey) {
     return (
-      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600" onClick={() => disconnect()}>
-        <div className="flex items-center gap-3">
-          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
-          <span className="font-bold font-connected">Connected</span>
-        </div>
-      </WalletMultiButton>
+        <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600">
+          <div className="flex items-center gap-3">
+            {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+            <span className="font-bold">Connected</span>
+          </div>
+        </WalletMultiButton>
     );
   }
 
+  // Б) ВЫБРАН, НО НЕ ПОДКЛЮЧЕН
   if (gWalletName && !gConnected) {
     return (
-      <WalletMultiButton
-        className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20"
-      >
-        <div className="flex items-center gap-3">
-          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
-          <span className="text-connect">Connect</span>
+        <div className="flex flex-col items-center gap-2 relative">
+          <WalletMultiButton className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20">
+            <div className="flex items-center gap-3">
+              {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+              <span className="text-connect">Connect</span>
+            </div>
+          </WalletMultiButton>
+
+          {/*
+            Кнопка "Change Wallet" показывается ТОЛЬКО если:
+            1. Это мобилка
+            2. Мы НЕ внутри браузера кошелька (Chrome/Safari)
+        */}
+          {isMobile && !isInWalletBrowser && (
+              <button
+                  onClick={handleResetWallet}
+                  className="change-wallet"
+              >
+                &nbsp;
+              </button>
+          )}
         </div>
-      </WalletMultiButton>
     );
   }
 
-
-
+  // В) НИЧЕГО НЕ ВЫБРАНО
   return (
-    <div className="wallet-wrapper">
-      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
-        <div className="flex items-center gap-3 btn-s-wallet">
-          <i className="pi-wallet text-xl"></i>
-          <span className="font-bold">Wallet</span>
-        </div>
-      </WalletMultiButton>
-    </div>
+      <div className="wallet-wrapper">
+        <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
+          <div className="flex items-center gap-3 btn-s-wallet">
+            <i className="pi-wallet text-xl"></i>
+            <span className="font-bold">Wallet</span>
+          </div>
+        </WalletMultiButton>
+      </div>
   );
 };
