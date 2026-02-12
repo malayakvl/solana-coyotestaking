@@ -18,7 +18,7 @@ export const ConnectButton = () => {
     publicKey: null,
     walletName: null,
   });
-  
+
   const hasRedirectedRef = useRef(false);
 
   // 1. Синхронизация стейта
@@ -39,7 +39,7 @@ export const ConnectButton = () => {
     const ua = navigator.userAgent;
     const isAndroid = /Android/i.test(ua);
     const isInWallet = /Phantom|Solflare|Backpack/i.test(ua);
-    
+
     // Проверка наличия провайдера (если мы уже внутри кошелька)
     const hasProvider = !!(window as any).solana || !!(window as any).solflare;
 
@@ -50,7 +50,7 @@ export const ConnectButton = () => {
     if (sessionStorage.getItem(redirectKey) || hasRedirectedRef.current) return;
 
     const walletName = wallet.adapter.name;
-    const currentUrl = window.location.href; 
+    const currentUrl = window.location.href;
     const encodedUrl = encodeURIComponent(currentUrl);
 
     let deepLink = '';
@@ -58,7 +58,7 @@ export const ConnectButton = () => {
     if (walletName === 'Phantom') {
       // Phantom отлично ест https universal links
       deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
-    } 
+    }
     else if (walletName === 'Solflare') {
       // ИСПОЛЬЗУЕМ ПРЯМОЙ ПРОТОКОЛ для Solflare на Android
       // Это предотвращает редирект в Google Play
@@ -69,7 +69,7 @@ export const ConnectButton = () => {
       console.log('Deep linking to:', walletName);
       hasRedirectedRef.current = true;
       sessionStorage.setItem(redirectKey, 'true');
-      
+
       // Небольшая задержка, чтобы стейт адаптера успел записаться
       setTimeout(() => {
         window.location.href = deepLink;
@@ -94,19 +94,34 @@ export const ConnectButton = () => {
     return (
       <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600" onClick={() => disconnect()}>
         <div className="flex items-center gap-3">
-           {icon && <img src={icon} className="w-5 h-5" />}
-           <span>Connected</span>
+          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+          <span className="font-bold font-connected">Connected</span>
         </div>
       </WalletMultiButton>
     );
   }
 
+  if (gWalletName && !gConnected) {
+    return (
+      <WalletMultiButton
+        className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20"
+      >
+        <div className="flex items-center gap-3">
+          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+          <span className="text-connect">Connect</span>
+        </div>
+      </WalletMultiButton>
+    );
+  }
+
+
+
   return (
     <div className="wallet-wrapper">
-      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600">
+      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
         <div className="flex items-center gap-3 btn-s-wallet">
           <i className="pi-wallet text-xl"></i>
-          <span className="font-bold">{gWalletName ? `Connect`: 'Wallet'}</span>
+          <span className="font-bold">Wallet</span>
         </div>
       </WalletMultiButton>
     </div>
