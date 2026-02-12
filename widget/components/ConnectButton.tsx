@@ -115,14 +115,13 @@ export const ConnectButton = () => {
             1. Это мобилка
             2. Мы НЕ внутри браузера кошелька (Chrome/Safari)
         */}
-          {isMobile && !isInWalletBrowser && (
-              <button
-                  onClick={handleResetWallet}
-                  className="change-wallet"
-              >
-                &nbsp;
-              </button>
-          )}
+          {/*{isMobile && !isInWalletBrowser && (*/}
+          <button
+              onClick={handleResetWallet}
+              className="change-wallet"
+          >
+            &nbsp;
+          </button>
         </div>
     );
   }
