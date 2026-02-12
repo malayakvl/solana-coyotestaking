@@ -52,7 +52,6 @@ export const ConnectButton = () => {
     const walletName = wallet.adapter.name;
     const currentUrl = window.location.href;
     const encodedUrl = encodeURIComponent(currentUrl);
-
     let deepLink = '';
 
     if (walletName === 'Phantom') {
