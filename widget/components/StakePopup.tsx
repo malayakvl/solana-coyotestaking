@@ -118,7 +118,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
-      console.log('Попап закрыт → сбрасываем баланс');
       setAvailableBalance(null);
       return;
     }
@@ -167,7 +166,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
     if (isSubmittingRef.current) return;
 
     if (!publicKeyToUse) {
-      setAmountError('Wallet not connected');
+      // setAmountError('Wallet not connected');
       return;
     }
     if (!cachedBlockhash.current || !cachedRentExempt.current) {
@@ -185,11 +184,10 @@ export const StakePopup: React.FC<StakePopupProps> = ({
       setAmountError(`Minimum ${MIN_STAKE} SOL`);
       return;
     }
-    console.log(availableBalance, 'availableBalance', num, 'num')
-    if (availableBalance !== null && num > availableBalance) {
-      setAmountError('Insufficient balance');
-      return;
-    }
+    // if (availableBalance !== null && num > availableBalance) {
+    //   setAmountError('Insufficient balance');
+    //   return;
+    // }
 
     try {
       isSubmittingRef.current = true;
@@ -237,6 +235,18 @@ export const StakePopup: React.FC<StakePopupProps> = ({
         providerNew = (window as any).solflare;
       } else if (globalWalletName === 'Phantom') {
         providerNew = (window as any).phantom?.solana;
+      } else if (globalWalletName === 'Backpack') {
+        providerNew = (window as any).backpack?.solana;
+      } else if (globalWalletName === 'Coinbase') {
+        providerNew = (window as any).coinbase?.solana;
+      } else if (globalWalletName === 'OKX') {
+        providerNew = (window as any).okx?.solana;
+      } else if (globalWalletName === 'Brave') {
+        providerNew = (window as any).brave?.solana;
+      } else if (globalWalletName === 'Trust') {
+        providerNew = (window as any).trust?.solana;
+      } else if (globalWalletName === 'Ledger') {
+        providerNew = (window as any).ledger?.solana;
       }
 
       const provider = providerNew || (window as any).solana || (window as any).phantom?.solana;
