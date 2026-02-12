@@ -27,12 +27,19 @@ export const ConnectButton = () => {
     const ua = navigator.userAgent;
     const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
 
-    // Проверяем, запущены ли мы внутри встроенного браузера кошелька
-    const inWallet = /Phantom|Solflare|Backpack/i.test(ua);
-    const hasInjectedProvider = !!(window as any).solana || !!(window as any).solflare;
+    // Проверяем максимально жестко, чтобы не было ошибки net::ERR_UNKNOWN_SCHEME
+    const isSolflareUA = /Solflare/i.test(ua);
+    const isPhantomUA = /Phantom/i.test(ua);
+    const hasProvider = !!(window as any).solana || !!(window as any).solflare;
+
+    const inWallet = isSolflareUA || isPhantomUA || hasProvider;
 
     setIsMobile(mobile);
-    setIsInWalletBrowser(inWallet || hasInjectedProvider);
+    setIsInWalletBrowser(inWallet);
+
+    if (inWallet) {
+      hasRedirectedRef.current = true;
+    }
   }, []);
 
   // 2. Синхронизация стейта
@@ -48,28 +55,41 @@ export const ConnectButton = () => {
 
   // 3. Логика редиректа (Android)
   useEffect(() => {
+    // ВАЖНО: Если мы уже в кошельке (isInWalletBrowser), выходим СРАЗУ
+    // Именно это предотвращает ошибку net::ERR_UNKNOWN_SCHEME
     if (!wallet?.adapter?.name || connected || isInWalletBrowser) return;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
     if (!isAndroid) return;
 
-    const redirectKey = `rd_${wallet.adapter.name}`;
+    const walletName = wallet.adapter.name;
+    const redirectKey = `rd_${walletName}`;
+
     if (sessionStorage.getItem(redirectKey) || hasRedirectedRef.current) return;
 
-    const walletName = wallet.adapter.name;
-    const encodedUrl = encodeURIComponent(window.location.href);
+    const currentUrl = window.location.href;
+    const encodedUrl = encodeURIComponent(currentUrl);
+    const origin = encodeURIComponent(window.location.origin);
+
     let deepLink = '';
 
     if (walletName === 'Phantom') {
-      deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
-    } else if (walletName === 'Solflare') {
-      deepLink = `solflare://ul/v1/browse/${encodedUrl}`;
+      deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${origin}`;
+    }
+    else if (walletName === 'Solflare') {
+      // ИСПОЛЬЗУЕМ СТРУКТУРУ ИЗ ТВОЕГО ПРИМЕРА:
+      // solflare://ul/v1/browse/<URL>?ref=<ORIGIN>
+      deepLink = `solflare://ul/v1/browse/${encodedUrl}?ref=${origin}`;
     }
 
     if (deepLink) {
       hasRedirectedRef.current = true;
       sessionStorage.setItem(redirectKey, 'true');
-      setTimeout(() => { window.location.href = deepLink; }, 100);
+
+      // Используем небольшой таймаут
+      setTimeout(() => {
+        window.location.href = deepLink;
+      }, 150);
     }
   }, [wallet?.adapter?.name, connected, isInWalletBrowser]);
 
@@ -86,8 +106,6 @@ export const ConnectButton = () => {
   const icon = gWalletName ? WALLET_ICONS[gWalletName] : null;
 
   // --- RENDER ---
-
-  // А) ПОДКЛЮЧЕН
   if (gConnected && gPubkey) {
     return (
         <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600">
@@ -99,7 +117,6 @@ export const ConnectButton = () => {
     );
   }
 
-  // Б) ВЫБРАН, НО НЕ ПОДКЛЮЧЕН
   if (gWalletName && !gConnected) {
     return (
         <div className="flex flex-col items-center gap-2 relative">
@@ -110,23 +127,15 @@ export const ConnectButton = () => {
             </div>
           </WalletMultiButton>
 
-          {/*
-            Кнопка "Change Wallet" показывается ТОЛЬКО если:
-            1. Это мобилка
-            2. Мы НЕ внутри браузера кошелька (Chrome/Safari)
-        */}
-          {/*{isMobile && !isInWalletBrowser && (*/}
-          <button
-              onClick={handleResetWallet}
-              className="change-wallet"
-          >
-            &nbsp;
-          </button>
+          {!isInWalletBrowser && (
+              <button onClick={handleResetWallet} className="change-wallet">
+                &nbsp;
+              </button>
+          )}
         </div>
     );
   }
 
-  // В) НИЧЕГО НЕ ВЫБРАНО
   return (
       <div className="wallet-wrapper">
         <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
