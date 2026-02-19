@@ -21,21 +21,33 @@ export const ConnectButton = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isInWalletBrowser, setIsInWalletBrowser] = useState(false);
   const hasRedirectedRef = useRef(false);
+  const [isMounted, setIsMounted] = useState(false);
+
 
   // 1. Определение окружения
   useEffect(() => {
     const ua = navigator.userAgent;
     const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    setIsMounted(true);
+    const isAndroid = /Android/i.test(ua);
 
     // Проверяем максимально жестко, чтобы не было ошибки net::ERR_UNKNOWN_SCHEME
     const isSolflareUA = /Solflare/i.test(ua);
     const isPhantomUA = /Phantom/i.test(ua);
     const hasProvider = !!(window as any).solana || !!(window as any).solflare;
-
     const inWallet = isSolflareUA || isPhantomUA || hasProvider;
 
     setIsMobile(mobile);
     setIsInWalletBrowser(inWallet);
+
+    // ХАК ДЛЯ ANDROID: Если мы НЕ в кошельке, принудительно чистим localStorage.
+    // Это не даст адаптеру автоматически выбрать Phantom при возврате в браузер.
+    if (isAndroid && !inWallet) {
+      localStorage.removeItem('walletName'); // Ключ, который использует библиотека
+      if (wallet?.adapter) {
+        select(null);
+      }
+    }
 
     if (inWallet) {
       hasRedirectedRef.current = true;

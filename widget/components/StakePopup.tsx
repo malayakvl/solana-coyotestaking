@@ -163,6 +163,16 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 
 
   const handleConfirm = async () => {
+    // --- TEMPORARILY DISABLED FOR UI TESTING ---
+    const dummySignature = '5K9uN8P3WpY7z9L2X...DUMMY_SIGNATURE';
+    if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
+      (window as any).showSuccessPopup(
+        `Transaction Successful!\n\nSignature: ${dummySignature}\n\nView on Solana Explorer: https://solana.fm/tx/${dummySignature}`
+      );
+    }
+    return;
+
+    /*
     if (isSubmittingRef.current) return;
 
     if (!publicKeyToUse) {
@@ -334,6 +344,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
         setAmountError(err.message || 'Transaction failed');
       }
     }
+    */
   };
 
 
@@ -523,7 +534,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({
                 onChange={(e) => setAmount(e.target.value)}
                 className="stake-input"
                 disabled={isSubmitting}
-                style={{ borderColor: amountError ? '#ff554f' : '#ccc', borderWidth: amountError ? 2 : 1 }}
               />
               {amountError && <div style={{ color: '#fff', marginTop: 5, fontWeight: 'bold', fontSize: '12px' }}>❌ {amountError}</div>}
               {message && <div style={{ color: '#fff', marginTop: 5, fontSize: '12px' }}>ℹ️ {message}</div>}

@@ -1,14 +1,14 @@
 @import "@solana/wallet-adapter-react-ui/styles.css";
 
 .pi-wallet {
-  background: url("https://vladika.love/wp-content/themes/yootheme/js/wallet-icon.png") !important;
-  background-size: contain;
-  width: 40px;
-  height: 40px;
+  background: url("https://darktower.team/widget/dist/wallet-icon.png") !important;
+  background-size: contain !important;
+  width: 30px;
+  height: 30px;
   display: inline-block;
   position: absolute;
-  left: 19px;
-  top: 2px;
+  left: 15px;
+  top: 6px;
 }
 
 .wallet-adapter-button {
@@ -16,14 +16,22 @@
   min-width: 170px;
 }
 
+.wallet-adapter-modal-title {
+  font-size: 29px !important;
+  line-height: 1.1 !important;
+  margin-top: 73px !important;
+  margin-bottom: 20px !important;
+  font-weight: 700 !important;
+}
+
 .wallet-adapter-button-trigger {
-  background: #ff554f !important;
+  background: #b8a269 !important;
   border-radius: 4px !important;
   min-width: 145px !important;
   text-align: center !important;
   display: block !important;
   position: relative !important;
-  color: #000 !important;
+  color: #fff !important;
 }
 
 .mobile-wallet-block .wallet-adapter-button {
@@ -37,7 +45,7 @@
 
 
 .wallet-adapter-button:not([disabled]):hover {
-  background-color: #ff554f !important;
+  background-color: #dbbe73 !important;
 }
 
 .wallet-adapter-button-trigger .wallet-adapter-button-start-icon {
@@ -52,11 +60,11 @@
 
 /* Even more specific selectors for modal styles */
 div.wallet-adapter-modal-wrapper:not(.custom) {
-  background: #7b100f !important;
+  background: #1a1a1a !important;
 }
 
 button.wallet-adapter-modal-button-close:not(.custom) {
-  color: #ff554f !important;
+  color: #1a1a1a !important;
 }
 
 button.wallet-adapter-modal-button-close:not(.custom) svg {
@@ -68,7 +76,7 @@ button.wallet-adapter-modal-button-close:not(.custom) svg {
 }
 
 .wallet-adapter-modal-button-close {
-  background-color: #ff554f !important;
+  background-color: #bdaeae !important;
 }
 
 .wallet-adapter-modal-button-close svg {
@@ -129,20 +137,24 @@ footer .wallet-widget-class {
 
 .stake-sol-btn {
   text-transform: uppercase;
-  border: none;
-  border-radius: 5em;
-  padding: 25px 55px;
-  font-size: 20px;
   font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 1rem;
+  background-image: none;
+  margin: 19px 0 60px auto;
+  padding: 18px 42px 18px 41px;
+  border: none;
   color: #fff !important;
-  background: #ff554f !important;
+  background: #b8a269 !important;
   position: relative;
   cursor: pointer;
   font-family: "Open Sans";
+  min-width: 225px;
 }
 
 .stake-sol-btn:hover {
-  background: #e04a46 !important;
+  background: #dbbe73 !important;
+  color: #b8a269 !important;
 }
 
 .stake-sol-btn:hover::after {
@@ -193,25 +205,28 @@ footer .wallet-widget-class {
   height: 340px;
   border-radius: 10px;
   padding: 15px;
-  background: #fff;
+  background: #1a1a1a;
+  color: #fff !important;
   position: relative;
+  margin-top: -100px !important;
   font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .stake-popup-header {
-  background-image: url(../public/popup/popup-top.png);
+  background-image: url(https://darktower.team/images/DT-1.png);
   background-repeat: no-repeat;
-  width: 520px;
-  height: 314px;
+  width: 228px;
+  height: 57px;
   position: absolute;
-  top: -180px;
-  left: 0;
+  top: 26px;
+  left: 142px;
+  background-size: contain;
 }
 
 .stake-popup-tips {
   margin-top: 117px;
   font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
-  color: #000 !important;
+  color: #fff !important;
   line-height: 20px;
 }
 
@@ -222,7 +237,7 @@ footer .wallet-widget-class {
   text-align: center;
   font-weight: bold;
   font-size: 24px;
-  color: #6e181e;
+  color: #fff;
   font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
@@ -230,7 +245,7 @@ footer .wallet-widget-class {
   display: block;
   font-size: 16px;
   font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
-  color: black;
+  color: #fff;
 }
 
 .flex::after {
@@ -241,8 +256,8 @@ footer .wallet-widget-class {
 
 .red-content-popup {
   margin-top: 30px;
-  background-color: #ff554e;
-  color: #fff;
+  background-color: #fff;
+  color: #000;
   margin: -15px;
   width: calc(100% + 30px);
   margin-top: 25px !important
@@ -264,11 +279,11 @@ footer .wallet-widget-class {
 .stake-input {
   background-color: #fff;
   height: 45px;
-  background-color: #fff;
-  height: 45px;
-  border: none;
+  border-width: 3px !important;
+  min-height: 60px !important;
+  border-color: #5c5134;
   width: 100%;
-  color: #590b10;
+  color: #000;
   font-weight: bold;
   font-size: 30px;
   text-align: right;
@@ -291,17 +306,19 @@ footer .wallet-widget-class {
 }
 
 .stake-submit-btn {
-  background-color: #5b0b0b;
+  background-color: #b8a269;
   color: #fff;
   text-transform: uppercase;
   border: none;
-  border-radius: 5em;
-  padding: 20px 55px;
+  padding: 10px 20px;
   margin-top: 20px;
   text-align: center;
   margin: 20px auto;
   font-size: 18px;
+  min-width: 225px;
 }
+
+.success-popup-confirm-close {}
 
 .stake-button-container {
   text-align: center;
@@ -668,7 +685,7 @@ footer .uk-container {
   position: absolute;
   top: -90px;
   right: -20px;
-  background: #5b0b0b;
+  background: #1a1a1a;
   border: none;
   font-size: 20px;
   cursor: pointer;
@@ -701,6 +718,26 @@ footer .uk-container {
 .stake-btn-container {
   display: table;
   margin: 0 auto;
+  float: right;
+}
+
+.success-popup-confirm-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 31px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  border-radius: 50%;
+  padding: 2px 8px 15px;
+  font-family: Open Sans;
+  font-weight: 600;
+  text-transform: inherit;
+  z-index: 999;
+  font-size: 16px;
 }
 
 footer .wallet-container {

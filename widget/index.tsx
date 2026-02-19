@@ -68,6 +68,8 @@ export const replaceButtons = () => {
   if (buttonsReplaced) {
     return;
   }
+  console.log(document.querySelectorAll('.wallet-widget-class'));
+
 
   buttonsReplaced = true;
   // console.log('Replacing buttons...');
