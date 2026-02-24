@@ -120,42 +120,42 @@ export const ConnectButton = () => {
   // --- RENDER ---
   if (gConnected && gPubkey) {
     return (
-        <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600">
-          <div className="flex items-center gap-3">
-            {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
-            <span className="font-bold">Connected</span>
-          </div>
-        </WalletMultiButton>
+      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600">
+        <div className="flex items-center gap-3">
+          {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+          <span className="font-bold font-connected">Connected</span>
+        </div>
+      </WalletMultiButton>
     );
   }
 
   if (gWalletName && !gConnected) {
     return (
-        <div className="flex flex-col items-center gap-2 relative">
-          <WalletMultiButton className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20">
-            <div className="flex items-center gap-3">
-              {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
-              <span className="text-connect">Connect</span>
-            </div>
-          </WalletMultiButton>
+      <div className="flex flex-col items-center gap-2 relative">
+        <WalletMultiButton className="wallet-btn !bg-white/10 !backdrop-blur-xl !border !border-white/20">
+          <div className="flex items-center gap-3">
+            {icon && <span className={`i-wallet-${gWalletName?.toLowerCase()}`} />}
+            <span className="text-connect">Connect</span>
+          </div>
+        </WalletMultiButton>
 
-          {!isInWalletBrowser && (
-              <button onClick={handleResetWallet} className="change-wallet">
-                &nbsp;
-              </button>
-          )}
-        </div>
+        {!isInWalletBrowser && (
+          <button onClick={handleResetWallet} className="change-wallet">
+            &nbsp;
+          </button>
+        )}
+      </div>
     );
   }
 
   return (
-      <div className="wallet-wrapper">
-        <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
-          <div className="flex items-center gap-3 btn-s-wallet">
-            <i className="pi-wallet text-xl"></i>
-            <span className="font-bold">Wallet</span>
-          </div>
-        </WalletMultiButton>
-      </div>
+    <div className="wallet-wrapper">
+      <WalletMultiButton className="wallet-btn !bg-gradient-to-r !from-purple-600 !to-pink-600 !shadow-lg">
+        <div className="flex items-center gap-3 btn-s-wallet">
+          <i className="pi-wallet text-xl"></i>
+          <span className="font-bold">Wallet</span>
+        </div>
+      </WalletMultiButton>
+    </div>
   );
 };

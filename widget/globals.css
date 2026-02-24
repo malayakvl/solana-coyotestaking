@@ -1,19 +1,30 @@
 @import "@solana/wallet-adapter-react-ui/styles.css";
 
 .pi-wallet {
-  background: url("https://darktower.team/widget/dist/wallet-icon.png") !important;
+  /* background: url("https://coyotestaking.top/widget/dist/wallet-icon.png") !important; */
+  background: url("https://coyotestaking.top/widget/dist/white-wallet.png") !important;
   background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
   width: 30px;
   height: 30px;
   display: inline-block;
   position: absolute;
   left: 15px;
-  top: 6px;
+  top: 7px;
+}
+
+.font-bold {
+  padding-left: 5px;
+}
+
+.font-connected {
+  padding-left: 20px !important;
 }
 
 .wallet-adapter-button {
-  width: 170px;
-  min-width: 170px;
+  width: 155px;
+  min-width: 155px;
 }
 
 .wallet-adapter-modal-title {
@@ -25,9 +36,9 @@
 }
 
 .wallet-adapter-button-trigger {
-  background: #b8a269 !important;
+  background: #232d72 !important;
   border-radius: 4px !important;
-  min-width: 145px !important;
+  min-width: 125px !important;
   text-align: center !important;
   display: block !important;
   position: relative !important;
@@ -45,7 +56,7 @@
 
 
 .wallet-adapter-button:not([disabled]):hover {
-  background-color: #dbbe73 !important;
+  background-color: #232d72 !important;
 }
 
 .wallet-adapter-button-trigger .wallet-adapter-button-start-icon {
@@ -141,20 +152,28 @@ footer .wallet-widget-class {
   letter-spacing: 2px;
   font-size: 1rem;
   background-image: none;
-  margin: 19px 0 60px auto;
-  padding: 18px 42px 18px 41px;
+  margin: 490px 0 60px auto;
+  padding: 18px 53px 19px 52px;
   border: none;
   color: #fff !important;
-  background: #b8a269 !important;
+  background: transparent !important;
   position: relative;
   cursor: pointer;
   font-family: "Open Sans";
   min-width: 225px;
+  color: #fff !important;
+  border-radius: 50px;
+  border: solid 2px #fff;
+  font-size: 20px;
+}
+
+.second-stake-btn .stake-sol-btn {
+  margin: 60px auto !important;
 }
 
 .stake-sol-btn:hover {
-  background: #dbbe73 !important;
-  color: #b8a269 !important;
+  background: #fff !important;
+  color: #05070a !important;
 }
 
 .stake-sol-btn:hover::after {
@@ -197,55 +216,56 @@ footer .wallet-widget-class {
   z-index: 10000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
-  font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .stake-popup-content {
-  width: 487px;
+  width: 430px;
   height: 340px;
   border-radius: 10px;
   padding: 15px;
-  background: #1a1a1a;
-  color: #fff !important;
+  background: #fff;
+  color: #1a1a1a !important;
   position: relative;
   margin-top: -100px !important;
-  font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .stake-popup-header {
-  background-image: url(https://darktower.team/images/DT-1.png);
+  background-image: url(https://coyotestaking.top/images/logo_coyotestaking.png);
   background-repeat: no-repeat;
   width: 228px;
   height: 57px;
   position: absolute;
   top: 26px;
-  left: 142px;
+  left: 120px;
   background-size: contain;
+  background-position: center;
 }
 
 .stake-popup-tips {
-  margin-top: 117px;
-  font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
-  color: #fff !important;
+  margin-top: 85px;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #1a1a1a !important;
   line-height: 20px;
+  text-align: center;
 }
 
 .col-param {
   width: 33%;
   float: left;
-  padding-top: 25px;
+  padding-top: 5px;
   text-align: center;
-  font-weight: bold;
   font-size: 24px;
-  color: #fff;
-  font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .col-param span {
   display: block;
   font-size: 16px;
-  font-family: DM Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
-  color: #fff;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
 }
 
 .flex::after {
@@ -256,8 +276,9 @@ footer .wallet-widget-class {
 
 .red-content-popup {
   margin-top: 30px;
-  background-color: #fff;
-  color: #000;
+  background-color: #000;
+
+  color: #fff;
   margin: -15px;
   width: calc(100% + 30px);
   margin-top: 25px !important
@@ -265,11 +286,12 @@ footer .wallet-widget-class {
 
 .red-content {
   padding: 0px 15px 10px 15px !important;
+  border: solid 1px #fff;
 }
 
 .text-amount {
   text-align: right;
-  margin: 0px;
+  margin: 0px !important;
 }
 
 .amount-value {
@@ -306,10 +328,11 @@ footer .wallet-widget-class {
 }
 
 .stake-submit-btn {
-  background-color: #b8a269;
+  background-color: transparent;
+  border: solid 2px;
+  border-radius: 50px;
   color: #fff;
   text-transform: uppercase;
-  border: none;
   padding: 10px 20px;
   margin-top: 20px;
   text-align: center;
@@ -325,11 +348,12 @@ footer .wallet-widget-class {
 }
 
 .text-footer {
-  color: black;
+  color: #fff;
   font-size: 14px;
   display: inline-block;
   line-height: 18px;
   padding-bottom: 15px;
+  text-align: center;
 }
 
 .i-wallet-phantom {
@@ -381,7 +405,7 @@ footer .wallet-widget-class {
 }
 
 .text-connect {
-  color: #000;
+  color: #fff;
 }
 
 /* Base wrapper */
@@ -400,7 +424,7 @@ footer .wallet-widget-class {
   font-size: 13px;
   font-weight: 500;
   color: #f5f3ff;
-  font-family: "DM Sans", Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-family: "Open Sans", Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 
   background: #7c1010;
   /* deep phantom purple */
@@ -530,15 +554,15 @@ footer .uk-container {
 /* Success popup icon styles */
 .success-popup-icon {
   /* background-image: url("../public/popup/popup2-top.png"); */
-  background-image: url("../public/popup/popup-top.png");
+  background-image: url(https://coyotestaking.top/images/logo_coyotestaking.png);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  width: 517px;
-  height: 315px;
-  margin: 0 auto 15px auto;
-  top: -183px;
-  left: 0px;
+  width: 228px;
+  height: 57px;
+  margin: 0 auto 15px;
+  top: 20px;
+  left: 95px;
   position: absolute;
 }
 
@@ -549,9 +573,9 @@ footer .uk-container {
 
 /* Success popup close button styles */
 .success-popup-close-button {
-  background: #5b0b0b;
+  background: transparent;
   color: #fff;
-  border: none;
+  border: solid 2px #fff;
   border-radius: 5em;
   padding: 14px 32px;
   font-size: 18px;
@@ -611,10 +635,10 @@ footer .uk-container {
 
 /* Success popup button container styles */
 .success-popup-button-container {
-  background: #ff554f;
   padding: 20px;
-  border-radius: 0 0 16px 16px;
   margin: 0 -30px -30px -30px;
+  background-color: #000;
+  border: solid 1px #fff;
 }
 
 /* Success popup button text styles */
@@ -625,38 +649,40 @@ footer .uk-container {
   text-align: center;
   padding: 0px 30px;
   line-height: normal;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .success-popup-signature-container {
-  background: #fff;
+  color: #000 !important;
   padding: 15px;
-  border-radius: 8px;
-  margin-top: 95px;
-  margin-bottom: 25px;
+  margin-top: 50px;
   text-align: center;
   line-height: normal !important;
+  font-family: Open Sans, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .success-popup-close {
   position: absolute;
-  top: -80px;
-  right: 10px;
+  top: -12px;
+  right: -17px;
   background: none;
   border: medium;
   font-size: 20px;
   cursor: pointer;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
+  background: #807a7a;
+  color: #fff;
 }
 
 .stake-popup-content .col-param {
-  font-size: 36px;
-  font-family: "Open Sans";
+  font-size: 32px;
+  /* font-family: "Open Sans"; */
   margin: 0 !important;
 }
 
 .stake-popup-content .col-param span {
-  margin-top: -15px !important;
+  margin-top: 0px !important;
 }
 
 .red-content-popup {
@@ -698,16 +724,17 @@ footer .uk-container {
 }
 
 .black-btn-block .stake-sol-btn {
-  border: solid 4px #ffd4d3;
+  border: solid 2px #fff;
   border-radius: 5em;
   background: none;
   text-transform: uppercase;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  color: #ffd4d3 !important;
-  padding: 10px 55px;
+  color: #fff !important;
+  padding: 18px 53px 19px 52px;
   margin-top: 25px !important;
-  font-family: "Open Sans"
+  font-family: "Open Sans";
+  border-radius: 50px;
 }
 
 .black-btn-block .stake-sol-btn:hover {
@@ -718,7 +745,7 @@ footer .uk-container {
 .stake-btn-container {
   display: table;
   margin: 0 auto;
-  float: right;
+  /* float: right; */
 }
 
 .success-popup-confirm-close {
@@ -727,10 +754,10 @@ footer .uk-container {
   right: -12px;
   width: 32px;
   height: 31px;
-  background: #fff;
+  background: #807a7a;
   border: none;
   cursor: pointer;
-  color: #000;
+  color: #fff;
   border-radius: 50%;
   padding: 2px 8px 15px;
   font-family: Open Sans;
@@ -759,18 +786,226 @@ footer .wallet-container {
 
 .success-popup-close {
   position: absolute;
-  top: -106px;
+  top: -10px;
   right: -17px;
-  width: 20px;
-  height: 20px;
-  background: #5b0b0b;
+  width: 35px;
+  height: 35px;
+
   border: none;
   font-size: 20px;
   cursor: pointer;
+  border-radius: 50%;
+  padding: 0px 6px 12px 6px;
+  cursor: pointer;
   color: #fff;
   border-radius: 50%;
-  padding: 0px 8px 15px 8px;
-  font-family: "Open Sans";
+  padding: 2px 8px 15px;
+  font-family: Open Sans;
   font-weight: 600;
-  text-transform: inherit;
+}
+
+.success-popup-explorer-link-new {
+  color: #fff;
+  text-decoration: underline;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  display: block;
+  text-align: center;
+}
+
+
+.mobile-wallet {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .mobile-wallet {
+    display: none;
+  }
+}
+
+.success-popup-inner {
+  position: fixed !important;
+  top: 145px !important;
+  margin-top: 0 !important;
+}
+
+@media (max-width: 767px) {
+  .desktop-wallet {
+    display: none !important;
+  }
+
+  .mobile-wallet {
+    display: block;
+  }
+
+  .mobile-h-block {
+    width: 400px !important;
+  }
+
+  .u-logo {
+    float: left;
+  }
+
+  .wallet-adapter-button {
+    width: 125px !important;
+  }
+
+  .wallet-adapter-modal-list .wallet-adapter-button {
+    width: 100% !important;
+  }
+
+  .wallet-adapter-button .font-bold {
+    padding-left: 10px !important;
+  }
+
+  .wallet-adapter-dropdown {
+    margin-top: 29px !important;
+  }
+
+  /* .wallet-wrapper {
+    margin-left: 10px;
+  } */
+
+  .u-header .u-image-1 {
+    width: 180px !important;
+  }
+
+  .mobile-wallet {
+    margin-top: -5px;
+  }
+
+
+  .u-header .u-menu-1 {
+    margin-top: -41px;
+    margin-bottom: 22px;
+    margin-right: 45px;
+  }
+
+  .i-wallet-phantom {
+    left: 6px !important;
+  }
+
+  .stake-btn-container {
+    float: inherit !important;
+    width: 100%;
+    text-align: center;
+  }
+
+  .text-connect {
+    padding-left: 10px !important;
+  }
+
+  .wallet-adapter-button .font-bold.font-connected {
+    padding-left: 10px !important;
+  }
+
+  .pi-wallet {
+    width: 35px;
+    height: 35px;
+    top: 7px;
+    left: 3px;
+  }
+
+  .wallet-adapter-dropdown {
+    padding-left: 10px;
+  }
+
+  .element {
+    width: 90%;
+  }
+
+  .stake-popup-content {
+    width: 90%;
+  }
+
+  .stake-popup-header {
+    width: 90%;
+    height: 57px;
+    position: absolute;
+    top: 26px;
+    left: inherit;
+    background-position: center;
+  }
+
+  .success-popup-icon {
+    width: 90%;
+    height: 57px;
+    position: absolute;
+    top: 26px;
+    left: inherit;
+    background-position: center;
+  }
+
+  .stake-popup-content {
+    position: absolute;
+    top: 140px;
+  }
+
+  .success-popup-container {
+    top: 140px !important;
+    position: fixed !important;
+  }
+
+  .success-popup-inner {
+    position: fixed !important;
+    top: 120px !important;
+    margin-top: 0px !important;
+  }
+}
+
+.mobile-container .stake-sol-btn {
+  margin-top: 441px !important;
+}
+
+
+
+@media (max-width: 767px) {
+  .u-header .u-search-1 {
+    margin-top: -50px;
+  }
+
+  .m-header {
+    width: 380px !important;
+  }
+
+  .logo-block {
+    float: left;
+    width: 40%;
+  }
+
+  .elements-block {
+    float: right;
+    width: 100%;
+    padding-top: 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .logo-block {
+    float: left;
+    width: 40%;
+  }
+
+  .elements-block {
+    float: right;
+    width: 50%;
+    padding-top: 20px;
+  }
+}
+
+/* Только мобильные */
+@media (max-width: 767px) {
+  .logo-block {
+    float: inherit !important;
+    width: auto;
+  }
+
+  .elements-block {
+    float: inherit !important;
+    width: auto;
+    padding-top: 0px !important;
+    margin-left: 10px !important;
+  }
 }

@@ -11,7 +11,7 @@ import {
   StakeProgram
 } from '@solana/web3.js';
 
-const VOTE_ACCOUNT = new PublicKey('53RJBy7aBGA7Aag6AryxEmBbsHDgwfBWagLrPbGHnfvR');
+const VOTE_ACCOUNT = new PublicKey('DHoZJqvvMGvAXw85Lmsob7YwQzFVisYg8HY4rt5BAj6M');
 const MIN_STAKE = 0.01;
 
 interface StakePopupProps {
@@ -37,9 +37,6 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 }) => {
   const walletContext = useWallet();
   const effectiveWallet = propWallet || walletContext;
-  console.log('StakePopup mounted with wallet:', effectiveWallet);
-  console.log('StakePopup mounted with globalPublicKey:', globalPublicKey);
-  console.log('StakePopup mounted with globalWalletName:', globalWalletName);
 
   const getPublicKey = (): PublicKey | null => {
     if (effectiveWallet?.publicKey) return effectiveWallet.publicKey;
@@ -164,15 +161,14 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 
   const handleConfirm = async () => {
     // --- TEMPORARILY DISABLED FOR UI TESTING ---
-    const dummySignature = '5K9uN8P3WpY7z9L2X...DUMMY_SIGNATURE';
-    if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
-      (window as any).showSuccessPopup(
-        `Transaction Successful!\n\nSignature: ${dummySignature}\n\nView on Solana Explorer: https://solana.fm/tx/${dummySignature}`
-      );
-    }
-    return;
+    // const dummySignature = '5K9uN8P3WpY7z9L2X...DUMMY_SIGNATURE';
+    // if (typeof window !== 'undefined' && (window as any).showSuccessPopup) {
+    //   (window as any).showSuccessPopup(
+    //     `Transaction Successful!\n\nSignature: ${dummySignature}\n\nView on Solana Explorer: https://solana.fm/tx/${dummySignature}`
+    //   );
+    // }
+    // return;
 
-    /*
     if (isSubmittingRef.current) return;
 
     if (!publicKeyToUse) {
@@ -344,7 +340,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
         setAmountError(err.message || 'Transaction failed');
       }
     }
-    */
+
   };
 
 
@@ -362,32 +358,32 @@ export const StakePopup: React.FC<StakePopupProps> = ({
         // Create container div
         const container = document.createElement('div');
         container.id = 'success-popup-container';
-        container.style.position = 'fixed';
+        container.style.position = 'flex';
         container.style.inset = '0';
         container.style.background = 'rgba(0,0,0,0.6)';
         container.style.display = 'flex';
         container.style.alignItems = 'center';
         container.style.justifyContent = 'center';
         container.style.zIndex = '1000';
-        container.style.fontFamily = 'Open Sans, sans-serif';
+        // container.style.fontFamily = 'Open Sans, sans-serif';
 
         // Create popup content
         const popup = document.createElement('div');
+        popup.className = 'success-popup-inner';
         popup.style.background = '#fff';
         popup.style.borderRadius = '16px';
         popup.style.padding = '30px';
         popup.style.width = '90%';
-        popup.style.maxWidth = '457px';
+        popup.style.maxWidth = '400px';
         popup.style.textAlign = 'center';
-        // popup.style.border = '3px solid #ff8480';
         popup.style.position = 'relative';
         popup.style.marginTop = '120px';
         // popup.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
 
         // Create title
         const title = document.createElement('h2');
-        title.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
-        title.style.color = '#ff8480';
+        title.textContent = 'You`ve successfully delegated SOL to Coyotestaking. Your stake will start earning rewards from the next epoch.';
+        title.style.color = '#1a1a1a';
         title.style.marginBottom = '20px';
         title.style.fontSize = '28px';
         title.style.fontWeight = 'bold';
@@ -407,7 +403,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
 
         // Create message container
         const messageContainer = document.createElement('div');
-        messageContainer.style.color = '#fff';
+        messageContainer.style.color = '#000';
         messageContainer.style.marginBottom = '25px';
         messageContainer.style.fontSize = '16px';
         messageContainer.style.lineHeight = '1.5';
@@ -423,7 +419,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
         const signatureMatch = message.match(/Signature: ([A-Za-z0-9]+)/);
         if (signatureMatch && signatureMatch[1]) {
           const signatureTitle = document.createElement('div');
-          signatureTitle.textContent = 'You`ve successfully delegated SOL to Vladika. Your stake will start earning rewards from the next epoch.';
+          signatureTitle.textContent = 'You`ve successfully delegated SOL to Coyotestaking.top. Your stake will start earning rewards from the next epoch.';
           signatureTitle.style.color = '#000';
           signatureTitle.style.fontSize = '16px';
           signatureTitle.style.marginBottom = '8px';
@@ -507,8 +503,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
       <div className="stake-popup-content">
         <div className="stake-popup-header"></div>
         <div className="stake-popup-tips">
-          Your trusted validator. Stake smart, earn more.
-          <br />0% commission + 100 % MEV rewards. Keep every lamport!
+          Reliable. Profitable. Secure.
         </div>
 
         <div className="flex">
@@ -549,7 +544,7 @@ export const StakePopup: React.FC<StakePopupProps> = ({
                 {isSubmitting ? 'Sending...' : 'Stake'}
               </button>
             </div>
-            <span className="text-footer">The maximum stake is your balance minus 0.01, to ensure you have some SOL left for future transactions.</span>
+            <span className="text-footer">Your tokens never leave your wallet — you're simply delegating your vote power.</span>
           </div>
         </div>
       </div>
